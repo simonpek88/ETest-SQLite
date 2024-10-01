@@ -1,6 +1,5 @@
 # coding UTF-8
 import apsw
-import time
 import streamlit as st
 from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del
 

@@ -21,10 +21,10 @@ def getUserCName(userName):
     rows = mdb_sel(cur, SQL)
     if rows:
         st.session_state.userCName = rows[0][0]
-        st.session_state.userStationCN = rows[0][1]
+        st.session_state.StationCN = rows[0][1]
     else:
         st.session_state.userCName = "未找到"
-        st.session_state.userStationCN = "未找到"
+        st.session_state.StationCN = "未找到"
 
 
 def delOutdatedTable():
@@ -68,7 +68,7 @@ def login():
         userName = st.text_input("请输入用户名", max_chars=8, help="员工编码")
         if userName != "":
             getUserCName(userName)
-            st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :red[{st.session_state.userStationCN}]")
+            st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :red[{st.session_state.StationCN}]")
         userPassword = st.text_input("请输入密码", max_chars=8, help="默认为1234", type="password", autocomplete="off")
         examType = st.selectbox("请选择功能类型", ("练习", "考试"), index=0)
         buttonLogin = st.button("登录")
@@ -625,6 +625,8 @@ def AIGenerQues():
         with col2:
             textChapter = st.text_input("请输入新章节名称", value="", placeholder="添加新的章节")
             textChapter = textChapter.strip()
+    elif table == "公共题库":
+        chapter, textChapter = "", ""
     quesRefer = st.text_area("请输入参考资料")
     quesType = st.radio(label="请选择要生成的题型", options=("单选题", "多选题", "判断题", "填空题"), index=None, horizontal=True)
     quesCount = st.number_input("请输入要生成的题目数量", min_value=1, max_value=10, value=5, step=1)
@@ -762,6 +764,8 @@ def AIGenerQues():
                     st.info("A.I.未生成到任何试题, 请检查参考资料是否正确或是生成的试题已经在题库中")
             else:
                 st.warning("站室题库请选择章节")
+    else:
+        st.info("请设置各选项和参考资料")
 
 
 def ClearMP():

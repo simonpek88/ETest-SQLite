@@ -96,7 +96,7 @@ def addNewQues():
         elif selectFunc == "公共题库":
             SQL = "SELECT ID from commquestions where Question = '" + qQuestion + "'"
         if mdb_sel(cur, SQL):
-            st.success(f"考题: [{qQuestion}] 类型: [{qType}] 所属站室: [{st.session_state.userStationCN}] 题库: [{selectFunc}] 已添加成功")
+            st.success(f"考题: [{qQuestion}] 类型: [{qType}] 所属站室: [{st.session_state.StationCN}] 题库: [{selectFunc}] 已添加成功")
         else:
             st.warning(f"考题添加至 [{selectFunc}] 失败")
 
@@ -213,7 +213,7 @@ def addUser():
     with itemArea.container():
         userName = st.number_input("用户编码", min_value=1, max_value=999999, value=1, help="建议使用员工编码, 姓名和站室可以有重复, 但是编码必须具有唯一性")
         userCName = st.text_input("用户姓名", max_chars=10, autocomplete="name", help="请输入用户中文姓名")
-        station = st.select_slider("站室", stationCName, value=userStationCN)
+        station = st.select_slider("站室", stationCName, value=st.session_state.StationCN)
         userPassword1 = st.text_input("设置密码", max_chars=8, type="password", autocomplete="off", help="设置用户密码")
         userPassword2 = st.text_input("请重新输入密码", max_chars=8, type="password", autocomplete="off")
         #userType = st.toggle("用户类型 (用户/管理员)", value=False, help="关闭为用户, 打开为管理员")
@@ -263,7 +263,7 @@ cur.execute("PRAGMA journal_mode = WAL")
 st.write("# :orange[基础数据录入]")
 #selectFunc = st.selectbox("请选择数据表", ["章节信息", "站室专用题库", "公共题库", "考试场次", "站室", "用户"], index=None, help="请选择数据表")
 selectFunc = st.selectbox("请选择数据表", ["考试场次", "站室", "用户"], index=None, help="请选择数据表")
-stationCName, userStationCN = [], st.session_state.userStationCN
+stationCName = []
 SQL = "SELECT Station from stations order by ID"
 rows = mdb_sel(cur, SQL)
 for row in rows:
