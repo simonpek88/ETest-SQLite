@@ -12,7 +12,6 @@ DB/*.db-shm
 DB/*.db-wal
 DB/Keys.docx
 DB/Keys.pdf
-CSC-Project-CustomDict.txt
 ~$*.*
 .vsclog
 vsc-extensions.txt

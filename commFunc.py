@@ -21,7 +21,6 @@ def pad(data):
 
 
 def unpad(data):
-
     return data[:-(data[-1] if type(data[-1]) == int else ord(data[-1]))]
 
 
@@ -101,7 +100,7 @@ def deepseek_AI(ques, option, quesType):
             messages=[
                 {
                     "role": "system",
-                    "content": "你是一位解题专家，请根据下面的题目和题目类型和选项并给出正确答案，要求：\n1. 给出每个选项的对错, 判断题和填空题直接给出答案和解析过程\n2. 生成内容应清晰、精确、详尽并易于理解\n3. 输出如果有国家标准或行业规范需要提供来源出处, 若能检索到具体出处, 需要精确到是[第几条], 并引用\n4. 不输出原题, 但要输出选项, 并给出每个选项的解析过程\n5. 解析内容每行不要超过40个字, 但是可以多行\n6. 着重显示正确的答案并给出一个详尽的小结"
+                    "content": "你是一位解题专家，请根据下面的题目和题目类型和选项并给出正确答案，要求：\n1. 给出每个选项的对错, 判断题和填空题直接给出答案和解析过程\n2. 生成内容应清晰、精确、详尽并易于理解\n3. 输出如果有国家标准或行业规范需要提供来源出处, 若能检索到具体出处, 需要精确到是第几条, 并引用\n4. 不输出原题, 但要输出选项, 并给出每个选项的解析过程\n5. 解析内容每行不要超过40个字, 但是可以多行\n6. 着重显示正确的答案并给出一个详尽的小结"
                 },
                 {
                     "role": "user",
@@ -110,7 +109,6 @@ def deepseek_AI(ques, option, quesType):
             ],
             stream=False
         )
-
         return response.choices[0].message.content
     else:
         return ""
@@ -130,7 +128,6 @@ def qianfan_AI(ques, AImodel, option, quesType):
             "role": "user",
             "content": f"{prompt}{contentStr}"
         }])
-
         return resp["body"]["result"]
     else:
         return ""
