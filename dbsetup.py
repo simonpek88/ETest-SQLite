@@ -126,7 +126,7 @@ with st.expander("# :orange[其他设置]"):
         if row[1] == 1:
             AIModelIndex = i
         i += 1
-    st.radio("选择LLM大模型", options=AIModel, index=AIModelIndex, key="AIModel", horizontal=True, on_change=updateAIModel, help="讯飞可以输出MarkDown格式;文心千帆输出速度快, 内容可用;DeepSeek内容准确性相对高一些")
+    st.radio("选择LLM大模型", options=AIModel, index=AIModelIndex, key="AIModel", horizontal=True, on_change=updateAIModel, help="讯飞输出质量高, 规范引用准确, 建议选用;文心千帆输出速度快, 内容可用;DeepSeek内容准确性相对高一些")
 st.divider()
 buttonReset = st.button("重置所有设置", type="primary")
 if buttonReset:

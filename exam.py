@@ -235,7 +235,7 @@ def exam(row):
                 if buttonAnalysis:
                     AIAnswerInfo = st.empty()
                     with AIAnswerInfo.container():
-                        st.info(f"正在使用:red[[{AIModelName.replace('大模型', '')}]]获取答案解析, 不能保证完全正确, 仅供参考! 请稍等...")
+                        st.info(f"正在使用:red[[{AIModelName.replace('大模型', '')}]]获取答案解析, 内容不能保证正确, 仅供参考! 请稍等...")
                     if AIModelName == "文心千帆大模型":
                         AIAnswer = qianfan_AI(row[1], AIModel, option, row[4])
                     elif AIModelName == "讯飞星火大模型":

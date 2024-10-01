@@ -765,7 +765,7 @@ def AIGenerQues():
             else:
                 st.warning("站室题库请选择章节")
     else:
-        st.info("请设置各选项和参考资料")
+        st.info("请设置各选项和添加参考资料")
 
 
 def ClearMP():
