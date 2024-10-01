@@ -10,6 +10,9 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from hashlib import md5
 
+# cSpell:ignoreRegExp /[^\s]{16,}/
+# cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+
 
 def pad(data):
     length = 16 - (len(data) % 16)

@@ -15,6 +15,9 @@ from xlsxwriter.workbook import Workbook
 from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del, getParam, updatePyFileinfo
 from commFunc import qianfan_AI_GenerQues
 
+# cSpell:ignoreRegExp /[^\s]{16,}/
+# cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+
 
 def getUserCName(userName):
     SQL = "SELECT userCName, StationCN from user where userName = " + str(userName)

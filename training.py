@@ -4,6 +4,9 @@ import streamlit as st
 import time
 from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del, GenerExam, getParam
 
+# cSpell:ignoreRegExp /[^\s]{16,}/
+# cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+
 
 def training():
     StationCN = st.session_state.StationCN

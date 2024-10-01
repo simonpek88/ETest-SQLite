@@ -5,6 +5,9 @@ import pandas as pd
 import time
 from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del
 
+# cSpell:ignoreRegExp /[^\s]{16,}/
+# cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+
 
 def highlight_max(x, forecolor='black', backcolor='yellow'):
     is_max = x == x.max()

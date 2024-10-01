@@ -6,6 +6,9 @@ import datetime
 import streamlit_antd_components as sac
 from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del
 
+# cSpell:ignoreRegExp /[^\s]{16,}/
+# cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+
 
 def ClearStr(strValue):
     strValue = strValue.replace("\n", "").replace("\t", "").strip()

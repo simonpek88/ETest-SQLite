@@ -8,6 +8,9 @@ from streamlit_modal import Modal
 from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del, getParam
 from commFunc import xunfei_xh_AI, qianfan_AI, deepseek_AI, xunfei_xh_AI_fib
 
+# cSpell:ignoreRegExp /[^\s]{16,}/
+# cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+
 
 def updateAnswer(userQuesID):
     SQL = f"UPDATE {st.session_state.examFinalTable} set userAnswer = '{st.session_state.answer}', userName = {st.session_state.userName} where ID = {userQuesID}"
