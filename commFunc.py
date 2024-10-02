@@ -1,14 +1,15 @@
 # coding UTF-8
-import apsw
-import random
-import os
-import time
-import qianfan
 import base64
-from openai import OpenAI
+import os
+import random
+import time
+from hashlib import md5
+
+import apsw
+import qianfan
 from Crypto import Random
 from Crypto.Cipher import AES
-from hashlib import md5
+from openai import OpenAI
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g

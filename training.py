@@ -1,8 +1,10 @@
 # coding UTF-8
+import time
+
 import apsw
 import streamlit as st
-import time
-from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del, GenerExam, getParam
+
+from commFunc import GenerExam, getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g

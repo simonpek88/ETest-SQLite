@@ -1,7 +1,8 @@
 # coding UTF-8
 import apsw
 import streamlit as st
-from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del
+
+from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
