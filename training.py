@@ -46,9 +46,9 @@ def training():
                     genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom)
         elif st.session_state.examType == "training":
             col1, col2 = st.columns(2)
-            SQL = "SELECT chapterRatio from questionaff where chapterName = '公共题库'"
+            SQL = f"SELECT chapterRatio from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '公共题库'"
             tempCR1 = mdb_sel(cur, SQL)[0][0]
-            SQL = "SELECT chapterRatio from questionaff where chapterName = '错题集'"
+            SQL = f"SELECT chapterRatio from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '错题集'"
             tempCR2 = mdb_sel(cur, SQL)[0][0]
             with col1:
                 generPack.append(st.checkbox("公共题库", value=True))

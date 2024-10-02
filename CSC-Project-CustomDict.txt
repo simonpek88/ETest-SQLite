@@ -18,6 +18,7 @@ examidd
 examresult
 Fileinfo
 gener
+JXQW
 mktime
 moption
 morepractise
@@ -25,8 +26,10 @@ oxml
 qianfan
 QIANFAN
 questionaff
+questo
 questype
 Resultto
+rowid
 selectbox
 unpad
 verinfo

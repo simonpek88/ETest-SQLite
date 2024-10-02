@@ -204,6 +204,11 @@ def addStation():
                 cur.execute(SQL)
                 SQL = f"INSERT INTO setup_{sn}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
                 mdb_ins(conn, cur, SQL)
+            for each in ["公共题库", "错题集"]:
+                SQL = f"SELECT ID from questionaff where chapterName = '{each}' and StationCN = '{sn}'"
+                if not mdb_sel(cur, SQL):
+                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio) VALUES('{each}', '{sn}', 10)"
+                    mdb_ins(conn, cur, SQL)
             st.success(f"[{sn}] 站室添加成功")
         else:
             st.warning(f"[{sn}] 添加站室失败")

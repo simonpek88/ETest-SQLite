@@ -12,6 +12,7 @@ from commFunc import xunfei_xh_AI, qianfan_AI, deepseek_AI, xunfei_xh_AI_fib
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
 
 
+@st.fragment
 def updateAnswer(userQuesID):
     SQL = f"UPDATE {st.session_state.examFinalTable} set userAnswer = '{st.session_state.answer}', userName = {st.session_state.userName} where ID = {userQuesID}"
     mdb_modi(conn, cur, SQL)
@@ -68,7 +69,7 @@ def calcScore():
                         fibAI = xunfei_xh_AI_fib(fibQues, fibQues2)
                         if fibAI != "" and fibAI.find("无法直接回答") == -1 and fibAI.find("尚未查询") == -1 and fibAI.find("我不确定您想要表达什么意思") == -1 and fibAI.find("由于信息不足，无法给出准确答案") == -1 and fibAI.find("无法确定正确答案") == -1 and fibAI.find("无法提供准确答案") == -1:
                             if st.session_state.debug:
-                                print(f"Debug: [{row[3]}] [Q:{row[0]} / A:{row[2]}] / A.I.判断: [{fibAI}]")
+                                print(f"debug: [{row[3]}] [Q:{row[0]} / A:{row[2]}] / A.I.判断: [{fibAI}]")
                             if fibAI == "正确":
                                 userScore += wrScore
                                 flagAIScore = True
@@ -109,6 +110,7 @@ def calcScore():
         mdb_ins(conn, cur, SQL)
 
 
+@st.fragment
 def getOptionAnswer(row, option):
     for index, value in enumerate(option):
         if st.session_state.option == value:
@@ -132,12 +134,21 @@ def getMOptionAnswer(row):
     updateAnswer(row[0])
 
 
+@st.fragment
 def getRadioAnswer(row):
     if "正确" in st.session_state.radio:
         st.session_state.answer = 1
     else:
         st.session_state.answer = 0
     updateAnswer(row[0])
+
+
+@st.fragment
+def delQuestion(delQuesRow):
+    delTablePack = ["questions", "commquestions", "morepractise"]
+    for delTable in delTablePack:
+        SQL = f"DELETE from {delTable} where Question = '{delQuesRow[1]}' and qType = '{delQuesRow[4]}'"
+        mdb_del(conn, cur, SQL)
 
 
 @st.fragment
@@ -159,6 +170,10 @@ def exam(row):
         reviseQues = row[1]
     standardAnswer = getStandardAnswer(row)
     st.info(f"第{row[0]}题 :green[{reviseQues}]")
+    if st.session_state.debug:
+        buttonConfirm = st.button("从所有题库中删除此题", type="primary")
+        if buttonConfirm:
+            st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
     st.write(f":red[本题为{row[4]}]:")
     if row[4] == '单选题':
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
@@ -266,6 +281,7 @@ def exam(row):
     st.session_state.curQues = row[0]
 
 
+@st.fragment
 def updateAIModel(AIOption, AIOptionIndex):
     SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramType = 'others' and paramName like '%大模型'"
     mdb_modi(conn, cur, SQL)
@@ -318,6 +334,7 @@ def getStandardAnswer(qRow):
     return standardAnswer
 
 
+@st.fragment
 def updateTA():
     textAnswerPack = []
     for key in st.session_state.keys():
@@ -340,7 +357,6 @@ def changeCurQues(step):
         st.session_state.curQues = quesCount
 
 
-#@st.fragment
 def gotoChosenQues():
     st.subheader("跳转到指定题号")
     cop = re.compile('[^0-9^.]')

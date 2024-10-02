@@ -31,6 +31,8 @@ def updateQuesType(quesType):
     else:
         SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramName = '{quesType}'"
     mdb_modi(conn, cur, SQL)
+    if quesType == "测试模式":
+        st.session_state.debug = bool(st.session_state[quesType])
     st.success(f"{quesType} 设置更新成功")
 
 
@@ -120,7 +122,7 @@ with st.expander("# :orange[其他设置]"):
         elif row[0] == "A.I.答案解析更新至题库":
             st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 是否将使用大模型获取的答案解析更新至题库")
         elif row[0] == "测试模式":
-            st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 是否打开测试模式用以输出更多信息")
+            st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 是否开启测试模式用以输出更多信息")
     AIModel, AIModelIndex, i = [], 0, 0
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
     rows = mdb_sel(cur, SQL)

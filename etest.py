@@ -1,19 +1,22 @@
 # coding UTF-8
-import streamlit as st
-import apsw
 import os
+import re
 import time
+
+import apsw
 import openpyxl
 import pandas as pd
+import streamlit as st
 import streamlit_antd_components as sac
-from streamlit_extras.badges import badge
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Pt, RGBColor
 from docx.oxml.ns import qn
+from docx.shared import Pt, RGBColor
+from streamlit_extras.badges import badge
 from xlsxwriter.workbook import Workbook
-from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del, getParam, updatePyFileinfo
-from commFunc import qianfan_AI_GenerQues
+
+from commFunc import (getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel,
+                      qianfan_AI_GenerQues, updatePyFileinfo)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -88,7 +91,7 @@ def login():
                 st.session_state.userType = result[0][2]
                 st.session_state.StationCN = result[0][3]
                 st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
-                st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
+                st.session_state.debug = bool(getParam("debug", st.session_state.StationCN))
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
                 ClearTables()
@@ -563,19 +566,29 @@ def dbinput():
 
 
 def dbfunc():
+    if st.session_state.debug:
+        flagInputWord = False
+    else:
+        flagInputWord = True
     bc = sac.segmented(
         items=[
             sac.SegmentedItem(label="A.I.出题", icon="robot"),
             sac.SegmentedItem(label="题库导入", icon="database-up"),
+            sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=flagInputWord),
+            sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
             sac.SegmentedItem(label="清空错题集", icon="journal-x"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
             sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot"),
-        ], align="center", color="red"
+        ], align="start", color="red"
     )
     if bc == "A.I.出题":
         AIGenerQues()
-    if bc == "题库导入":
+    elif bc == "题库导入":
         dbinput()
+    elif bc == "Word文件导入":
+        inputWord()
+    elif bc == "删除单个试题":
+        deleteSingleQues()
     elif bc == "清空错题集":
         ClearMP()
     elif bc == "删除静态题库":
@@ -584,6 +597,108 @@ def dbfunc():
         buttonReset = st.button("重置ID", type="primary")
         if buttonReset:
             st.button("确认重置", type="secondary", on_click=resetTableID)
+
+
+def deleteSingleQues():
+    tablename = st.selectbox("请选择要删除:red[单个试题]所在的题库", ("站室题库", "公共题库", "错题集"), index=None)
+    if tablename:
+        st.number_input("请输入要删除的试题ID", min_value=1, max_value=999999, placeholder="每个题库试题的ID都不一样, 相同ID可以在不同题库, 一定要检查题库和ID是否一致", key="delQuesID")
+        buttonConfirm = st.button("删除", type="primary")
+        if buttonConfirm:
+            st.button("确认删除", type="secondary", on_click=deleteQues, args=(tablename,))
+
+
+def deleteQues(tablename):
+    if tablename == "站室题库":
+        targetTable = "questions"
+    elif tablename == "公共题库":
+        targetTable = "commquestions"
+    elif tablename == "错题集":
+        targetTable = "morepractise"
+    SQL = f"DELETE from {targetTable} where ID = {st.session_state.delQuesID}"
+    mdb_modi(conn, cur, SQL)
+    st.success(f"已 :red[删除] {tablename} 中ID为 {st.session_state.delQuesID} 的试题")
+
+
+def inputWord():
+    #doc = Document("./QuesRefer/特种设备安全管理员考试题库精选全文.docx")
+    #doc = Document("./QuesRefer/(新版)特种设备安全管理人员(特种作业)考试题库.docx")
+    #doc = Document("./QuesRefer/(新版)特种设备安全管理人员资格(特种作业)考试题库(全真题库).docx")
+    #doc = Document("./QuesRefer/2023年全国特种设备作业人员考试题库附答案.docx")
+    doc = Document("./QuesRefer/2023年特种设备作业安全管理人员证考试题库(通用版).docx")
+    chapter = "特种设备安全管理员"
+    #title_rule = re.compile("\\d+、")
+    title_rule = re.compile("\\d+.")
+    option_rule = re.compile("\\w+、")
+    ques, qAnswer, temp2, generQuesCount, qType = "", "", "", 0, ""
+    if st.session_state.debug:
+        os.system("cls")
+    st.spinner("正在导入Word文件...")
+    for i, paragraph in enumerate(doc.paragraphs[:]):
+        line = paragraph.text.replace('\n', '').replace('\r', '').replace("（", "(").replace("）", ")").strip()
+        if line:
+            #if title_rule.search(line):
+            if line[:7].find(".") != -1:
+                if temp2.endswith(";"):
+                    temp2 = temp2[:-1]
+                    qOption = temp2
+                    temp2 = ""
+                if ques != "" and qAnswer != "" and qOption != "":
+                    if qOption.find("正确;错误") != -1:
+                        qType = "判断题"
+                        qAnswer = int(qAnswer) ^ 1
+                        qOption = ""
+                    elif len(qAnswer) == 1:
+                        qType = "单选题"
+                    elif len(qAnswer) > 1:
+                        qType = "多选题"
+                    if st.session_state.debug:
+                        print(f"Record: Q: {ques} T: {qType} O: {qOption} A: {qAnswer}")
+                    SQL = f"SELECT ID from questions where Question = '{ques}' and qType = '{qType}' and StationCN = '{st.session_state.StationCN}' and chapterName = '{chapter}'"
+                    if not mdb_sel(cur, SQL):
+                        SQL = f"INSERT INTO questions(Question, qOption, qAnswer, qType, StationCN, chapterName, SourceType) VALUES ('{ques}', '{qOption}', '{qAnswer}', '{qType}', '{st.session_state.StationCN}', '{chapter}', '人工')"
+                        mdb_ins(conn, cur, SQL)
+                        generQuesCount += 1
+                    ques, qAnswer, qOption = "", "", ""
+                temp = ""
+                if st.session_state.debug:
+                    print(f"Ques:{line}")
+                if line[:7].find("、") != -1:
+                    ques = line[line.find("、") + 1:]
+                elif line[:7].find(".") != -1:
+                    ques = line[line.find(".") + 1:]
+                if ques.startswith("."):
+                    ques = ques[1:]
+                qAnswer = ""
+                while True:
+                    b1 = line.find('(')
+                    b2 = line.find(')')
+                    if b1 != -1 and b2 != -1 and line[b1 + 1:b1 + 2] in ["A", "B", "C", "D", "E", "F"]:
+                        temp = line[b1 + 1:b2]
+                        ques = ques.replace(temp, " " * len(temp))
+                        temp = temp.replace("、", "")
+                        for each in temp:
+                            qAnswer = qAnswer + str(ord(each) - 65) + ";"
+                        line = line[b2 + 1:]
+                    else:
+                        break
+                if qAnswer.endswith(";"):
+                    qAnswer = qAnswer[:-1]
+            elif option_rule.search(line):
+                if st.session_state.debug:
+                    print(f"{line}")
+                temp2 = temp2 + line[2:] + ";"
+            elif line.find("正确答案：") != -1:
+                print(line)
+                temp = line[line.find("正确答案：") + 5:]
+                for each in temp:
+                    qAnswer = qAnswer + str(ord(each) - 65) + ";"
+                if qAnswer.endswith(";"):
+                    qAnswer = qAnswer[:-1]
+        else:
+            continue
+    ClearTables()
+    st.success(f"共生成{generQuesCount}道试题")
 
 
 def resetTableID():
@@ -740,7 +855,7 @@ def AIGenerQues():
                             if quesType == "单选题" and len(str(qAnswer)) > 1:
                                 flagSuccess = False
                             if st.session_state.debug:
-                                print(f"Debug: 题目:[{quesHeader}] 选项:[{qOption}], 标准答案:[{qAnswer}] 答题解析:[{qAnalysis}]")
+                                print(f"debug: 题目:[{quesHeader}] 选项:[{qOption}], 标准答案:[{qAnswer}] 答题解析:[{qAnalysis}]")
                         if qAnswer != "" and quesHeader != "" and len(str(qAnswer)) < 200 and len(quesHeader) < 200 and flagSuccess:
                             if table == "公共题库":
                                 SQL = f"SELECT ID from commquestions where Question = '{quesHeader}' and qType = '{quesType}'"
