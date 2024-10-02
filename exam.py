@@ -153,7 +153,7 @@ def delQuestion(delQuesRow):
 
 @st.fragment
 def exam(row):
-    option, AIModelName, AIOption, AIOptionIndex = [], "", [], 0
+    option, AIModelName, AIOption, AIOptionIndex, judOption = [], "", [], 0, ["A. 正确", "B. 错误"]
     flagAIUpdate = bool(getParam("A.I.答案解析更新至题库", st.session_state.StationCN))
     SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'others' and paramName like '%大模型' order by ID"
     tempTable = mdb_sel(cur, SQL)
@@ -183,6 +183,7 @@ def exam(row):
             st.radio(" ", option, index=None, key="option", on_change=getOptionAnswer, args=(row, option,), label_visibility="collapsed", horizontal=True)
         else:
             st.radio(" ", option, index=int(row[6]), key="option", on_change=getOptionAnswer, args=(row, option,), label_visibility="collapsed", horizontal=True)
+            st.write(f"你已选择 :blue[{option[int(row[6])]}]")
     elif row[4] == '多选题':
         st.session_state.answer = ""
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
@@ -199,9 +200,10 @@ def exam(row):
                 st.checkbox(f"{value}:", value=False, key=f"moption_{index}", on_change=getMOptionAnswer, args=(row,))
     elif row[4] == '判断题':
         if row[6] == "":
-            st.radio(" ", ("A. 正确", "B. 错误"), index=None, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
+            st.radio(" ", judOption, index=None, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
         else:
-            st.radio(" ", ("A. 正确", "B. 错误"), index=int(row[6]) ^ 1, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
+            st.radio(" ", judOption, index=int(row[6]) ^ 1, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
+            st.write(f"你已选择 :blue[{judOption[int(row[6]) ^ 1]}]")
     elif row[4] == '填空题':
         st.session_state.answer = ""
         orgOption = row[6].replace("；", ";").split(";")
