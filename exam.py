@@ -1,12 +1,14 @@
 # coding UTF-8
+import re
+import time
+
 import apsw
 import streamlit as st
-import time
-import re
 import streamlit_antd_components as sac
 from streamlit_modal import Modal
-from commFunc import mdb_sel, mdb_modi, mdb_ins, mdb_del, getParam
-from commFunc import xunfei_xh_AI, qianfan_AI, deepseek_AI, xunfei_xh_AI_fib
+
+from commFunc import (deepseek_AI, getParam, mdb_del, mdb_ins, mdb_modi,
+                      mdb_sel, qianfan_AI, xunfei_xh_AI, xunfei_xh_AI_fib)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -16,7 +18,6 @@ from commFunc import xunfei_xh_AI, qianfan_AI, deepseek_AI, xunfei_xh_AI_fib
 def updateAnswer(userQuesID):
     SQL = f"UPDATE {st.session_state.examFinalTable} set userAnswer = '{st.session_state.answer}', userName = {st.session_state.userName} where ID = {userQuesID}"
     mdb_modi(conn, cur, SQL)
-    del st.session_state.answer
 
 
 def calcScore():
@@ -76,7 +77,7 @@ def calcScore():
                             else:
                                 flagAIScore = False
                     else:
-                        st.warning("试题或是答案数量不匹配, 请检查")
+                        st.warning("⚠️ 试题或是答案数量不匹配, 请检查")
             if not flagAIScore:
                 SQL = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
                 if not mdb_sel(cur, SQL):
@@ -143,7 +144,6 @@ def getRadioAnswer(row):
     updateAnswer(row[0])
 
 
-@st.fragment
 def delQuestion(delQuesRow):
     delTablePack = ["questions", "commquestions", "morepractise"]
     for delTable in delTablePack:
@@ -154,6 +154,7 @@ def delQuestion(delQuesRow):
 @st.fragment
 def exam(row):
     option, AIModelName, AIOption, AIOptionIndex, judOption = [], "", [], 0, ["A. 正确", "B. 错误"]
+    st.session_state.answer = ""
     flagAIUpdate = bool(getParam("A.I.答案解析更新至题库", st.session_state.StationCN))
     SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'others' and paramName like '%大模型' order by ID"
     tempTable = mdb_sel(cur, SQL)
@@ -169,7 +170,7 @@ def exam(row):
     else:
         reviseQues = row[1]
     standardAnswer = getStandardAnswer(row)
-    st.info(f"第{row[0]}题 :green[{reviseQues}]")
+    st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
     if st.session_state.debug:
         buttonConfirm = st.button("从所有题库中删除此题", type="primary")
         if buttonConfirm:
@@ -183,7 +184,7 @@ def exam(row):
             st.radio(" ", option, index=None, key="option", on_change=getOptionAnswer, args=(row, option,), label_visibility="collapsed", horizontal=True)
         else:
             st.radio(" ", option, index=int(row[6]), key="option", on_change=getOptionAnswer, args=(row, option,), label_visibility="collapsed", horizontal=True)
-            st.write(f"你已选择 :blue[{option[int(row[6])]}]")
+            st.write(f":red[你已选择: ] :blue[{option[int(row[6])]}]")
     elif row[4] == '多选题':
         st.session_state.answer = ""
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
@@ -203,7 +204,7 @@ def exam(row):
             st.radio(" ", judOption, index=None, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
         else:
             st.radio(" ", judOption, index=int(row[6]) ^ 1, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
-            st.write(f"你已选择 :blue[{judOption[int(row[6]) ^ 1]}]")
+            st.write(f":red[你已选择: ] :blue[{judOption[int(row[6]) ^ 1]}]")
     elif row[4] == '填空题':
         st.session_state.answer = ""
         orgOption = row[6].replace("；", ";").split(";")
@@ -291,6 +292,7 @@ def updateAIModel(AIOption, AIOptionIndex):
     mdb_modi(conn, cur, SQL)
 
 
+@st.fragment
 def delAnalysis(row):
     for each in ["questions", "commquestions", "morepractise", st.session_state.examTable, st.session_state.examFinalTable]:
         SQL = f"UPDATE {each} set qAnalysis = '' where Question = '{row[1]}' and qType = '{row[4]}'"
@@ -298,6 +300,7 @@ def delAnalysis(row):
     st.info("本题解析已删除")
 
 
+@st.fragment
 def manualFIB(rowID):
     fibAI = ""
     SQL = f"SELECT Question, qAnswer, userAnswer from {st.session_state.examFinalTable} where ID = {rowID}"
@@ -311,7 +314,7 @@ def manualFIB(rowID):
                 fibQues = f"{fibQues[:b1]}({each}){fibQues[b1 + 2:]}"
         fibAI = xunfei_xh_AI_fib(fibQues)
     else:
-        st.warning("试题或是答案数量不匹配, 请检查")
+        st.warning("⚠️ 试题或是答案数量不匹配, 请检查")
 
     return fibAI
 
@@ -351,6 +354,7 @@ def updateTA():
     updateAnswer(st.session_state.curQues)
 
 
+@st.fragment
 def changeCurQues(step):
     st.session_state.curQues += step
     if st.session_state.curQues < 1:
@@ -408,12 +412,12 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
             info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
             if remainingTime < 0:
                 if st.session_state.examType == "exam":
-                    st.warning("考试已结束, 将强制交卷!")
+                    st.warning("⚠️ 考试已结束, 将强制交卷!")
                     calcScore()
                 else:
                     st.session_state.examStartTime = int(time.time())
             elif remainingTime < 900:
-                st.warning(f":red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
+                st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
         examCon = st.empty()
         with examCon.container():
             SQL = "SELECT * from " + st.session_state.examFinalTable + " order by ID"

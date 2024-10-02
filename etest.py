@@ -91,7 +91,7 @@ def login():
                 st.session_state.userType = result[0][2]
                 st.session_state.StationCN = result[0][3]
                 st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
-                st.session_state.debug = bool(getParam("debug", st.session_state.StationCN))
+                st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
                 ClearTables()
