@@ -112,11 +112,11 @@ def calcScore():
 
 
 @st.fragment
-def getOptionAnswer(row, option):
+def getOptionAnswer(chosenID, chosen, option):
     for index, value in enumerate(option):
-        if st.session_state.option == value:
+        if chosen == value:
             st.session_state.answer = index
-    updateAnswer(row[0])
+    updateAnswer(chosenID)
 
 
 @st.fragment
@@ -136,12 +136,12 @@ def getMOptionAnswer(row):
 
 
 @st.fragment
-def getRadioAnswer(row):
-    if "正确" in st.session_state.radio:
+def getRadioAnswer(chosenID, chosen):
+    if "正确" in chosen:
         st.session_state.answer = 1
     else:
         st.session_state.answer = 0
-    updateAnswer(row[0])
+    updateAnswer(chosenID)
 
 
 def delQuestion(delQuesRow):
@@ -172,7 +172,7 @@ def exam(row):
     standardAnswer = getStandardAnswer(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
     if st.session_state.debug:
-        buttonConfirm = st.button("从所有题库中删除此题", type="primary")
+        buttonConfirm = st.button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
     st.write(f":red[本题为{row[4]}]:")
@@ -181,10 +181,12 @@ def exam(row):
             value = value.replace("\n", "").replace("\t", "").strip()
             option.append(f"{chr(65 + index)}. {value}")
         if row[6] == "":
-            st.radio(" ", option, index=None, key="option", on_change=getOptionAnswer, args=(row, option,), label_visibility="collapsed", horizontal=True)
+            chosen = st.radio(" ", option, index=None, label_visibility="collapsed", horizontal=True)
         else:
-            st.radio(" ", option, index=int(row[6]), key="option", on_change=getOptionAnswer, args=(row, option,), label_visibility="collapsed", horizontal=True)
-            st.write(f":red[你已选择: ] :blue[{option[int(row[6])]}]")
+            chosen = st.radio(" ", option, index=int(row[6]), label_visibility="collapsed", horizontal=True)
+            #st.write(f":red[你已选择: ] :blue[{option[int(row[6])]}]")
+        if chosen is not None:
+            getOptionAnswer(row[0], chosen, option)
     elif row[4] == '多选题':
         st.session_state.answer = ""
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
@@ -201,10 +203,12 @@ def exam(row):
                 st.checkbox(f"{value}:", value=False, key=f"moption_{index}", on_change=getMOptionAnswer, args=(row,))
     elif row[4] == '判断题':
         if row[6] == "":
-            st.radio(" ", judOption, index=None, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
+            chosen = st.radio(" ", judOption, index=None, label_visibility="collapsed", horizontal=True)
         else:
-            st.radio(" ", judOption, index=int(row[6]) ^ 1, key="radio", on_change=getRadioAnswer, args=(row,), label_visibility="collapsed", horizontal=True)
-            st.write(f":red[你已选择: ] :blue[{judOption[int(row[6]) ^ 1]}]")
+            chosen = st.radio(" ", judOption, index=int(row[6]) ^ 1, label_visibility="collapsed", horizontal=True)
+            #st.write(f":red[你已选择: ] :blue[{judOption[int(row[6]) ^ 1]}]")
+        if chosen is not None:
+            getRadioAnswer(row[0], chosen)
     elif row[4] == '填空题':
         st.session_state.answer = ""
         orgOption = row[6].replace("；", ";").split(";")
@@ -236,7 +240,7 @@ def exam(row):
             with col1:
                 buttonAnalysis = st.button("显示答案解析")
             with col2:
-                buttonDelAnalysis = st.button("删除答案解析")
+                buttonDelAnalysis = st.button("删除本题答案解析")
             if buttonAnalysis:
                 st.subheader(f":orange[解析 标准答案: :green[[{standardAnswer}]]]\n{row[5]}", divider="gray")
             if buttonDelAnalysis:
@@ -246,7 +250,7 @@ def exam(row):
                 with col1:
                     buttonAnalysis = st.button(f"A.I.答案解析 使用:green[[{AIModelName.replace('大模型', '')}]]")
                 with col2:
-                    buttonDelAnalysis = st.button("删除答案解析")
+                    buttonDelAnalysis = st.button("删除本题答案解析")
                 if AIModelName == "文心千帆大模型":
                     AIModelType = st.radio(label="请设置生成内容类型", options=("简洁", "详细"), index=0, horizontal=True, help="返回结果类型, 详细型附加了很多解释内容")
                     if AIModelType == "简洁":
