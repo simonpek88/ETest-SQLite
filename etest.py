@@ -41,7 +41,7 @@ def delOutdatedTable():
 
 
 def changePassword():
-    st.write("# :red[修改密码]")
+    st.write("### :red[修改密码]")
     oldPassword = st.text_input("请输入原密码", max_chars=8, help="默认为1234", type="password", autocomplete="off")
     newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="off")
     confirmPassword = st.text_input("请再次输入新密码", max_chars=8, type="password", autocomplete="off")
@@ -70,7 +70,7 @@ def login():
     login = st.empty()
     with login.container():
         #st.write(st.session_state.userName)
-        st.write("# :blue[专业技能考试系统 - 离线版]")
+        st.write("## :blue[专业技能考试系统 - 离线版]")
         userName = st.text_input("请输入用户名", max_chars=8, help="员工编码")
         if userName != "":
             getUserCName(userName)

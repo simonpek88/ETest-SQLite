@@ -182,7 +182,7 @@ def qianfan_AI_GenerQues(reference, quesType, quesCount, AImodel):
     aikeySK = getEncryptKeys("qianfan_sk")
     os.environ["QIANFAN_ACCESS_KEY"] = aikeyAK
     os.environ["QIANFAN_SECRET_KEY"] = aikeySK
-    prompt = f"#您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是特定题型的试题"
+    prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是特定题型的试题"
     prompt = prompt + "\n请按照以下格式出题\n题型: \n试题: \n选项: \n标准答案: \n试题解析: \n\n按以下内容出题\n参考资料:\n"
     chat_comp = qianfan.ChatCompletion()
     resp = chat_comp.do(model=f"{AImodel}", messages=[{
@@ -322,10 +322,7 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
         if "错题集" in qAffPack and examType == "training":
             chapterRatio = getChapterRatio(StationCN, "错题集")
             for k in quesType:
-                if flagNewOnly:
-                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where ID not in (SELECT cid from studyinfo where questable = 'morepractise' and userName = {userName}) and qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
-                else:
-                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
+                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
                 rows = mdb_sel(cur, SQL)
                 for row in rows:
                     SQL = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"

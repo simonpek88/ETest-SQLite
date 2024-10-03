@@ -153,18 +153,16 @@ def delQuestion(delQuesRow):
 
 @st.fragment
 def updateStudyInfo(studyRow):
-    for each in ["questions", "commquestions", "morepractise"]:
+    for each in ["questions", "commquestions"]:
         if each == "questions":
-            SQL = f"SELECT ID from {each} where Question = '{row[1]}' and qType = '{row[4]}' and StationCN = '{st.session_state.StationCN}'"
+            SQL = f"SELECT ID, chapterName from {each} where Question = '{row[1]}' and qType = '{row[4]}' and StationCN = '{st.session_state.StationCN}'"
         elif each == "commquestions":
-            SQL = f"SELECT ID from {each} where Question = '{row[1]}' and qType = '{row[4]}'"
-        elif each == "morepractise":
-            SQL = f"SELECT ID from {each} where Question = '{row[1]}' and qType = '{row[4]}' and StationCN = '{st.session_state.StationCN}' and userName = {st.session_state.userName}"
+            SQL = f"SELECT ID, '公共题库' from {each} where Question = '{row[1]}' and qType = '{row[4]}'"
         studyRow = mdb_sel(cur, SQL)
         if studyRow:
-            SQL = f"SELECT ID from studyinfo where cid = {studyRow[0][0]} and questable = '{each}' and userName = {st.session_state.userName}"
+            SQL = f"SELECT ID from studyinfo where cid = {studyRow[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyRow[0][1]}'"
             if not mdb_sel(cur, SQL):
-                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName) VALUES({studyRow[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}')"
+                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName) VALUES({studyRow[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyRow[0][1]}')"
                 mdb_ins(conn, cur, SQL)
 
 
@@ -187,7 +185,7 @@ def exam(row):
     else:
         reviseQues = row[1]
     standardAnswer = getStandardAnswer(row)
-    if row[6] != "" and st.session_state.examType != "exam":
+    if st.session_state.examType != "exam":
         updateStudyInfo(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
     if st.session_state.debug:

@@ -270,7 +270,7 @@ cur.execute("PRAGMA cipher = 'aes256cbc'")
 cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
-st.write("# :orange[基础数据录入]")
+st.write("### :orange[基础数据录入]")
 #selectFunc = st.selectbox("请选择数据表", ["章节信息", "站室专用题库", "公共题库", "考试场次", "站室", "用户"], index=None, help="请选择数据表")
 selectFunc = st.selectbox("请选择数据表", ["考试场次", "站室", "用户"], index=None, help="请选择数据表")
 stationCName = []

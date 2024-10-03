@@ -129,7 +129,7 @@ cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
 if st.session_state.examType == "training":
-    #st.write("# :red[生成练习题库]")
+    #st.write("### :red[生成练习题库]")
     st.markdown("<font face='微软雅黑' color=blue size=20><center>**生成练习题库**</center></font>", unsafe_allow_html=True)
 elif st.session_state.examType == "exam":
     st.markdown("<font face='微软雅黑' color=red size=20><center>**选择考试**</center></font>", unsafe_allow_html=True)

@@ -203,7 +203,7 @@ cur.execute("PRAGMA cipher = 'aes256cbc'")
 cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
-st.write("# :violet[信息查询]")
+st.write("### :violet[信息查询]")
 selectFunc = st.selectbox("查询项目", ["考试信息", "未参加考试人员", "答题解析"], index=None)
 if selectFunc == "考试信息":
     queryExamResult()

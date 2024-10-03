@@ -63,7 +63,7 @@ cur.execute("PRAGMA cipher = 'aes256cbc'")
 cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
-st.write("# :green[系统参数设置]")
+st.write("### :green[系统参数设置]")
 with st.expander("# :blue[考试参数设置]"):
     #st.subheader("考试参数设置")
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'exam' order by ID"
