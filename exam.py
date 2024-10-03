@@ -186,7 +186,7 @@ def exam(row):
     if st.session_state.examType != "exam":
         updateStudyInfo(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
-    if st.session_state.debug:
+    if st.session_state.debug and st.session_state.userType == "admin":
         buttonConfirm = st.button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
