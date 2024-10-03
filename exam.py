@@ -152,6 +152,23 @@ def delQuestion(delQuesRow):
 
 
 @st.fragment
+def updateStudyInfo(studyRow):
+    for each in ["questions", "commquestions", "morepractise"]:
+        if each == "questions":
+            SQL = f"SELECT ID from {each} where Question = '{row[1]}' and qType = '{row[4]}' and StationCN = '{st.session_state.StationCN}'"
+        elif each == "commquestions":
+            SQL = f"SELECT ID from {each} where Question = '{row[1]}' and qType = '{row[4]}'"
+        elif each == "morepractise":
+            SQL = f"SELECT ID from {each} where Question = '{row[1]}' and qType = '{row[4]}' and StationCN = '{st.session_state.StationCN}' and userName = {st.session_state.userName}"
+        studyRow = mdb_sel(cur, SQL)
+        if studyRow:
+            SQL = f"SELECT ID from studyinfo where cid = {studyRow[0][0]} and questable = '{each}' and userName = {st.session_state.userName}"
+            if not mdb_sel(cur, SQL):
+                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName) VALUES({studyRow[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}')"
+                mdb_ins(conn, cur, SQL)
+
+
+@st.fragment
 def exam(row):
     option, AIModelName, AIOption, AIOptionIndex, judOption = [], "", [], 0, ["A. 正确", "B. 错误"]
     st.session_state.answer = ""
@@ -170,6 +187,8 @@ def exam(row):
     else:
         reviseQues = row[1]
     standardAnswer = getStandardAnswer(row)
+    if row[6] != "" and st.session_state.examType != "exam":
+        updateStudyInfo(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
     if st.session_state.debug:
         buttonConfirm = st.button("⚠️ 从所有题库中删除此题", type="primary")

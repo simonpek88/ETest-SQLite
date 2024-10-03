@@ -45,7 +45,7 @@ def training():
                     rows = mdb_sel(cur, SQL)
                     for row in rows:
                         generPack.append(row[0])
-                    genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom)
+                    genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
         elif st.session_state.examType == "training":
             col1, col2 = st.columns(2)
             SQL = f"SELECT chapterRatio from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '公共题库'"
@@ -77,6 +77,7 @@ def training():
                     st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCR)
                 i += 1
                 k += 1
+            st.checkbox("仅未学习试题", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
             generButtonQues = st.button("生成题库")
             if generButtonQues:
                 st.session_state.examName = "练习题库"
@@ -90,7 +91,7 @@ def training():
                         else:
                             chapterPack.append(rows[index - 2][0])
                 if chapterPack:
-                    genResult = GenerExam(chapterPack, StationCN, userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom)
+                    genResult = GenerExam(chapterPack, StationCN, userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
                 else:
                     st.warning("题库生成试题失败, 请检查题库设置")
     if genResult:

@@ -296,7 +296,7 @@ def getChapterRatio(StationCN, qAff):
     return cr
 
 
-def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examRandom):
+def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examRandom, flagNewOnly):
     if examRandom:
         examTable = f"exam_{StationCN}_{userName}_{examName}"
         examFinalTable = f"exam_final_{StationCN}_{userName}_{examName}"
@@ -306,7 +306,10 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
     flagTableExist = CreateExamTable(examTable, examRandom)
     if not flagTableExist:
         for k in quesType:
-            SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, chapterName, SourceType from questions where (StationCN = '{StationCN}' and qType = '{k[0]}') and (chapterName = '"
+            if flagNewOnly and examType == "training":
+                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, chapterName, SourceType from questions where (ID not in (SELECT cid from studyinfo where questable = 'questions' and userName = {userName}) and StationCN = '{StationCN}' and qType = '{k[0]}') and (chapterName = '"
+            else:
+                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, chapterName, SourceType from questions where (StationCN = '{StationCN}' and qType = '{k[0]}') and (chapterName = '"
             for each in qAffPack:
                 if each != "错题集" and each != "公共题库":
                     SQL = SQL + each + "' or chapterName = '"
@@ -319,7 +322,10 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
         if "错题集" in qAffPack and examType == "training":
             chapterRatio = getChapterRatio(StationCN, "错题集")
             for k in quesType:
-                SQL = "SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where qType = '" + k[0] + "' and userName = " + str(userName) + " order by WrongTime DESC"
+                if flagNewOnly:
+                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where ID not in (SELECT cid from studyinfo where questable = 'morepractise' and userName = {userName}) and qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
+                else:
+                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
                 rows = mdb_sel(cur, SQL)
                 for row in rows:
                     SQL = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
@@ -329,7 +335,10 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
         if '公共题库' in qAffPack:
             chapterRatio = getChapterRatio(StationCN, '公共题库')
             for k in quesType:
-                SQL = "SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where qType = '" + k[0] + "' order by ID"
+                if flagNewOnly and examType == "training":
+                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where ID not in (SELECT cid from studyinfo where questable = 'commquestions' and userName = {userName}) and qType = '{k[0]}' order by ID"
+                else:
+                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where qType = '{k[0]}' order by ID"
                 rows = mdb_sel(cur, SQL)
                 for row in rows:
                     SQL = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"

@@ -25,12 +25,14 @@ morepractise
 oxml
 qianfan
 QIANFAN
+questable
 questionaff
 questo
 questype
 Resultto
 rowid
 selectbox
+studyinfo
 unpad
 verinfo
 xfxh

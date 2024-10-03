@@ -566,19 +566,15 @@ def dbinput():
 
 
 def dbfunc():
-    if st.session_state.debug:
-        flagInputWord = False
-    else:
-        flagInputWord = True
     bc = sac.segmented(
         items=[
             sac.SegmentedItem(label="A.I.出题", icon="robot"),
             sac.SegmentedItem(label="题库导入", icon="database-up"),
-            sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=flagInputWord),
+            #sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=st.session_state.debug ^ True),
             sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
             sac.SegmentedItem(label="清空错题集", icon="journal-x"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
-            sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot"),
+            #sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
         ], align="start", color="red"
     )
     if bc == "A.I.出题":
