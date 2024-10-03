@@ -173,13 +173,11 @@ def exam(row):
     flagAIUpdate = bool(getParam("A.I.答案解析更新至题库", st.session_state.StationCN))
     SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'others' and paramName like '%大模型' order by ID"
     tempTable = mdb_sel(cur, SQL)
-    i = 0
-    for each in tempTable:
-        AIOption.append(each[0])
-        if each[1] == 1:
-            AIModelName = each[0]
-            AIOptionIndex = i
-        i += 1
+    for index, value in enumerate(tempTable):
+        AIOption.append(value[0])
+        if value[1] == 1:
+            AIModelName = value[0]
+            AIOptionIndex = index
     if row[4] == "填空题":
         reviseQues = row[1].replace("(", ":red[( _ ]").replace(")", ":red[ _ _ )]")
     else:

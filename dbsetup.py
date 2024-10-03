@@ -124,14 +124,13 @@ with st.expander("# :orange[其他设置]"):
             st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 是否将使用大模型获取的答案解析更新至题库")
         elif row[0] == "测试模式":
             st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 是否开启测试模式用以输出更多信息")
-    AIModel, AIModelIndex, i = [], 0, 0
+    AIModel, AIModelIndex = [], 0
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
     rows = mdb_sel(cur, SQL)
-    for row in rows:
-        AIModel.append(row[0])
-        if row[1] == 1:
-            AIModelIndex = i
-        i += 1
+    for index, value in enumerate(rows):
+        AIModel.append(value[0])
+        if value[1] == 1:
+            AIModelIndex = index
     st.radio("选择LLM大模型", options=AIModel, index=AIModelIndex, key="AIModel", horizontal=True, on_change=updateAIModel, help="讯飞输出质量高, 规范引用准确, 建议选用;文心千帆输出速度快, 内容可用;DeepSeek内容准确性相对高一些")
 st.divider()
 buttonReset = st.button("重置所有设置", type="primary")
