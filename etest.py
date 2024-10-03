@@ -940,7 +940,7 @@ def studyinfoDetail():
     ct = mdb_sel(cur, SQL)[0][0]
     SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"
     cs = mdb_sel(cur, SQL)[0][0]
-    st.progress(value=cs / ct, text=f":blue[公共题库] 已完成 :orange[{round((cs / ct) * 100, 1)}%]")
+    st.progress(value=cs / ct, text=f":blue[公共题库] 已完成 :orange[{int((cs / ct) * 100)}%]")
     SQL = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' order by ID"
     rows = mdb_sel(cur, SQL)
     for row in rows:
@@ -948,7 +948,7 @@ def studyinfoDetail():
         ct = mdb_sel(cur, SQL)[0][0]
         SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '{row[0]}'"
         cs = mdb_sel(cur, SQL)[0][0]
-        st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{round((cs / ct) * 100, 1)}%]")
+        st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{int((cs / ct) * 100)}%]")
 
 
 conn = apsw.Connection("./DB/ETest_enc.db")
