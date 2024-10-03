@@ -17,6 +17,7 @@ from xlsxwriter.workbook import Workbook
 
 from commFunc import (getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel,
                       qianfan_AI_GenerQues, updatePyFileinfo)
+from streamlit_extras.metric_cards import style_metric_cards
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -572,7 +573,7 @@ def dbfunc():
             sac.SegmentedItem(label="题库导入", icon="database-up"),
             #sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=st.session_state.debug ^ True),
             sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
-            sac.SegmentedItem(label="清空错题集", icon="journal-x"),
+            sac.SegmentedItem(label="错题集重置", icon="journal-x"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
             #sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
         ], align="start", color="red"
@@ -896,6 +897,60 @@ def ClearMPAction(bcArea):
     st.success("错题集已清空")
 
 
+def studyinfo():
+    study = sac.segmented(
+        items=[
+            sac.SegmentedItem(label="信息", icon="info-circle"),
+            sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
+        ], align="center", color="red"
+    )
+    if study == "信息":
+        studyinfoDetail()
+    elif study == "学习记录重置":
+        studyReset()
+
+
+def studyReset():
+    buttonSubmit = st.button("重置学习记录", type="primary")
+    if buttonSubmit:
+        st.button("确认重置", type="secondary", on_click=studyResetAction)
+
+
+def studyResetAction():
+    SQL = f"DELETE from studyinfo where userName = {st.session_state.userName}"
+    mdb_del(conn, cur, SQL)
+    st.success("学习记录已重置")
+
+
+def studyinfoDetail():
+    scol1, scol2, scol3, scol4, scol5 = st.columns(5)
+    scol1.metric(label="姓名", value=st.session_state.userCName, help=st.session_state.userCName)
+    scol2.metric(label="站室", value=st.session_state.StationCN, help=st.session_state.StationCN)
+    SQL = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集'"
+    rows = mdb_sel(cur, SQL)
+    scol3.metric(label="章节总计", value=rows[0][0], help="包含公共题库, 不含错题集")
+    SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' UNION SELECT Count(ID) from commquestions"
+    rows = mdb_sel(cur, SQL)
+    scol4.metric(label="试题总计", value=rows[0][0] + rows[1][0], help="包含公共题库, 不含错题集")
+    SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
+    rows = mdb_sel(cur, SQL)
+    scol5.metric(label="已学习试题", value=rows[0][0])
+    style_metric_cards()
+    SQL = "SELECT Count(ID) from commquestions"
+    ct = mdb_sel(cur, SQL)[0][0]
+    SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"
+    cs = mdb_sel(cur, SQL)[0][0]
+    st.progress(value=cs / ct, text=f":blue[公共题库] 已完成 :orange[{round(cs / ct, 1) * 100}%]")
+    SQL = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' order by ID"
+    rows = mdb_sel(cur, SQL)
+    for row in rows:
+        SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' and chapterName = '{row[0]}'"
+        ct = mdb_sel(cur, SQL)[0][0]
+        SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '{row[0]}'"
+        cs = mdb_sel(cur, SQL)[0][0]
+        st.progress(value=round(cs / ct, 1), text=f":blue[{row[0]}] 已完成 :orange[{round(cs / ct, 1) * 100}%]")
+
+
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
 cur.execute("PRAGMA cipher = 'aes256cbc'")
@@ -920,6 +975,7 @@ aboutInfo_menu = st.Page(aboutInfo, title="关于...", icon=":material/info:")
 aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/license:")
 dboutput_menu = st.Page(dboutput, title="文件导出", icon=":material/output:")
 dbfunc_menu = st.Page(dbfunc, title="题库功能", icon=":material/input:")
+studyinfo_menu = st.Page(studyinfo, title="学习信息", icon=":material/import_contacts:")
 
 
 if "logged_in" not in st.session_state:
@@ -942,6 +998,7 @@ if st.session_state.logged_in:
                 {
                     "功能": [dashboard_page, trainingQues_page, dbbasedata_page, dboutput_menu, dbfunc_menu, dbsetup_page],
                     "查询": [search_page],
+                    "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
                     "关于": [aboutLicense_menu, aboutInfo_menu],
                 }
@@ -950,6 +1007,7 @@ if st.session_state.logged_in:
             pg = st.navigation(
                 {
                     "功能": [dashboard_page, trainingQues_page],
+                    "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
                     "关于": [aboutLicense_menu, aboutInfo_menu],
                 }

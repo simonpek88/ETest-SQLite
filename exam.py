@@ -155,14 +155,14 @@ def delQuestion(delQuesRow):
 def updateStudyInfo(studyRow):
     for each in ["questions", "commquestions"]:
         if each == "questions":
-            SQL = f"SELECT ID, chapterName from {each} where Question = '{row[1]}' and qType = '{row[4]}' and StationCN = '{st.session_state.StationCN}'"
+            SQL = f"SELECT ID, chapterName from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}' and StationCN = '{st.session_state.StationCN}'"
         elif each == "commquestions":
-            SQL = f"SELECT ID, '公共题库' from {each} where Question = '{row[1]}' and qType = '{row[4]}'"
-        studyRow = mdb_sel(cur, SQL)
-        if studyRow:
-            SQL = f"SELECT ID from studyinfo where cid = {studyRow[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyRow[0][1]}'"
+            SQL = f"SELECT ID, '公共题库' from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}'"
+        studyResult = mdb_sel(cur, SQL)
+        if studyResult:
+            SQL = f"SELECT ID from studyinfo where cid = {studyResult[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyResult[0][1]}'"
             if not mdb_sel(cur, SQL):
-                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName) VALUES({studyRow[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyRow[0][1]}')"
+                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName) VALUES({studyResult[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyResult[0][1]}')"
                 mdb_ins(conn, cur, SQL)
 
 

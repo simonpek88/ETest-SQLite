@@ -31,6 +31,7 @@ questo
 questype
 Resultto
 rowid
+scol
 selectbox
 studyinfo
 unpad
