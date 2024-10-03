@@ -900,11 +900,11 @@ def ClearMPAction(bcArea):
 def studyinfo():
     study = sac.segmented(
         items=[
-            sac.SegmentedItem(label="信息", icon="info-circle"),
+            sac.SegmentedItem(label="学习进度", icon="grid-3x2-gap"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
         ], align="center", color="red"
     )
-    if study == "信息":
+    if study == "学习进度":
         studyinfoDetail()
     elif study == "学习记录重置":
         studyReset()
@@ -935,7 +935,7 @@ def studyinfoDetail():
     SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
     rows = mdb_sel(cur, SQL)
     scol5.metric(label="已学习试题", value=rows[0][0])
-    style_metric_cards()
+    style_metric_cards(border_left_color="#8581d9")
     SQL = "SELECT Count(ID) from commquestions"
     ct = mdb_sel(cur, SQL)[0][0]
     SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"

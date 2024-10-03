@@ -3,6 +3,7 @@ aikey
 aikeys
 antd
 apsw
+breakline
 commquestions
 crsetup
 dasetup
