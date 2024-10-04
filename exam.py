@@ -383,7 +383,7 @@ def changeCurQues(step):
 
 
 def gotoChosenQues():
-    st.subheader("跳转到指定题号")
+    st.subheader("跳转到指定题号: ")
     cop = re.compile('[^0-9^.]')
     tmp = cop.sub('', st.session_state.chosenID)
     SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {tmp}"
@@ -408,10 +408,7 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
             if key.startswith("moption_") or key.startswith("textAnswer_"):
                 del st.session_state[key]
         if st.session_state.examType == "exam" or flagTime:
-            if st.session_state.examType == "exam":
-                examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
-            else:
-                examTimeLimit = 3600 * 4
+            examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
             remainingTime = examTimeLimit - (int(time.time()) - st.session_state.examStartTime)
             hTime = "0" + str(int(remainingTime / 3600))
             mTime = int((remainingTime % 3600) / 60)
@@ -437,6 +434,7 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
                     st.session_state.examStartTime = int(time.time())
             elif remainingTime < 900:
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
+        qcol1, qcol2, qcol3, qcol4 = st.columns(4)
         examCon = st.empty()
         with examCon.container():
             SQL = "SELECT * from " + st.session_state.examFinalTable + " order by ID"
@@ -445,49 +443,58 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
             #st.write(f"Cur:{st.session_state.curQues} Comp:{st.session_state.flagCompleted}")
             if st.session_state.flagCompleted:
                 if st.session_state.curQues == 1:
-                    preButton = st.button("上题", disabled=True)
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
                 else:
-                    preButton = st.button("上题", on_click=changeCurQues, args=(-1,))
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1,))
                 if st.session_state.curQues == quesCount:
-                    nextButton = st.button("下题", disabled=True)
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
                 else:
-                    nextButton = st.button("下题", on_click=changeCurQues, args=(1,))
-                submitButton = st.button("交卷")
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                submitButton = qcol1.button("交卷", icon=":material/publish:")
             elif st.session_state.confirmSubmit:
-                preButton = st.button("上题", disabled=True)
-                nextButton = st.button("下题", disabled=True)
-                submitButton = st.button("交卷", disabled=True)
+                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
+                submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
             elif st.session_state.curQues == 0:
-                preButton = st.button("上题", disabled=True)
-                nextButton = st.button("下题", on_click=changeCurQues, args=(1,))
-                submitButton = st.button("交卷", disabled=True)
+                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
                 exam(rows[0])
             elif st.session_state.curQues == 1:
-                preButton = st.button("上题", disabled=True)
-                nextButton = st.button("下题", on_click=changeCurQues, args=(1,))
-                submitButton = st.button("交卷", disabled=True)
+                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
             elif st.session_state.curQues == quesCount:
-                preButton = st.button("上题", on_click=changeCurQues, args=(-1,))
-                nextButton = st.button("下题", disabled=True)
-                submitButton = st.button("交卷")
+                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1,))
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
+                submitButton = qcol1.button("交卷", icon=":material/publish:")
                 st.session_state.flagCompleted = True
             elif st.session_state.curQues > 1 and st.session_state.curQues < quesCount:
-                preButton = st.button("上题", on_click=changeCurQues, args=(-1,))
-                nextButton = st.button("下题", on_click=changeCurQues, args=(1,))
-                submitButton = st.button("交卷", disabled=True)
+                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1,))
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
+            SQL = "SELECT aikey from aikeys where keyname = 'unAnswered'"
+            cpStr = mdb_sel(cur, SQL)[0][0]
+            if cpStr != "":
+                st.caption(f"作答提示: :red[{cpStr}] 题还未作答, 可以在下方:green[[试卷全部题目]]下拉列表中跳转\n___")
             if (preButton or nextButton or submitButton) and not st.session_state.confirmSubmit:
                 SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"
                 row = mdb_sel(cur, SQL)[0]
                 if preButton or nextButton:
                     exam(row)
-                completedPack = []
+                completedPack, cpStr = [], ""
                 SQL = f"SELECT ID, userAnswer, qType from {st.session_state.examFinalTable} order by ID"
                 rows3 = mdb_sel(cur, SQL)
                 for row3 in rows3:
                     if row3[1] == "":
                         completedPack.append(f"第{row3[0]}题 [{row3[2]}] 未作答")
+                        cpStr = cpStr + str(row3[0]) + "/"
                     else:
                         completedPack.append(f"第{row3[0]}题 [{row3[2]}] 已作答")
+                if cpStr.endswith("/"):
+                    cpStr = cpStr[:-1]
+                SQL = f"UPDATE aikeys set aikey = '{cpStr}' where keyname = 'unAnswered'"
+                mdb_modi(conn, cur, SQL)
                 st.selectbox(":green[试卷全部题目]", completedPack, index=None, key="chosenID", on_change=gotoChosenQues)
                 if submitButton:
                     emptyAnswer = "你没有作答的题为:第["

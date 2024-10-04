@@ -159,6 +159,7 @@ def aboutInfo():
         st.caption("DeepSeek")
         st.image("./Images/logos/deepseek.png")
     display_pypi()
+    st.write("###### :violet[为了获得更好的使用体验, 请使用浅色主题]")
     SQL = "SELECT Sum(pyMC) from verinfo"
     verinfo = mdb_sel(cur, SQL)[0][0]
     SQL = "SELECT Max(pyLM) from verinfo"
@@ -931,24 +932,29 @@ def studyinfoDetail():
     scol3.metric(label="章节总计", value=rows[0][0], help="包含公共题库, 不含错题集")
     SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' UNION SELECT Count(ID) from commquestions"
     rows = mdb_sel(cur, SQL)
-    scol4.metric(label="试题总计", value=rows[0][0] + rows[1][0], help="包含公共题库, 不含错题集")
+    ct = rows[0][0] + rows[1][0]
+    scol4.metric(label="试题总计", value=ct, help="包含公共题库, 不含错题集")
     SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
     rows = mdb_sel(cur, SQL)
-    scol5.metric(label="已学习试题", value=rows[0][0])
+    scol5.metric(label="已学习试题", value=rows[0][0], help=f"总完成率: {int(rows[0][0] / ct * 100)}%")
     style_metric_cards(border_left_color="#8581d9")
-    SQL = "SELECT Count(ID) from commquestions"
-    ct = mdb_sel(cur, SQL)[0][0]
-    SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"
-    cs = mdb_sel(cur, SQL)[0][0]
-    st.progress(value=cs / ct, text=f":blue[公共题库] 已完成 :orange[{int((cs / ct) * 100)}%]")
-    SQL = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' order by ID"
-    rows = mdb_sel(cur, SQL)
-    for row in rows:
-        SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' and chapterName = '{row[0]}'"
+    st.write("###### :violet[如果上面6个标签无显示内容, 请改用浅色主题]")
+    with st.expander("各章节进度详情", icon=":material/format_list_bulleted:", expanded=True):
+        SQL = "SELECT Count(ID) from commquestions"
         ct = mdb_sel(cur, SQL)[0][0]
-        SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '{row[0]}'"
-        cs = mdb_sel(cur, SQL)[0][0]
-        st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{int((cs / ct) * 100)}%]")
+        if ct > 0:
+            SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"
+            cs = mdb_sel(cur, SQL)[0][0]
+            st.progress(value=cs / ct, text=f":blue[公共题库] 已完成 :orange[{int((cs / ct) * 100)}%]")
+        SQL = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' order by ID"
+        rows = mdb_sel(cur, SQL)
+        for row in rows:
+            SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' and chapterName = '{row[0]}'"
+            ct = mdb_sel(cur, SQL)[0][0]
+            if ct > 0:
+                SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '{row[0]}'"
+                cs = mdb_sel(cur, SQL)[0][0]
+                st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{int((cs / ct) * 100)}%]")
 
 
 conn = apsw.Connection("./DB/ETest_enc.db")

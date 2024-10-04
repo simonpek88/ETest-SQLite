@@ -18,12 +18,14 @@ dyna
 examidd
 examresult
 Fileinfo
+fontsize
 gener
 JXQW
 mktime
 moption
 morepractise
 oxml
+qcol
 qianfan
 QIANFAN
 questable
