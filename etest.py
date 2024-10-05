@@ -43,35 +43,36 @@ def delOutdatedTable():
 
 def changePassword():
     st.write("### :red[修改密码]")
-    oldPassword = st.text_input("请输入原密码", max_chars=8, type="password", autocomplete="off")
-    newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="off")
-    confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="off")
-    if oldPassword:
-        SQL = "SELECT ID from user where userName = " + str(st.session_state.userName) + " and userPassword = '" + oldPassword + "'"
-        if mdb_sel(cur, SQL):
-            if newPassword and confirmPassword and newPassword != "":
-                if newPassword == confirmPassword:
-                    buttonSubmit = st.button("确认修改")
-                    if buttonSubmit:
-                        SQL = f"UPDATE user set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
-                        mdb_modi(conn, cur, SQL)
-                        st.toast("密码修改成功, 请重新登录")
-                        logout()
+    changePW = st.empty()
+    with changePW.container(border=True):
+        oldPassword = st.text_input("请输入原密码", max_chars=8, type="password", autocomplete="off")
+        newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="off")
+        confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="off")
+        if oldPassword:
+            SQL = "SELECT ID from user where userName = " + str(st.session_state.userName) + " and userPassword = '" + oldPassword + "'"
+            if mdb_sel(cur, SQL):
+                if newPassword and confirmPassword and newPassword != "":
+                    if newPassword == confirmPassword:
+                        buttonSubmit = st.button("确认修改")
+                        if buttonSubmit:
+                            SQL = f"UPDATE user set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
+                            mdb_modi(conn, cur, SQL)
+                            st.toast("密码修改成功, 请重新登录")
+                            logout()
+                    else:
+                        st.warning("两次输入的密码不一致")
                 else:
-                    st.warning("两次输入的密码不一致")
+                    st.warning("请检查新密码")
             else:
-                st.warning("请检查新密码")
+                st.warning("原密码不正确")
         else:
-            st.warning("原密码不正确")
-    else:
-        st.warning("原密码不能为空")
+            st.warning("原密码不能为空")
 
 
 def login():
+    st.write("## :blue[专业技能考试系统 - 离线版]")
     login = st.empty()
-    with login.container():
-        #st.write(st.session_state.userName)
-        st.write("## :blue[专业技能考试系统 - 离线版]")
+    with login.container(border=True):
         userName = st.text_input("请输入用户名", max_chars=8, placeholder="员工编码")
         if userName != "":
             getUserCName(userName)
