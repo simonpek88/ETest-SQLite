@@ -382,13 +382,12 @@ def changeCurQues(step):
         st.session_state.curQues = quesCount
 
 
-def gotoChosenQues():
-    st.subheader("跳转到指定题号: ")
-    cop = re.compile('[^0-9^.]')
-    tmp = cop.sub('', st.session_state.chosenID)
-    SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {tmp}"
-    row = mdb_sel(cur, SQL)[0]
-    exam(row)
+@st.fragment
+def quesGoto():
+    if st.session_state.chosenID is not None:
+        st.session_state.goto = True
+        cop = re.compile('[^0-9^.]')
+        st.session_state.curQues = int(cop.sub('', st.session_state.chosenID))
 
 
 conn = apsw.Connection("./DB/ETest_enc.db")
@@ -400,7 +399,8 @@ cur.execute("PRAGMA journal_mode = WAL")
 if "confirmSubmit" not in st.session_state:
     st.session_state.confirmSubmit = False
 if "examFinalTable" in st.session_state and "examName" in st.session_state and not st.session_state.confirmSubmit:
-    st.write(f"# :red[{st.session_state.examName}]")
+    #st.write(f"## :red[{st.session_state.examName}]")
+    st.markdown(f"<font face='微软雅黑' color=red size=16><center>**{st.session_state.examName}**</center></font>", unsafe_allow_html=True)
     flagTime = bool(getParam("显示考试时间", st.session_state.StationCN))
     SQL = f"SELECT userName, examName from examresult GROUP BY userName, examName HAVING count(userName) < {st.session_state.examLimit} and count(examName) < {st.session_state.examLimit} and userName = {st.session_state.userName} and examName = '{st.session_state.examName}'"
     if mdb_sel(cur, SQL) or st.session_state.examType == "training":
@@ -473,29 +473,33 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
                 preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1,))
                 nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
                 submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
-            SQL = "SELECT aikey from aikeys where keyname = 'unAnswered'"
-            cpStr = mdb_sel(cur, SQL)[0][0]
-            if cpStr != "":
-                st.caption(f"作答提示: :red[{cpStr}] 题还未作答, 可以在下方:green[[试卷全部题目]]下拉列表中跳转\n___")
-            if (preButton or nextButton or submitButton) and not st.session_state.confirmSubmit:
+            iCol1, iCol2 = st.columns(2)
+            completedPack, cpStr, cpCount = [], "", 0
+            SQL = f"SELECT ID, userAnswer, qType from {st.session_state.examFinalTable} order by ID"
+            rows3 = mdb_sel(cur, SQL)
+            for row3 in rows3:
+                if row3[1] == "":
+                    completedPack.append(f"第{row3[0]}题 [{row3[2]}] 未作答")
+                    cpStr = cpStr + str(row3[0]) + "/"
+                else:
+                    completedPack.append(f"第{row3[0]}题 [{row3[2]}] 已作答")
+                    cpCount += 1
+            if cpCount == quesCount:
+                iCol1.caption(":orange[作答提示: 全部题目已作答]")
+            elif cpCount > 0:
+                iCol1.caption(f":blue[作答提示:] :red[{cpStr[:-1]}] :blue[题还未作答, 可以在右边下拉列表中跳转]")
+            else:
+                iCol1.caption(":red[你还未开始答题]")
+            iCol2.selectbox(":green[试卷全部题目]", completedPack, index=None, on_change=quesGoto, key="chosenID")
+            st.divider()
+            if (preButton or nextButton or submitButton or st.session_state.goto) and not st.session_state.confirmSubmit:
                 SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"
                 row = mdb_sel(cur, SQL)[0]
-                if preButton or nextButton:
+                if preButton or nextButton or st.session_state.goto:
+                    if st.session_state.goto:
+                        st.session_state.goto = False
+                        st.write("#### :blue[跳转到指定题号: ]")
                     exam(row)
-                completedPack, cpStr = [], ""
-                SQL = f"SELECT ID, userAnswer, qType from {st.session_state.examFinalTable} order by ID"
-                rows3 = mdb_sel(cur, SQL)
-                for row3 in rows3:
-                    if row3[1] == "":
-                        completedPack.append(f"第{row3[0]}题 [{row3[2]}] 未作答")
-                        cpStr = cpStr + str(row3[0]) + "/"
-                    else:
-                        completedPack.append(f"第{row3[0]}题 [{row3[2]}] 已作答")
-                if cpStr.endswith("/"):
-                    cpStr = cpStr[:-1]
-                SQL = f"UPDATE aikeys set aikey = '{cpStr}' where keyname = 'unAnswered'"
-                mdb_modi(conn, cur, SQL)
-                st.selectbox(":green[试卷全部题目]", completedPack, index=None, key="chosenID", on_change=gotoChosenQues)
                 if submitButton:
                     emptyAnswer = "你没有作答的题为:第["
                     SQL = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer == '' order by ID"

@@ -346,8 +346,6 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
     for k in quesType:
         SQL = f"INSERT INTO {examFinalTable}(Question, qOption, qAnswer, qType, qAnalysis, SourceType) SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from {examTable} where qType = '{k[0]}' order by randomID limit 0, {k[1]}"
         mdb_ins(conn, cur, SQL)
-    SQL = "UPDATE aikeys set aikey = '' where keyname = 'unAnswered'"
-    mdb_modi(conn, cur, SQL)
     quesCount, quesCS = 0, 0
     SQL = "SELECT Count(ID) from " + examFinalTable
     quesCount = mdb_sel(cur, SQL)[0][0]

@@ -104,6 +104,7 @@ def training():
             st.session_state.curQues = 0
             st.session_state.flagCompleted = False
             st.session_state.examStartTime = int(time.time())
+            st.session_state.goto = False
             if st.session_state.examType != "training":
                 st.session_state.examChosen = True
             else:
