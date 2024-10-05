@@ -97,7 +97,7 @@ def training():
     if genResult:
         if genResult[0]:
             generQues.empty()
-            st.success(f"题库生成完毕, 总共生成{genResult[1]}道试题, 请在左边侧边栏选择功能")
+            st.success(f"题库生成完毕, 总共生成{genResult[1]}道试题, 请在👈左侧边栏选择功能")
             st.session_state.examTable = genResult[2]
             st.session_state.examFinalTable = genResult[3]
             st.session_state.confirmSubmit = False
