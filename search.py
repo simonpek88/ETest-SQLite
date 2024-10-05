@@ -49,39 +49,41 @@ def queryExamAnswer(tablename):
                         st.subheader("", divider="green")
                     st.subheader(f"题目: :grey[{row[0]}]")
                     if row[3] == "单选题":
+                        st.write(":red[标准答案:]")
                         option, userAnswer = [], ["A", "B", "C", "D"]
                         tmp = row[1].replace("；", ";").split(";")
-                        for each in tmp:
+                        for index, each in enumerate(tmp):
                             each = each.replace("\n", "").replace("\t", "").strip()
-                            option.append(each)
-                        st.radio("标准答案:", option, key=f"compare_{row[6]}", index=int(row[2]), horizontal=True)
+                            option.append(f"{userAnswer[index]}. {each}")
+                        st.radio(" ", option, key=f"compare_{row[6]}", index=int(row[2]), horizontal=True, label_visibility="collapsed", disabled=True)
                         st.write(f"你的答案: :red[{userAnswer[int(row[5])]}] 你的选择为: :blue[[{flagAnswer}]]")
                     elif row[3] == "多选题":
                         userOption = ["A", "B", "C", "D", "E", "F", "G", "H"]
-                        st.write("标准答案:")
+                        st.write(":red[标准答案:]")
                         option = row[1].replace("；", ";").split(";")
                         orgOption = row[2].replace("；", ";").split(";")
                         for index, value in enumerate(option):
                             value = value.replace("\n", "").replace("\t", "").strip()
                             if str(index) in orgOption:
-                                st.checkbox(f"{value}:", value=True)
+                                st.checkbox(f"{userOption[index]}. {value}:", value=True, disabled=True)
                             else:
-                                st.checkbox(f"{value}:", value=False)
+                                st.checkbox(f"{userOption[index]}. {value}:", value=False, disabled=True)
                         userAnswer = row[5].replace("；", ";").split(";")
                         tmp = ""
                         for each in userAnswer:
                             tmp = tmp + userOption[int(each)] + ", "
                         st.write(f"你的答案: :red[{tmp[:-2]}] 你的选择为: :blue[[{flagAnswer}]]")
                     elif row[3] == "判断题":
-                        option = ["正确", "错误"]
+                        st.write(":red[标准答案:]")
+                        option = ["A. 正确", "B. 错误"]
                         tmp = int(row[2]) ^ 1
-                        st.radio("标准答案:", option, key=f"compare_{row[6]}", index=tmp, horizontal=True)
+                        st.radio(" ", option, key=f"compare_{row[6]}", index=tmp, horizontal=True, label_visibility="collapsed", disabled=True)
                         tmp = int(row[5]) ^ 1
                         st.write(f"你的答案: :red[{option[tmp]}] 你的选择为: :blue[[{flagAnswer}]]")
                     elif row[3] == "填空题":
                         option = row[2].replace("；", ";").split(";")
                         userAnswer = row[5].replace("；", ";").split(";")
-                        st.write("标准答案:")
+                        st.write(":red[标准答案:]")
                         for index, value in enumerate(option):
                             st.write(f"第{index + 1}个填空: :green[{value}]")
                         st.write("你的答案:")

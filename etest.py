@@ -902,13 +902,75 @@ def studyinfo():
     study = sac.segmented(
         items=[
             sac.SegmentedItem(label="学习进度", icon="grid-3x2-gap"),
+            sac.SegmentedItem(label="错题集", icon="list-stars"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
         ], align="center", color="red"
     )
     if study == "学习进度":
         studyinfoDetail()
+    if study == "错题集":
+        displayErrorQues()
     elif study == "学习记录重置":
         studyReset()
+
+
+def displayErrorQues():
+    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID, WrongTime from morepractise where userAnswer <> '' and qAnswer <> userAnswer and userName = {st.session_state.userName} order by WrongTime DESC"
+    rows = mdb_sel(cur, SQL)
+    if rows:
+        for row in rows:
+            #st.subheader("", divider="red")
+            with st.expander(label=f"题目: {row[0]} 次数: {row[7]}", expanded=False):
+                if row[3] == "单选题":
+                    st.write(":red[标准答案:]")
+                    option, userAnswer = [], ["A", "B", "C", "D"]
+                    tmp = row[1].replace("；", ";").split(";")
+                    for index, each in enumerate(tmp):
+                        each = each.replace("\n", "").replace("\t", "").strip()
+                        option.append(f"{userAnswer[index]}. {each}")
+                    st.radio(" ", option, key=f"compare_{row[6]}", index=int(row[2]), horizontal=True, label_visibility="collapsed", disabled=True)
+                    st.write(f"你的答案: :red[{userAnswer[int(row[5])]}] 你的选择为: :blue[错误]")
+                elif row[3] == "多选题":
+                    userOption = ["A", "B", "C", "D", "E", "F", "G", "H"]
+                    st.write(":red[标准答案:]")
+                    option = row[1].replace("；", ";").split(";")
+                    orgOption = row[2].replace("；", ";").split(";")
+                    for index, value in enumerate(option):
+                        value = value.replace("\n", "").replace("\t", "").strip()
+                        if str(index) in orgOption:
+                            st.checkbox(f"{userOption[index]}. {value}:", value=True, disabled=True)
+                        else:
+                            st.checkbox(f"{userOption[index]}. {value}:", value=False, disabled=True)
+                    userAnswer = row[5].replace("；", ";").split(";")
+                    tmp = ""
+                    for each in userAnswer:
+                        tmp = tmp + userOption[int(each)] + ", "
+                    st.write(f"你的答案: :red[{tmp[:-2]}] 你的选择为: :blue[错误]")
+                elif row[3] == "判断题":
+                    st.write(":red[标准答案:]")
+                    option = ["A. 正确", "B. 错误"]
+                    tmp = int(row[2]) ^ 1
+                    st.radio(" ", option, key=f"compare_{row[6]}", index=tmp, horizontal=True, label_visibility="collapsed", disabled=True)
+                    tmp = int(row[5]) ^ 1
+                    st.write(f"你的答案: :red[{option[tmp]}] 你的选择为: :blue[错误]")
+                elif row[3] == "填空题":
+                    option = row[2].replace("；", ";").split(";")
+                    userAnswer = row[5].replace("；", ";").split(";")
+                    st.write(":red[标准答案:]")
+                    for index, value in enumerate(option):
+                        st.write(f"第{index + 1}个填空: :green[{value}]")
+                    st.write("你的答案:")
+                    for index, value in enumerate(userAnswer):
+                        st.write(f"第{index + 1}个填空: :red[{value}]")
+                    st.write("你的填写为: :blue[错误]")
+                if row[4] != "":
+                    if row[4].endswith("]"):
+                        #st.write(row[4])
+                        st.markdown(f"答案解析: {row[4][:-1]}]")
+                    else:
+                        st.markdown(f"答案解析: :green[{row[4]}]")
+    else:
+        st.info("暂无数据")
 
 
 def studyReset():
