@@ -43,9 +43,9 @@ def delOutdatedTable():
 
 def changePassword():
     st.write("### :red[修改密码]")
-    oldPassword = st.text_input("请输入原密码", max_chars=8, help="默认为1234", type="password", autocomplete="off")
+    oldPassword = st.text_input("请输入原密码", max_chars=8, type="password", autocomplete="off")
     newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="off")
-    confirmPassword = st.text_input("请再次输入新密码", max_chars=8, type="password", autocomplete="off")
+    confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="off")
     if oldPassword:
         SQL = "SELECT ID from user where userName = " + str(st.session_state.userName) + " and userPassword = '" + oldPassword + "'"
         if mdb_sel(cur, SQL):
@@ -72,11 +72,11 @@ def login():
     with login.container():
         #st.write(st.session_state.userName)
         st.write("## :blue[专业技能考试系统 - 离线版]")
-        userName = st.text_input("请输入用户名", max_chars=8, help="员工编码")
+        userName = st.text_input("请输入用户名", max_chars=8, placeholder="员工编码")
         if userName != "":
             getUserCName(userName)
             st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :red[{st.session_state.StationCN}]")
-        userPassword = st.text_input("请输入密码", max_chars=8, help="默认为1234", type="password", autocomplete="off")
+        userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
         examType = st.selectbox("请选择功能类型", ("练习", "考试"), index=0)
         buttonLogin = st.button("登录")
     if buttonLogin:
