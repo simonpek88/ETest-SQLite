@@ -226,7 +226,6 @@ def addUser():
         station = st.select_slider("站室", stationCName, value=st.session_state.StationCN)
         userPassword1 = st.text_input("设置密码", max_chars=8, type="password", autocomplete="off", help="设置用户密码")
         userPassword2 = st.text_input("请重新输入密码", max_chars=8, type="password", autocomplete="off")
-        #userType = st.toggle("用户类型 (用户/管理员)", value=False, help="关闭为用户, 打开为管理员")
         userType = sac.switch(label="管理员", on_label="On", align='start', size='md', value=False)
         userCName = ClearStr(userCName)
         if userName and userCName and userPassword1 and userPassword2 and userPassword1 != "" and userPassword2 != "":

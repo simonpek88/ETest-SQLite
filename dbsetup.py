@@ -1,6 +1,7 @@
 # coding UTF-8
 import apsw
 import streamlit as st
+import streamlit_antd_components as sac
 
 from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel
 
@@ -26,7 +27,7 @@ def updateCR():
     st.success("章节权重更新成功")
 
 
-def updateQuesType(quesType):
+def updateSwitchOption(quesType):
     if st.session_state[quesType]:
         SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 1 where paramName = '{quesType}'"
     else:
@@ -34,7 +35,7 @@ def updateQuesType(quesType):
     mdb_modi(conn, cur, SQL)
     if quesType == "测试模式":
         st.session_state.debug = bool(st.session_state[quesType])
-    st.success(f"{quesType} 设置更新成功")
+    #st.success(f"{quesType} 设置更新成功")
 
 
 def setupReset():
@@ -79,16 +80,18 @@ with st.expander("# :blue[考试参数设置]"):
         elif row[0] == "同场考试次数限制":
             st.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="最多5次")
         elif row[0] == "考试题库每次随机生成":
-            st.toggle(row[0], value=row[1], key=f"dasetup_{row[2]}", help="开启有效, 关闭无效")
+            #st.toggle(row[0], value=row[1], key=f"dasetup_{row[2]}", help="开启有效, 关闭无效")
+            sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
+            updateSwitchOption(row[0])
         elif row[0] == "考试时间":
             st.slider(row[0], min_value=30, max_value=90, value=row[1], step=10, key=f"dasetup_{row[2]}", help="单位:分钟, 建议为60分钟")
         elif row[0] == "使用大模型评判错误的填空题答案":
-            st.toggle(row[0], value=row[1], key=f"dasetup_{row[2]}", help="开启有效, 关闭无效, 对填空题的错误答案使用大模型再次评判")
+            sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
+            updateSwitchOption(row[0])
         else:
             st.slider(row[0], min_value=1, max_value=150, value=row[1], key=f"dasetup_{row[2]}")
     updateDA = st.button("考试参数更新", on_click=updateDAParam, args=("考试",))
 with st.expander("# :red[章节权重设置]"):
-    #st.subheader("章节权重设置")
     SQL = "SELECT chapterName, chapterRatio, ID from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and StationCN = '" + st.session_state.StationCN + "'"
     rows = mdb_sel(cur, SQL)
     if rows:
@@ -107,7 +110,8 @@ with st.expander("# :green[题型设置]"):
     SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'questype' order by ID"
     rows = mdb_sel(cur, SQL)
     for row in rows:
-        st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="题型开启有效, 关闭无效")
+        sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
+        updateSwitchOption(row[0])
 with st.expander("# :violet[导出文件字体设置]"):
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'fontsize' order by ID"
     rows = mdb_sel(cur, SQL)
@@ -118,12 +122,9 @@ with st.expander("# :orange[其他设置]"):
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'others' order by ID"
     rows = mdb_sel(cur, SQL)
     for row in rows:
-        if row[0] == "显示考试时间":
-            st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 练习中不强制提交试卷")
-        elif row[0] == "A.I.答案解析更新至题库":
-            st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 是否将使用大模型获取的答案解析更新至题库")
-        elif row[0] == "测试模式":
-            st.toggle(row[0], value=row[1], key=row[0], on_change=updateQuesType, args=(row[0],), help="开启有效, 关闭无效, 是否开启测试模式用以输出更多信息")
+        if row[0] == "显示考试时间" or row[0] == "A.I.答案解析更新至题库" or row[0] == "测试模式":
+            sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
+            updateSwitchOption(row[0])
     AIModel, AIModelIndex = [], 0
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
     rows = mdb_sel(cur, SQL)
