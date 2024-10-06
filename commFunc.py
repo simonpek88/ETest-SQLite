@@ -360,7 +360,7 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
 def updatePyFileinfo():
     for root, dirs, files in os.walk("./"):
         for file in files:
-            if os.path.splitext(file)[1].lower() == '.py':
+            if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
                 pathIn = os.path.join(root, file)
                 pyFile = os.path.splitext(file)[0]
                 SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}'"
