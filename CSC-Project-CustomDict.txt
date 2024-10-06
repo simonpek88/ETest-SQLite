@@ -21,6 +21,7 @@ Fileinfo
 fontsize
 gener
 JXQW
+mcol
 mktime
 moption
 morepractise

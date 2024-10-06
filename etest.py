@@ -904,15 +904,47 @@ def studyinfo():
         items=[
             sac.SegmentedItem(label="学习进度", icon="grid-3x2-gap"),
             sac.SegmentedItem(label="错题集", icon="list-stars"),
+            sac.SegmentedItem(label="荣誉榜", icon="mortarboard"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
         ], align="center", color="red"
     )
     if study == "学习进度":
         studyinfoDetail()
-    if study == "错题集":
+    elif study == "错题集":
         displayErrorQues()
+    elif study == "荣誉榜":
+        displayMedals()
     elif study == "学习记录重置":
         studyReset()
+
+
+def displayMedals():
+    SQL = "SELECT examName from examidd where examName <> '练习题库' order by ID"
+    rows = mdb_sel(cur, SQL)
+    for row in rows:
+        with st.expander(label=f"{row[0]}", expanded=False):
+            mcol1, mcol2, mcol3, mcol4, mcol5 = st.columns(5)
+            SQL = f"SELECT userCName, examScore, examDate from examresult where examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 3"
+            rows2 = mdb_sel(cur, SQL)
+            if rows2:
+                if len(rows2) > 0:
+                    examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[0][2]))
+                    mcol3.image("./Images/gold-medal.png")
+                    mcol3.markdown(f"##### :red[<center>{rows2[0][0]}</center>]", unsafe_allow_html=True)
+                    mcol3.markdown(f"###### <center>成绩: {rows2[0][1]}分</center>", unsafe_allow_html=True)
+                    mcol3.markdown(f"###### <center>{examDate}</center>", unsafe_allow_html=True)
+                if len(rows2) > 1:
+                    examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[1][2]))
+                    mcol1.image("./Images/silver-medal.png")
+                    mcol1.markdown(f"##### :grey[<center>{rows2[1][0]}</center>]", unsafe_allow_html=True)
+                    mcol1.markdown(f"###### <center>成绩: {rows2[1][1]}分</center>", unsafe_allow_html=True)
+                    mcol1.markdown(f"###### <center>{examDate}</center>", unsafe_allow_html=True)
+                if len(rows2) > 2:
+                    examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[2][2]))
+                    mcol5.image("./Images/bronze-medal.png")
+                    mcol5.markdown(f"##### :orange[<center>{rows2[2][0]}</center>]", unsafe_allow_html=True)
+                    mcol5.markdown(f"###### <center>成绩: {rows2[2][1]}分</center>", unsafe_allow_html=True)
+                    mcol5.markdown(f"###### <center>{examDate}</center>", unsafe_allow_html=True)
 
 
 def displayErrorQues():
