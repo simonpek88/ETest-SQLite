@@ -923,28 +923,28 @@ def displayMedals():
     rows = mdb_sel(cur, SQL)
     for row in rows:
         with st.expander(label=f"{row[0]}", expanded=False):
-            mcol1, mcol2, mcol3, mcol4, mcol5 = st.columns(5)
+            mcol1, mcol2, mcol3, mcol4, mcol5, mcol6 = st.columns(6)
             SQL = f"SELECT userCName, examScore, examDate from examresult where examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 3"
             rows2 = mdb_sel(cur, SQL)
             if rows2:
                 if len(rows2) > 0:
                     examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[0][2]))
                     mcol3.image("./Images/gold-medal.png")
-                    mcol3.markdown(f"##### :red[<center>{rows2[0][0]}</center>]", unsafe_allow_html=True)
-                    mcol3.markdown(f"###### <center>成绩: {rows2[0][1]}分</center>", unsafe_allow_html=True)
-                    mcol3.markdown(f"###### <center>{examDate}</center>", unsafe_allow_html=True)
+                    mcol4.write(f"##### :red[{rows2[0][0]}]")
+                    mcol4.write(f"成绩: {rows2[0][1]}分")
+                    mcol4.write(f"{examDate}")
                 if len(rows2) > 1:
                     examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[1][2]))
                     mcol1.image("./Images/silver-medal.png")
-                    mcol1.markdown(f"##### :grey[<center>{rows2[1][0]}</center>]", unsafe_allow_html=True)
-                    mcol1.markdown(f"###### <center>成绩: {rows2[1][1]}分</center>", unsafe_allow_html=True)
-                    mcol1.markdown(f"###### <center>{examDate}</center>", unsafe_allow_html=True)
+                    mcol2.write(f"##### :grey[{rows2[1][0]}]")
+                    mcol2.write(f"成绩: {rows2[1][1]}分")
+                    mcol2.write(f"{examDate}")
                 if len(rows2) > 2:
                     examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[2][2]))
                     mcol5.image("./Images/bronze-medal.png")
-                    mcol5.markdown(f"##### :orange[<center>{rows2[2][0]}</center>]", unsafe_allow_html=True)
-                    mcol5.markdown(f"###### <center>成绩: {rows2[2][1]}分</center>", unsafe_allow_html=True)
-                    mcol5.markdown(f"###### <center>{examDate}</center>", unsafe_allow_html=True)
+                    mcol6.write(f"##### :orange[{rows2[2][0]}]")
+                    mcol6.write(f"成绩: {rows2[2][1]}分")
+                    mcol6.write(f"{examDate}")
 
 
 def displayErrorQues():
