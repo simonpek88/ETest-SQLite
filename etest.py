@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 import streamlit_antd_components as sac
 from PIL import Image, ImageFont, ImageDraw
+from streamlit_timeline import st_timeline
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
@@ -907,6 +908,7 @@ def studyinfo():
             sac.SegmentedItem(label="错题集", icon="list-stars"),
             sac.SegmentedItem(label="证书", icon="patch-check"),
             sac.SegmentedItem(label="荣誉榜", icon="mortarboard"),
+            sac.SegmentedItem(label="章节时间线", icon="clock-history"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
         ], align="center", color="red"
     )
@@ -918,8 +920,42 @@ def studyinfo():
         displayCertificate()
     elif study == "荣誉榜":
         displayMedals()
+    elif study == "章节时间线":
+        generTimeline()
     elif study == "学习记录重置":
         studyReset()
+
+
+def generTimeline():
+    timelineData, i = [], 1
+    SQL = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' order by ID"
+    rows = mdb_sel(cur, SQL)
+    for row in rows:
+        if row[0] != "公共题库":
+            SQL = f"SELECT Count(ID) from questions where chapterName = '{row[0]}'"
+            quesCount = mdb_sel(cur, SQL)[0][0]
+        else:
+            SQL = "SELECT Count(ID) from commquestions"
+            quesCount = mdb_sel(cur, SQL)[0][0]
+        SQL = f"SELECT startTime from studyinfo where userName = '{st.session_state.userName}' and chapterName = '{row[0]}' order by startTime"
+        rows2 = mdb_sel(cur, SQL)
+        if rows2:
+            trainingDate = time.strftime("%Y-%m-%d", time.localtime(rows2[0][0]))
+            trainingDate2 = time.strftime("%Y-%m-%d", time.localtime(rows2[-1][0]))
+            if len(rows2) == quesCount:
+                temp = {"id": i, "content": row[0], "start": trainingDate, "end": trainingDate2}
+            else:
+                temp = {"id": i, "content": row[0], "start": trainingDate, "type": "point"}
+            timelineData.append(temp)
+            i += 1
+    #st.write(timelineData)
+    if timelineData:
+        timeline = st_timeline(timelineData, groups=[], options={}, height="300px")
+        if timeline is not None:
+            if "end" in timeline:
+                st.write(f"章节: :green[{timeline['content']}] 开始时间: :blue[{timeline['start']}] 完成时间: :orange[{timeline['end']}]")
+            else:
+                st.write(f"章节: :green[{timeline['content']}] 开始时间: :blue[{timeline['start']}]")
 
 
 def displayCertificate():

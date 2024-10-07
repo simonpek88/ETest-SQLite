@@ -162,7 +162,7 @@ def updateStudyInfo(studyRow):
         if studyResult:
             SQL = f"SELECT ID from studyinfo where cid = {studyResult[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyResult[0][1]}'"
             if not mdb_sel(cur, SQL):
-                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName) VALUES({studyResult[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyResult[0][1]}')"
+                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName, startTime) VALUES({studyResult[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyResult[0][1]}', {int(time.time())})"
                 mdb_ins(conn, cur, SQL)
 
 
