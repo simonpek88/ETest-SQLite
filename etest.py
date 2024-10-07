@@ -985,7 +985,7 @@ def displayCertificate():
                     maxCertNum = examDetail[3]
                 certFile = f"./Images/Certificate/Cert-Num.{str(maxCertNum).rjust(5, '0')}-{st.session_state.userName}-{examDetail[0]}-{row[0]}_{examDateDetail}.png"
                 if not os.path.exists(certFile):
-                    if examDetail[1] == 100:
+                    if examDetail[1] >= 100:
                         medal = "./Images/gold-award.png"
                     elif examDetail[1] >= 90:
                         medal = "./Images/silver-award.png"
@@ -1002,7 +1002,8 @@ def displayCertificate():
 
 
 def generCertificate(certFile, medal, userCName, examName, examDate, maxCertNum):
-    if len(userCName) < 3:
+    namePosX = [866, 821, 796, 760, 726, 696]
+    if len(userCName) == 2:
         userCName = userCName[0] + " " + userCName[-1]
     font = ImageFont.truetype("./Fonts/msyhbd.ttf", 70)
     font2 = ImageFont.truetype("./Fonts/msyhbd.ttf", 30)
@@ -1015,13 +1016,11 @@ def generCertificate(certFile, medal, userCName, examName, examDate, maxCertNum)
     imMedal.close()
     dr = ImageDraw.Draw(im)
     dr.text((160, 132), f"No.{str(maxCertNum).rjust(5, '0')}", font=font4, fill='grey')
-    if len(userCName.replace(" ", "")) > 3:
-        dr.text((760, 452), userCName, font=font, fill='grey')
-    elif len(userCName.replace(" ", "")) > 2:
-        dr.text((796, 460), userCName, font=font, fill='grey')
+    if len(userCName.replace(" ", "")) - 1 >= 0 and len(userCName.replace(" ", "")) - 1 <= 5:
+        dr.text((namePosX[len(userCName.replace(" ", "")) - 1], 460), userCName, font=font, fill='grey')
     else:
-        dr.text((818, 460), userCName, font=font, fill='grey')
-    dr.text((760, 710), examName, font=font2, fill='grey')
+        dr.text((460, 460), userCName, font=font, fill='grey')
+    dr.text((900 - int(len(examName) * 15), 710), examName, font=font2, fill='grey')
     dr.text((410, 940), examDate, font=font3, fill='grey')
     im.save(certFile)
     im.close()
