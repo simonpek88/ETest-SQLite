@@ -8,6 +8,7 @@ import openpyxl
 import pandas as pd
 import streamlit as st
 import streamlit_antd_components as sac
+from PIL import Image, ImageFont, ImageDraw
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
@@ -904,6 +905,7 @@ def studyinfo():
         items=[
             sac.SegmentedItem(label="学习进度", icon="grid-3x2-gap"),
             sac.SegmentedItem(label="错题集", icon="list-stars"),
+            sac.SegmentedItem(label="证书", icon="patch-check"),
             sac.SegmentedItem(label="荣誉榜", icon="mortarboard"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
         ], align="center", color="red"
@@ -912,10 +914,65 @@ def studyinfo():
         studyinfoDetail()
     elif study == "错题集":
         displayErrorQues()
+    elif study == "证书":
+        displayCertificate()
     elif study == "荣誉榜":
         displayMedals()
     elif study == "学习记录重置":
         studyReset()
+
+
+def displayCertificate():
+    flagGener, flagInfo = False, True
+    SQL = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and examName <> '练习题库' order by ID"
+    rows = mdb_sel(cur, SQL)
+    for row in rows:
+        SQL = f"SELECT userCName, examScore, examDate from examresult where userName = '{st.session_state.userName}' and examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 1"
+        rows2 = mdb_sel(cur, SQL)
+        if rows2:
+            flagGener = True
+            if flagGener and flagInfo:
+                st.write(":orange[如需打印, 请打开 :green[程序目录下Image/Certificate] 或者点击右键另存为图片]")
+                flagInfo = False
+            examDetail = rows2[0]
+            with st.expander(label=f"{row[0]}", expanded=False):
+                examDateDetail = time.strftime("%Y%m%d%H%M%S", time.localtime(examDetail[2]))
+                certFile = f"./Images/Certificate/Cert-{st.session_state.userName}-{examDetail[0]}-{row[0]}_{examDateDetail}.png"
+                if not os.path.exists(certFile):
+                    if examDetail[1] == 100:
+                        medal = "./Images/gold-award.png"
+                    elif examDetail[1] >= 90:
+                        medal = "./Images/silver-award.png"
+                    else:
+                        medal = "./Images/bronze-award.png"
+                    examDate = time.strftime("%Y-%m-%d", time.localtime(examDetail[2]))
+                    generCertificate(certFile, medal, st.session_state.userCName, row[0], examDate)
+                if os.path.exists(certFile):
+                    st.image(certFile)
+    if not flagGener:
+        st.info("您没有通过任何考试, 无法生成证书")
+
+
+def generCertificate(certFile, medal, userCName, examName, examDate):
+    if len(userCName) < 3:
+        userCName = userCName[0] + " " + userCName[-1]
+    font = ImageFont.truetype(os.path.join("fonts", "./Fonts/msyhbd.ttf"), 70)
+    font2 = ImageFont.truetype(os.path.join("fonts", "./Fonts/msyhbd.ttf"), 30)
+    font3 = ImageFont.truetype(os.path.join("fonts", "./Fonts/msyhbd.ttf"), 36)
+    backpng = './Images/Certificate-bg.png'
+    im = Image.open(backpng)
+    imMedal = Image.open(medal)
+    im.paste(imMedal, (784, 860), imMedal)
+    imMedal.close()
+    dr = ImageDraw.Draw(im)
+    if len(userCName.replace(" ", "")) > 2:
+        dr.text((800, 460), userCName, font=font, fill='grey')
+    else:
+        dr.text((818, 460), userCName, font=font, fill='grey')
+    dr.text((760, 710), examName, font=font2, fill='grey')
+    dr.text((410, 940), examDate, font=font3, fill='grey')
+    im.save(certFile)
+    im.close()
 
 
 def displayMedals():

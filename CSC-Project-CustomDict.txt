@@ -21,6 +21,8 @@ Fileinfo
 fontsize
 gener
 JXQW
+listinsheet
+maxcol
 mcol
 mktime
 moption
