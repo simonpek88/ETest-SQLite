@@ -99,6 +99,7 @@ def login():
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
                 ClearTables()
+                cur.execute("VACUUM")
                 if examType == "练习":
                     st.session_state.examType = "training"
                     st.session_state.examName = "练习题库"
