@@ -953,9 +953,11 @@ def generTimeline():
         timeline = st_timeline(timelineData, groups=[], options={}, height="300px")
         if timeline is not None:
             if "end" in timeline:
-                st.write(f"章节: :green[{timeline['content']}] 开始时间: :blue[{timeline['start']}] 完成时间: :orange[{timeline['end']}]")
+                st.write(f"章节: :green[{timeline['content']}] 练习开始时间: :blue[{timeline['start']}] 完成时间: :orange[{timeline['end']}]")
             else:
-                st.write(f"章节: :green[{timeline['content']}] 开始时间: :blue[{timeline['start']}]")
+                st.write(f"章节: :green[{timeline['content']}] 练习开始时间: :blue[{timeline['start']}]")
+    else:
+        st.write(":red[暂无学习记录]")
 
 
 def displayCertificate():
