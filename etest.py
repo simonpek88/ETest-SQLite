@@ -99,7 +99,7 @@ def login():
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
                 ClearTables()
-                cur.execute("VACUUM")
+                #cur.execute("VACUUM")
                 if examType == "练习":
                     st.session_state.examType = "training"
                     st.session_state.examName = "练习题库"
@@ -117,6 +117,8 @@ def logout():
     for key in st.session_state.keys():
         del st.session_state[key]
     st.session_state.logged_in = False
+
+    cur.execute("VACUUM")
 
     cur.close()
     conn.close()
