@@ -373,8 +373,17 @@ def questoWord():
         if "examFinalTable" in st.session_state:
             stationCN = st.session_state.StationCN
             tablename = st.session_state.examFinalTable
-            st.write("📢:red[试卷题库如果导出文件中不包含设置的题型, 请在功能👉参数设置👉题型设置👉重新设置后再生成题库后导出, 其他类型题库没有此限制. 下面的设置是个展示, 无法点击和修改]😊")
-            st.image("./Images/dbsetup.png", caption="更改设置示例")
+            st.write("📢:red[试卷题库如果导出文件中不包含设置的题型, 请按如下提示操作, 其他类型题库没有此限制.]")
+            step = sac.steps(
+                items=[
+                    sac.StepsItem(title='参数设置'),
+                    sac.StepsItem(title='题型设置'),
+                    sac.StepsItem(title='重新生成题库'),
+                    sac.StepsItem(title='试卷导出'),
+                ], index=None, return_index=True
+            )
+            if step is not None:
+                st.image(f"./Images/help/OutputFile{step}.png", caption=f"操作步骤{step + 1}")
         else:
             st.warning("请先生成题库")
             quesTable = ""
@@ -1139,7 +1148,17 @@ def studyinfoDetail():
     rows = mdb_sel(cur, SQL)
     scol3.metric(label="已学习试题", value=f"{rows[0][0]} - {int(rows[0][0] / ct * 100)}%", help=f"总完成率: {int(rows[0][0] / ct * 100)}%")
     style_metric_cards(border_left_color="#8581d9")
-    st.write("###### :violet[如果上面3个标签无显示内容, 请改用浅色主题]")
+    helpInfo = ["点击页面⤴️右上角[...]图标, 并选择Settings", "点击Choose app theme, colors and fonts", "选择Light或是Custom Theme"]
+    st.write("###### :violet[如果上面3个标签无显示内容, 请按照以下步骤改用浅色主题]")
+    step = sac.steps(
+        items=[
+            sac.StepsItem(title='页面设置'),
+            sac.StepsItem(title='主题设置'),
+            sac.StepsItem(title='选择主题'),
+        ], index=None, return_index=True
+    )
+    if step is not None:
+        st.image(f"./Images/help/themesetup{step}.png", caption=f"{helpInfo[step]}")
     with st.expander("各章节进度详情", icon=":material/format_list_bulleted:", expanded=True):
         SQL = "SELECT Count(ID) from commquestions"
         ct = mdb_sel(cur, SQL)[0][0]
