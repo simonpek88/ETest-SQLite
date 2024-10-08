@@ -931,7 +931,7 @@ def AIGenerQues():
 
 
 def ClearMP():
-    buttonSubmit = st.button("清空所有内容", type="primary")
+    buttonSubmit = st.button("清空错题集所有记录", type="primary")
     if buttonSubmit:
         bcArea = st.empty()
         with bcArea.container():
@@ -941,7 +941,7 @@ def ClearMP():
 def ClearMPAction(bcArea):
     mdb_del(conn, cur, SQL="DELETE FROM morepractise")
     bcArea.empty()
-    st.success("错题集已清空")
+    st.success("错题集已重置")
 
 
 def studyinfo():
