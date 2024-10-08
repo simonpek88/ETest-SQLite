@@ -98,6 +98,8 @@ def login():
                 st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
+                SQL = f"UPDATE user set activeUser = 1 where userName = {st.session_state.userName}"
+                mdb_modi(conn, cur, SQL)
                 ClearTables()
                 #cur.execute("VACUUM")
                 if examType == "练习":
@@ -114,11 +116,13 @@ def login():
 
 def logout():
     delOutdatedTable()
+    SQL = f"UPDATE user set activeUser = 0 where userName = {st.session_state.userName}"
+    mdb_modi(conn, cur, SQL)
+    cur.execute("VACUUM")
+
     for key in st.session_state.keys():
         del st.session_state[key]
     st.session_state.logged_in = False
-
-    cur.execute("VACUUM")
 
     cur.close()
     conn.close()
@@ -618,6 +622,7 @@ def dbfunc():
             sac.SegmentedItem(label="删除所有试卷", icon="trash"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
             sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
+            sac.SegmentedItem(label="重置所有用户状态", icon="person-slash"),
         ], align="start", color="red"
     )
     if bc == "A.I.出题":
@@ -634,10 +639,20 @@ def dbfunc():
         delExamTable()
     elif bc == "删除静态题库":
         delStaticExamTable()
+    elif bc == "重置所有用户状态":
+        buttonReset = st.button("重置所有用户状态", type="primary")
+        if buttonReset:
+            st.button("确认重置", type="secondary", on_click=resetActiveUser)
     elif bc == "重置题库ID":
-        buttonReset = st.button("重置ID", type="primary")
+        buttonReset = st.button("重置题库ID", type="primary")
         if buttonReset:
             st.button("确认重置", type="secondary", on_click=resetTableID)
+
+
+def resetActiveUser():
+    SQL = f"UPDATE user set activeUser = 0 where userName <> {st.session_state.userName}"
+    mdb_modi(conn, cur, SQL)
+    st.success("已重置所有用户状态")
 
 
 def deleteSingleQues():
@@ -1240,6 +1255,7 @@ if "logged_in" not in st.session_state:
     st.rerun()
 
 if st.session_state.logged_in:
+    updatePyFileinfo(st.session_state.debug)
     if st.session_state.examType == "exam":
         pg = st.navigation(
             {
@@ -1269,9 +1285,8 @@ if st.session_state.logged_in:
                     "关于": [aboutLicense_menu, aboutInfo_menu],
                 }
             )
+    st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
 else:
     pg = st.navigation([login_page])
-
-updatePyFileinfo()
 
 pg.run()

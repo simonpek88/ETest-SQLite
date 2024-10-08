@@ -7,9 +7,12 @@ from hashlib import md5
 
 import apsw
 import qianfan
+from colorama import Back, Fore, Style, init
 from Crypto import Random
 from Crypto.Cipher import AES
 from openai import OpenAI
+
+init()
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -360,21 +363,27 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
         return False, quesCount, examTable, examFinalTable
 
 
-def updatePyFileinfo():
-    for root, dirs, files in os.walk("./"):
-        for file in files:
-            if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
-                pathIn = os.path.join(root, file)
-                pyFile = os.path.splitext(file)[0]
-                SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}'"
-                if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
-                    mdb_ins(conn, cur, SQL)
-                else:
-                    SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}' and pyLM = {int(os.path.getmtime(pathIn))}"
+def updatePyFileinfo(flagDebug=False):
+    if flagDebug:
+        SQL = "SELECT userCName, userType, StationCN from user where activeUser = 1"
+        rows = mdb_sel(cur, SQL)
+        for row in rows:
+            print("  Active User: " + Fore.RED + row[0].ljust(10 - len(row[0]) * 2 + len(row[0]) % 2, ' ') + Fore.WHITE + " Type: " + Fore.RED + row[1].ljust(5, ' ') + Fore.WHITE + " Station: " + Fore.RED + row[2] + Fore.WHITE)
+        print("<--------------------------------------------------->")
+        for root, dirs, files in os.walk("./"):
+            for file in files:
+                if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
+                    pathIn = os.path.join(root, file)
+                    pyFile = os.path.splitext(file)[0]
+                    SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}'"
                     if not mdb_sel(cur, SQL):
-                        SQL = f"UPDATE verinfo SET pyLM = {int(os.path.getmtime(pathIn))}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
-                        mdb_modi(conn, cur, SQL)
+                        SQL = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
+                        mdb_ins(conn, cur, SQL)
+                    else:
+                        SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}' and pyLM = {int(os.path.getmtime(pathIn))}"
+                        if not mdb_sel(cur, SQL):
+                            SQL = f"UPDATE verinfo SET pyLM = {int(os.path.getmtime(pathIn))}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
+                            mdb_modi(conn, cur, SQL)
 
 
 conn = apsw.Connection("./DB/ETest_enc.db")
