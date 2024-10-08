@@ -531,6 +531,31 @@ def dboutput():
         examResulttoExcel()
 
 
+def actDelExamTable():
+    for each in st.session_state.keys():
+        if each.startswith("delExamTable_"):
+            if st.session_state[each]:
+                each = each.replace("delExamTable_", "")
+                mdb_del(conn, cur, SQL=f"DROP TABLE IF EXISTS {each}")
+                st.info(f"{each} 试卷删除成功")
+
+
+def delExamTable():
+    flagExistTable = False
+    SQL = "SELECT name from sqlite_master where type = 'table' and name like 'exam_%'"
+    tempTable = mdb_sel(cur, SQL)
+    if tempTable:
+        st.subheader("删除所有试卷", divider="red")
+        for row in tempTable:
+            if row[0].count("_") == 3 or row[0].count("_") == 4:
+                st.checkbox(f"{row[0]}", key=f"delExamTable_{row[0]}")
+                flagExistTable = True
+    if flagExistTable:
+        st.button("确认删除", on_click=actDelExamTable)
+    else:
+        st.info("暂无试卷")
+
+
 def dbinputSubmit(tarTable, orgTable):
     tmpTable = ""
     if tarTable == "站室题库":
@@ -588,10 +613,11 @@ def dbfunc():
             sac.SegmentedItem(label="A.I.出题", icon="robot"),
             sac.SegmentedItem(label="题库导入", icon="database-up"),
             #sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=st.session_state.debug ^ True),
-            sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
             sac.SegmentedItem(label="错题集重置", icon="journal-x"),
+            sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
+            sac.SegmentedItem(label="删除所有试卷", icon="trash"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
-            #sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
+            sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
         ], align="start", color="red"
     )
     if bc == "A.I.出题":
@@ -600,10 +626,12 @@ def dbfunc():
         dbinput()
     elif bc == "Word文件导入":
         inputWord()
+    elif bc == "错题集重置":
+        ClearMP()
     elif bc == "删除单个试题":
         deleteSingleQues()
-    elif bc == "清空错题集":
-        ClearMP()
+    elif bc == "删除所有试卷":
+        delExamTable()
     elif bc == "删除静态题库":
         delStaticExamTable()
     elif bc == "重置题库ID":
@@ -721,6 +749,9 @@ def resetTableID():
         for i, row in enumerate(rows):
             SQL = f"UPDATE {tablename} set ID = {i + 1} where ID = {row[0]}"
             mdb_modi(conn, cur, SQL)
+            if tablename == "questions" or tablename == "commquestions":
+                SQL = f"UPDATE studyinfo set cid = {i + 1} where cid = {row[0]} and questable = '{tablename}'"
+                mdb_modi(conn, cur, SQL)
     st.success("题库ID重置成功")
 
 
@@ -1148,7 +1179,7 @@ def studyinfoDetail():
     rows = mdb_sel(cur, SQL)
     scol3.metric(label="已学习试题", value=f"{rows[0][0]} - {int(rows[0][0] / ct * 100)}%", help=f"总完成率: {int(rows[0][0] / ct * 100)}%")
     style_metric_cards(border_left_color="#8581d9")
-    helpInfo = ["点击页面⤴️右上角[...]图标, 并选择Settings", "点击Choose app theme, colors and fonts", "选择Light或是Custom Theme"]
+    helpInfo = ["点击页面⤴️右上角红圈处图标, 并选择Settings", "点击Choose app theme, colors and fonts", "选择Light或是Custom Theme"]
     st.write("###### :violet[如果上面3个标签无显示内容, 请按照以下步骤改用浅色主题]")
     step = sac.steps(
         items=[
