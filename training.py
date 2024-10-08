@@ -45,7 +45,7 @@ def training():
                     rows = mdb_sel(cur, SQL)
                     for row in rows:
                         generPack.append(row[0])
-                    genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
+                    genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
         elif st.session_state.examType == "training":
             col1, col2 = st.columns(2)
             SQL = f"SELECT chapterRatio from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '公共题库'"

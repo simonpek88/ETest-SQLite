@@ -120,7 +120,7 @@ def addChapter():
                 cr = int(chapterRatio)
                 SQL = "SELECT ID from questionaff where chapterName = '" + chapter + "' and StationCN = '" + sc + "'"
                 if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio) VALUES('{chapter}', '{sc}', {cr})"
+                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{chapter}', '{sc}', {cr}, {cr})"
                     mdb_ins(conn, cur, SQL)
                     flagSuccess = True
                     itemArea.empty()
@@ -209,7 +209,7 @@ def addStation():
             for each in ["公共题库", "错题集"]:
                 SQL = f"SELECT ID from questionaff where chapterName = '{each}' and StationCN = '{sn}'"
                 if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio) VALUES('{each}', '{sn}', 10)"
+                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{each}', '{sn}', 10, 10)"
                     mdb_ins(conn, cur, SQL)
             st.success(f"[{sn}] 站室添加成功")
         else:

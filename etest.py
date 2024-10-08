@@ -547,7 +547,7 @@ def dbinputSubmit(tarTable, orgTable):
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
     mdb_modi(conn, cur, SQL)
-    SQL = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio) SELECT DISTINCT chapterName, StationCN, 5 FROM questions"
+    SQL = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
     mdb_ins(conn, cur, SQL)
     ClearTables()
     st.success(f":green[[{tmpTable[:-2]}] 向 [{tarTable}]] :gray[导入成功]")
@@ -758,7 +758,7 @@ def AIGenerQues():
             if chapter is None and textChapter != "":
                 SQL = f"SELECT ID from questionaff where chapterName = '{textChapter}' and StationCN = '{chosenStationCN}'"
                 if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio) VALUES ('{textChapter}', '{chosenStationCN}', 5)"
+                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES ('{textChapter}', '{chosenStationCN}', 5, 5)"
                     mdb_ins(conn, cur, SQL)
                     st.toast(f"新的章节: :red[{textChapter}]添加完毕")
                 chapter = textChapter
@@ -1127,21 +1127,19 @@ def studyResetAction():
 
 
 def studyinfoDetail():
-    scol1, scol2, scol3, scol4, scol5 = st.columns(5)
-    scol1.metric(label="姓名", value=st.session_state.userCName, help=st.session_state.userCName)
-    scol2.metric(label="站室", value=st.session_state.StationCN, help=st.session_state.StationCN)
+    scol1, scol2, scol3 = st.columns(3)
     SQL = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集'"
     rows = mdb_sel(cur, SQL)
-    scol3.metric(label="章节总计", value=rows[0][0], help="包含公共题库, 不含错题集")
+    scol1.metric(label="章节总计", value=rows[0][0], help="包含公共题库, 不含错题集")
     SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' UNION SELECT Count(ID) from commquestions"
     rows = mdb_sel(cur, SQL)
     ct = rows[0][0] + rows[1][0]
-    scol4.metric(label="试题总计", value=ct, help="包含公共题库, 不含错题集")
+    scol2.metric(label="试题总计", value=ct, help="包含公共题库, 不含错题集")
     SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
     rows = mdb_sel(cur, SQL)
-    scol5.metric(label="已学习试题", value=rows[0][0], help=f"总完成率: {int(rows[0][0] / ct * 100)}%")
+    scol3.metric(label="已学习试题", value=f"{rows[0][0]} - {int(rows[0][0] / ct * 100)}%", help=f"总完成率: {int(rows[0][0] / ct * 100)}%")
     style_metric_cards(border_left_color="#8581d9")
-    st.write("###### :violet[如果上面6个标签无显示内容, 请改用浅色主题]")
+    st.write("###### :violet[如果上面3个标签无显示内容, 请改用浅色主题]")
     with st.expander("各章节进度详情", icon=":material/format_list_bulleted:", expanded=True):
         SQL = "SELECT Count(ID) from commquestions"
         ct = mdb_sel(cur, SQL)[0][0]

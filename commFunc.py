@@ -194,7 +194,7 @@ def qianfan_AI_GenerQues(reference, quesType, quesCount, AImodel):
 
 
 def outputErrorInfo(SQL):
-    print(f"SQL:[{SQL} ERROR! Please Check It!")
+    print(f"SQL:[{SQL}] ERROR! Please Check It!")
 
 
 def CreateExamTable(tablename, examRandom):
@@ -285,8 +285,11 @@ def getParam(paramName, StationCN):
     return param
 
 
-def getChapterRatio(StationCN, qAff):
-    SQL = "SELECT chapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
+def getChapterRatio(StationCN, qAff, examType):
+    if examType == "training":
+        SQL = "SELECT chapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
+    else:
+        SQL = "SELECT examChapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
     quesCRTable = mdb_sel(cur, SQL)
     if quesCRTable:
         cr = quesCRTable[0][0]
@@ -316,11 +319,11 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
             SQL = SQL[:-20] + "')"
             rows = mdb_sel(cur, SQL)
             for row in rows:
-                chapterRatio = getChapterRatio(StationCN, row[5])
+                chapterRatio = getChapterRatio(StationCN, row[5], examType)
                 SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[6]}')"
                 mdb_ins(conn, cur, SQL)
         if "错题集" in qAffPack and examType == "training":
-            chapterRatio = getChapterRatio(StationCN, "错题集")
+            chapterRatio = getChapterRatio(StationCN, "错题集", examType)
             for k in quesType:
                 SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
                 rows = mdb_sel(cur, SQL)
@@ -330,7 +333,7 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
                         SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
                         mdb_ins(conn, cur, SQL)
         if '公共题库' in qAffPack:
-            chapterRatio = getChapterRatio(StationCN, '公共题库')
+            chapterRatio = getChapterRatio(StationCN, "公共题库", examType)
             for k in quesType:
                 if flagNewOnly and examType == "training":
                     SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where ID not in (SELECT cid from studyinfo where questable = 'commquestions' and userName = {userName}) and qType = '{k[0]}' order by ID"

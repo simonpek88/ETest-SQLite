@@ -22,7 +22,7 @@ def updateCR():
     for key in st.session_state.keys():
         if key.startswith("crsetup_"):
             upID = key[key.find("_") + 1:]
-            SQL = f"UPDATE questionaff SET chapterRatio = {st.session_state[key]} WHERE ID = {upID}"
+            SQL = f"UPDATE questionaff SET examChapterRatio = {st.session_state[key]} WHERE ID = {upID}"
             mdb_modi(conn, cur, SQL)
     st.success("章节权重更新成功")
 
@@ -42,9 +42,9 @@ def setupReset():
     mdb_del(conn, cur, SQL=f"DELETE from setup_{st.session_state.StationCN}")
     SQL = f"INSERT INTO setup_{st.session_state.StationCN}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
     mdb_ins(conn, cur, SQL)
-    SQL = f"UPDATE questionaff set chapterRatio = 10 where StationCN = '{st.session_state.StationCN}' and (chapterName = '公共题库' or chapterName = '错题集')"
+    SQL = f"UPDATE questionaff set chapterRatio = 10, examChapterRatio = 10 where StationCN = '{st.session_state.StationCN}' and (chapterName = '公共题库' or chapterName = '错题集')"
     mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE questionaff set chapterRatio = 5 where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
+    SQL = f"UPDATE questionaff set chapterRatio = 5, examChapterRatio = 5 where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
     mdb_modi(conn, cur, SQL)
     bcArea.empty()
     st.success("所有设置已重置")
@@ -92,18 +92,18 @@ with st.expander("# :blue[考试参数设置]"):
             st.slider(row[0], min_value=1, max_value=150, value=row[1], key=f"dasetup_{row[2]}")
     updateDA = st.button("考试参数更新", on_click=updateDAParam, args=("考试",))
 with st.expander("# :red[章节权重设置]"):
-    SQL = "SELECT chapterName, chapterRatio, ID from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and StationCN = '" + st.session_state.StationCN + "'"
+    SQL = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and StationCN = '" + st.session_state.StationCN + "'"
     rows = mdb_sel(cur, SQL)
     if rows:
-        SQL = "SELECT chapterName, chapterRatio, ID from questionaff where chapterName = '公共题库' and StationCN = '" + st.session_state.StationCN + "'"
+        SQL = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '公共题库' and StationCN = '" + st.session_state.StationCN + "'"
         row = mdb_sel(cur, SQL)[0]
         st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
-        SQL = "SELECT chapterName, chapterRatio, ID from questionaff where chapterName = '错题集' and StationCN = '" + st.session_state.StationCN + "'"
+        SQL = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '错题集' and StationCN = '" + st.session_state.StationCN + "'"
         row = mdb_sel(cur, SQL)[0]
         st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="仅在练习题库中有效")
         for row in rows:
             st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
-        updateCR = st.button("章节权重更新", on_click=updateCR)
+        st.button("章节权重更新", on_click=updateCR)
     else:
         st.warning("该站室没有可设置章节")
 with st.expander("# :green[题型设置]"):
