@@ -107,10 +107,10 @@ def training():
             st.session_state.goto = False
             if st.session_state.examType != "training":
                 st.session_state.examChosen = True
-                updateActionUser(st.session_state.userName, "生成考试试题")
+                updateActionUser(st.session_state.userName, "生成考试试题", st.session_state.loginTime)
             else:
                 st.session_state.examChosen = False
-                updateActionUser(st.session_state.userName, "生成练习试题")
+                updateActionUser(st.session_state.userName, "生成练习试题", st.session_state.loginTime)
         else:
             st.session_state.examChosen = False
             st.warning("题库生成试题不满足要求, 请检查生成设置或联系管理员")

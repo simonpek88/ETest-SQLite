@@ -311,4 +311,4 @@ elif selectFunc == "站室专用题库" or selectFunc == "公共题库":
         if buttonAdd:
             addNewQues()
 if selectFunc is not None:
-    updateActionUser(st.session_state.userName, f"添加{selectFunc}")
+    updateActionUser(st.session_state.userName, f"添加{selectFunc}", st.session_state.loginTime)

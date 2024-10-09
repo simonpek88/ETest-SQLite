@@ -65,7 +65,7 @@ cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
 st.write("### :green[系统参数设置]")
-updateActionUser(st.session_state.userName, "设置系统参数")
+updateActionUser(st.session_state.userName, "设置系统参数", st.session_state.loginTime)
 with st.expander("# :blue[考试参数设置]"):
     #st.subheader("考试参数设置")
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'exam' order by ID"
@@ -140,4 +140,4 @@ if buttonReset:
     bcArea = st.empty()
     with bcArea.container():
         buttonConfirm = st.button("确认重置", type="secondary", on_click=setupReset)
-    updateActionUser(st.session_state.userName, "重置所有设置")
+    updateActionUser(st.session_state.userName, "重置所有设置", st.session_state.loginTime)

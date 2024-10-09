@@ -69,7 +69,7 @@ def changePassword():
             st.warning("原密码不正确")
     else:
         st.warning("原密码不能为空")
-    updateActionUser(st.session_state.userName, "修改密码")
+    updateActionUser(st.session_state.userName, "修改密码", st.session_state.loginTime)
 
 
 def login():
@@ -100,7 +100,8 @@ def login():
                 st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
-                SQL = f"UPDATE user set activeUser = 1 where userName = {st.session_state.userName}"
+                st.session_state.loginTime = int(time.time())
+                SQL = f"UPDATE user set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
                 mdb_modi(conn, cur, SQL)
                 ClearTables()
                 #cur.execute("VACUUM")
@@ -118,9 +119,8 @@ def login():
 
 def logout():
     delOutdatedTable()
-    SQL = f"UPDATE user set activeUser = 0 where userName = {st.session_state.userName}"
+    SQL = f"UPDATE user set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
-    updateActionUser(st.session_state.userName, "已经登出")
     cur.execute("VACUUM")
 
     for key in st.session_state.keys():
@@ -181,7 +181,7 @@ def aboutInfo():
         st.write(f"I feel {emoji[stars - 1][1]} {emoji[stars - 1][0]}")
     SQL = f"UPDATE verinfo set pyMC = pyMC + 1 where pyFile = 'thumbs-up-stars' and pyLM = {stars}"
     mdb_modi(conn, cur, SQL)
-    updateActionUser(st.session_state.userName, "浏览[关于]信息")
+    updateActionUser(st.session_state.userName, "浏览[关于]信息", st.session_state.loginTime)
 
 
 def display_pypi():
@@ -227,7 +227,7 @@ def aboutLicense():
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
         ''')
-    updateActionUser(st.session_state.userName, "浏览License信息")
+    updateActionUser(st.session_state.userName, "浏览License信息", st.session_state.loginTime)
 
 
 def actDelTable():
@@ -534,7 +534,7 @@ def dboutput():
     elif bc == "考试成绩导出(Excel格式)":
         examResulttoExcel()
     if bc is not None:
-        updateActionUser(st.session_state.userName, bc)
+        updateActionUser(st.session_state.userName, bc, st.session_state.loginTime)
 
 
 def actDelExamTable():
@@ -650,7 +650,7 @@ def dbfunc():
         if buttonReset:
             st.button("确认重置", type="secondary", on_click=resetTableID)
     if bc is not None:
-        updateActionUser(st.session_state.userName, bc)
+        updateActionUser(st.session_state.userName, bc, st.session_state.loginTime)
 
 
 def resetActiveUser():
@@ -987,7 +987,7 @@ def studyinfo():
     elif study == "学习记录重置":
         studyReset()
     if study is not None:
-        updateActionUser(st.session_state.userName, f"查看信息-{study}")
+        updateActionUser(st.session_state.userName, f"查看信息-{study}", st.session_state.loginTime)
 
 
 def generTimeline():
@@ -1230,11 +1230,31 @@ def studyinfoDetail():
 
 
 def actionUserStatus():
-    st.subheader(":violet[所有在线用户状态]", divider="rainbow")
-    SQL = "SELECT userCName, userType, StationCN, actionUser from user where activeUser = 1 order by ID"
+    st.subheader(":violet[在线用户状态]", divider="rainbow")
+    SQL = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from user where activeUser = 1 order by ID"
     rows = mdb_sel(cur, SQL)
-    df = pd.DataFrame(rows)
-    df.columns = ["姓名", "用户类型", "所属站室", "操作"]
+    df = pd.DataFrame(rows, dtype=str)
+    df.columns = ["姓名", "类型", "站室", "用户操作", "登录时间", "活动时间", "累计活动时间"]
+    for index, value in enumerate(rows):
+        df.loc[index, "登录时间"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(df["登录时间"][index])))
+        activeTime = int(df.loc[index, "活动时间"])
+        hTime = int(activeTime / 3600)
+        mTime = int((activeTime % 3600) / 60)
+        if mTime < 10:
+            mTime = "0" + str(mTime)
+        sTime = int(activeTime % 60)
+        if sTime < 10:
+            sTime = "0" + str(sTime)
+        df.loc[index, "活动时间"] = f"{hTime}:{mTime}:{sTime}"
+        activeTime = int(df.loc[index, "累计活动时间"])
+        hTime = int(activeTime / 3600)
+        mTime = int((activeTime % 3600) / 60)
+        if mTime < 10:
+            mTime = "0" + str(mTime)
+        sTime = int(activeTime % 60)
+        if sTime < 10:
+            sTime = "0" + str(sTime)
+        df.loc[index, "累计活动时间"] = f"{hTime}:{mTime}:{sTime}"
     st.dataframe(df, use_container_width=True)
 
 
@@ -1300,6 +1320,7 @@ if st.session_state.logged_in:
                     "关于": [aboutLicense_menu, aboutInfo_menu],
                 }
             )
+    st.sidebar.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
     st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
 else:
     pg = st.navigation([login_page])

@@ -225,4 +225,4 @@ elif selectFunc == "答题解析":
         else:
             st.warning("暂无数据")
 if selectFunc is not None:
-    updateActionUser(st.session_state.userName, f"查询{selectFunc}")
+    updateActionUser(st.session_state.userName, f"查询{selectFunc}", st.session_state.loginTime)

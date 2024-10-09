@@ -363,8 +363,8 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
         return False, quesCount, examTable, examFinalTable
 
 
-def updateActionUser(activeUser, actionUser):
-    SQL = f"UPDATE user SET actionUser = '{actionUser}' where userName = {activeUser}"
+def updateActionUser(activeUser, actionUser, loginTime):
+    SQL = f"UPDATE user SET actionUser = '{actionUser}', activeTime_session = {int(time.time()) - loginTime} where userName = {activeUser}"
     mdb_modi(conn, cur, SQL)
 
 
