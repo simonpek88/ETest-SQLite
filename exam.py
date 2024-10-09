@@ -8,7 +8,7 @@ import streamlit_antd_components as sac
 from streamlit_modal import Modal
 
 from commFunc import (deepseek_AI, getParam, mdb_del, mdb_ins, mdb_modi,
-                      mdb_sel, qianfan_AI, xunfei_xh_AI, xunfei_xh_AI_fib)
+                      mdb_sel, qianfan_AI, xunfei_xh_AI, xunfei_xh_AI_fib, updateActionUser)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -396,6 +396,10 @@ cur.execute("PRAGMA cipher = 'aes256cbc'")
 cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
+if st.session_state.examType == "exam":
+    updateActionUser(st.session_stateuserName, "考试")
+elif st.session_state.examType == "training":
+    updateActionUser(st.session_state.userName, "练习")
 if "confirmSubmit" not in st.session_state:
     st.session_state.confirmSubmit = False
 if "examFinalTable" in st.session_state and "examName" in st.session_state and not st.session_state.confirmSubmit:

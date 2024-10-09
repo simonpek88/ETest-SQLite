@@ -18,7 +18,7 @@ from streamlit_extras.badges import badge
 from xlsxwriter.workbook import Workbook
 
 from commFunc import (getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel,
-                      qianfan_AI_GenerQues, updatePyFileinfo)
+                      qianfan_AI_GenerQues, updatePyFileinfo, updateActionUser)
 from streamlit_extras.metric_cards import style_metric_cards
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
@@ -69,10 +69,12 @@ def changePassword():
             st.warning("原密码不正确")
     else:
         st.warning("原密码不能为空")
+    updateActionUser(st.session_state.userName, "修改密码")
 
 
 def login():
-    st.write("## :blue[专业技能考试系统 - 离线版]")
+    #st.write("## :blue[专业技能考试系统 - 离线版]")
+    st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
     login = st.empty()
     with login.container(border=True):
         userName = st.text_input("请输入用户名", max_chars=8, placeholder="员工编码")
@@ -118,6 +120,7 @@ def logout():
     delOutdatedTable()
     SQL = f"UPDATE user set activeUser = 0 where userName = {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
+    updateActionUser(st.session_state.userName, "已经登出")
     cur.execute("VACUUM")
 
     for key in st.session_state.keys():
@@ -128,11 +131,6 @@ def logout():
     conn.close()
 
     st.rerun()
-
-
-def todo():
-    st.subheader("完善查询功能", divider='green')
-    st.subheader("题库录入模块", divider='rainbow')
 
 
 def aboutInfo():
@@ -183,6 +181,7 @@ def aboutInfo():
         st.write(f"I feel {emoji[stars - 1][1]} {emoji[stars - 1][0]}")
     SQL = f"UPDATE verinfo set pyMC = pyMC + 1 where pyFile = 'thumbs-up-stars' and pyLM = {stars}"
     mdb_modi(conn, cur, SQL)
+    updateActionUser(st.session_state.userName, "浏览[关于]信息")
 
 
 def display_pypi():
@@ -228,6 +227,7 @@ def aboutLicense():
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
         ''')
+    updateActionUser(st.session_state.userName, "浏览License信息")
 
 
 def actDelTable():
@@ -533,6 +533,8 @@ def dboutput():
         resultExcel()
     elif bc == "考试成绩导出(Excel格式)":
         examResulttoExcel()
+    if bc is not None:
+        updateActionUser(st.session_state.userName, bc)
 
 
 def actDelExamTable():
@@ -647,6 +649,8 @@ def dbfunc():
         buttonReset = st.button("重置题库ID", type="primary")
         if buttonReset:
             st.button("确认重置", type="secondary", on_click=resetTableID)
+    if bc is not None:
+        updateActionUser(st.session_state.userName, bc)
 
 
 def resetActiveUser():
@@ -982,6 +986,8 @@ def studyinfo():
         generTimeline()
     elif study == "学习记录重置":
         studyReset()
+    if study is not None:
+        updateActionUser(st.session_state.userName, f"查看信息-{study}")
 
 
 def generTimeline():
@@ -1223,6 +1229,15 @@ def studyinfoDetail():
                 st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{int((cs / ct) * 100)}%]")
 
 
+def actionUserStatus():
+    st.subheader(":violet[所有在线用户状态]", divider="rainbow")
+    SQL = "SELECT userCName, userType, StationCN, actionUser from user where activeUser = 1 order by ID"
+    rows = mdb_sel(cur, SQL)
+    df = pd.DataFrame(rows)
+    df.columns = ["姓名", "用户类型", "所属站室", "操作"]
+    st.dataframe(df, use_container_width=True)
+
+
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
 cur.execute("PRAGMA cipher = 'aes256cbc'")
@@ -1240,9 +1255,9 @@ choseExam_page = st.Page("training.py", title="选择考试", icon=":material/da
 trainingQues_page = st.Page("exam.py", title="题库练习", icon=":material/format_list_bulleted:")
 execExam_page = st.Page("exam.py", title="开始考试", icon=":material/history_edu:")
 search_page = st.Page("search.py", title="信息查询", icon=":material/search:")
+actionUserStatus_menu = st.Page(actionUserStatus, title="用户状态", icon=":material/group:")
 dbsetup_page = st.Page("dbsetup.py", title="参数设置", icon=":material/settings:")
 dbbasedata_page = st.Page("dbbasedata.py", title="数据录入", icon=":material/app_registration:")
-todo_menu = st.Page(todo, title="待办事项", icon=":material/event_note:")
 aboutInfo_menu = st.Page(aboutInfo, title="关于...", icon=":material/info:")
 aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/license:")
 dboutput_menu = st.Page(dboutput, title="文件导出", icon=":material/output:")
@@ -1270,7 +1285,7 @@ if st.session_state.logged_in:
             pg = st.navigation(
                 {
                     "功能": [dashboard_page, trainingQues_page, dbbasedata_page, dboutput_menu, dbfunc_menu, dbsetup_page],
-                    "查询": [search_page],
+                    "查询": [search_page, actionUserStatus_menu],
                     "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
                     "关于": [aboutLicense_menu, aboutInfo_menu],

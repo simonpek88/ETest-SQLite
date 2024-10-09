@@ -3,7 +3,7 @@ import apsw
 import streamlit as st
 import streamlit_antd_components as sac
 
-from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel
+from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel, updateActionUser
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -65,6 +65,7 @@ cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
 st.write("### :green[系统参数设置]")
+updateActionUser(st.session_state.userName, "设置系统参数")
 with st.expander("# :blue[考试参数设置]"):
     #st.subheader("考试参数设置")
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'exam' order by ID"
@@ -139,3 +140,4 @@ if buttonReset:
     bcArea = st.empty()
     with bcArea.container():
         buttonConfirm = st.button("确认重置", type="secondary", on_click=setupReset)
+    updateActionUser(st.session_state.userName, "重置所有设置")

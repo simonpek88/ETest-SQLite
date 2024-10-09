@@ -5,7 +5,7 @@ import apsw
 import pandas as pd
 import streamlit as st
 
-from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel
+from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel, updateActionUser
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -209,9 +209,9 @@ st.write("### :violet[信息查询]")
 selectFunc = st.selectbox("查询项目", ["考试信息", "未参加考试人员", "答题解析"], index=None)
 if selectFunc == "考试信息":
     queryExamResult()
-if selectFunc == "未参加考试人员":
+elif selectFunc == "未参加考试人员":
     queryExamResultUsers()
-if selectFunc == "答题解析":
+elif selectFunc == "答题解析":
     queryExamName = st.selectbox("请选择考试场次", ["练习题库", "错题集"], index=0)
     if queryExamName:
         if queryExamName == "错题集":
@@ -224,3 +224,5 @@ if selectFunc == "答题解析":
             queryExamAnswer(tablename)
         else:
             st.warning("暂无数据")
+if selectFunc is not None:
+    updateActionUser(st.session_state.userName, f"查询{selectFunc}")

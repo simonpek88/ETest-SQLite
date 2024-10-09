@@ -6,7 +6,7 @@ import apsw
 import streamlit as st
 import streamlit_antd_components as sac
 
-from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel
+from commFunc import mdb_del, mdb_ins, mdb_modi, mdb_sel, updateActionUser
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -310,3 +310,5 @@ elif selectFunc == "站室专用题库" or selectFunc == "公共题库":
         buttonAdd = st.button("新增")
         if buttonAdd:
             addNewQues()
+if selectFunc is not None:
+    updateActionUser(st.session_state.userName, f"添加{selectFunc}")
