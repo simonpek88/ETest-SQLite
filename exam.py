@@ -8,7 +8,8 @@ import streamlit_antd_components as sac
 from streamlit_modal import Modal
 
 from commFunc import (deepseek_AI, getParam, mdb_del, mdb_ins, mdb_modi,
-                      mdb_sel, qianfan_AI, xunfei_xh_AI, xunfei_xh_AI_fib, updateActionUser)
+                      mdb_sel, qianfan_AI, updateActionUser, xunfei_xh_AI,
+                      xunfei_xh_AI_fib)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g

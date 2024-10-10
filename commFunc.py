@@ -7,12 +7,9 @@ from hashlib import md5
 
 import apsw
 import qianfan
-from colorama import Back, Fore, Style, init
 from Crypto import Random
 from Crypto.Cipher import AES
 from openai import OpenAI
-
-init()
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -374,7 +371,7 @@ def updatePyFileinfo(flagDebug=False):
         SQL = "SELECT userCName, userType, StationCN from user where activeUser = 1"
         rows = mdb_sel(cur, SQL)
         for row in rows:
-            print("  Active User: " + Fore.RED + row[0].ljust(10 - len(row[0]) * 2 + len(row[0]) % 2, ' ') + Fore.WHITE + " Type: " + Fore.RED + row[1].ljust(5, ' ') + Fore.WHITE + " Station: " + Fore.RED + row[2] + Fore.WHITE)
+            print(f"  Active User: {row[0].ljust(10 - len(row[0]) * 2 + len(row[0]) % 2, ' ')} Type: {row[1].ljust(5, ' ')} Station: {row[2]}")
         print("<--------------------------------------------------->")
         '''
         for root, dirs, files in os.walk("./"):

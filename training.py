@@ -4,7 +4,8 @@ import time
 import apsw
 import streamlit as st
 
-from commFunc import GenerExam, getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel, updateActionUser
+from commFunc import (GenerExam, getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel,
+                      updateActionUser)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
