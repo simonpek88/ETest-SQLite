@@ -346,7 +346,7 @@ def ClearTables():
     mdb_del(conn, cur, SQL)
     SQL = "DELETE from questionaff where rowid NOT IN (SELECT Min(rowid) from questionaff GROUP BY chapterName, StationCN)"
     mdb_del(conn, cur, SQL)
-    SQL = "DELETE from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and chapterName not in (SELECT DISTINCT(chapterName) from questions)"
+    SQL = "DELETE from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' and chapterName not in (SELECT DISTINCT(chapterName) from questions)"
     mdb_del(conn, cur, SQL)
     for each in ["questions", "commquestions", "morepractise"]:
         mdb_modi(conn, cur, SQL=f"update {each} set Question = REPLACE(Question,'\n', '')")

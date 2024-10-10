@@ -1,4 +1,5 @@
 # coding UTF-8
+import os
 import re
 import time
 
@@ -113,7 +114,7 @@ def calcScore():
 
 
 @st.fragment
-def getOptionAnswer(chosenID, chosen, option):
+def updateOptionAnswer(chosenID, chosen, option):
     for index, value in enumerate(option):
         if chosen == value:
             st.session_state.answer = index
@@ -121,7 +122,16 @@ def getOptionAnswer(chosenID, chosen, option):
 
 
 @st.fragment
-def getMOptionAnswer(row):
+def updateRadioAnswer(chosenID, chosen):
+    if "正确" in chosen:
+        st.session_state.answer = 1
+    else:
+        st.session_state.answer = 0
+    updateAnswer(chosenID)
+
+
+@st.fragment
+def updateMOptionAnswer(row):
     mpAnswerPack = []
     for key in st.session_state.keys():
         if key.startswith("moption_"):
@@ -134,15 +144,6 @@ def getMOptionAnswer(row):
     if st.session_state.answer.endswith(";"):
         st.session_state.answer = st.session_state.answer[:-1]
     updateAnswer(row[0])
-
-
-@st.fragment
-def getRadioAnswer(chosenID, chosen):
-    if "正确" in chosen:
-        st.session_state.answer = 1
-    else:
-        st.session_state.answer = 0
-    updateAnswer(chosenID)
 
 
 def delQuestion(delQuesRow):
@@ -185,7 +186,7 @@ def addFavQues(favRow):
 
 @st.fragment
 def exam(row):
-    option, AIModelName, AIOption, AIOptionIndex, judOption = [], "", [], 0, ["A. 正确", "B. 错误"]
+    option, AIModelName, AIOption, AIOptionIndex = [], "", [], 0
     st.session_state.answer = ""
     flagAIUpdate = bool(getParam("A.I.答案解析更新至题库", st.session_state.StationCN))
     SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'others' and paramName like '%大模型' order by ID"
@@ -205,7 +206,7 @@ def exam(row):
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
     acol1, acol2 = st.columns(2)
     if st.session_state.debug and st.session_state.userType == "admin":
-        buttonConfirm = acol1.button("⚠️ 从所有题库中删除此题", type="primary", help="此操作不可逆，请谨慎操作")
+        buttonConfirm = acol1.button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
     if st.session_state.examType == "training":
@@ -225,9 +226,9 @@ def exam(row):
             chosen = st.radio(" ", option, index=int(row[6]), label_visibility="collapsed", horizontal=True)
             #st.write(f":red[你已选择: ] :blue[{option[int(row[6])]}]")
         if chosen is not None:
-            getOptionAnswer(row[0], chosen, option)
+            updateOptionAnswer(row[0], chosen, option)
     elif row[4] == '多选题':
-        st.session_state.answer = ""
+        #st.session_state.answer = ""
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
             value = value.replace("\n", "").replace("\t", "").strip()
             option.append(f"{chr(65 + index)}. {value}")
@@ -237,17 +238,19 @@ def exam(row):
             orgOption = []
         for index, value in enumerate(option):
             if str(index) in orgOption:
-                st.checkbox(f"{value}:", value=True, key=f"moption_{index}", on_change=getMOptionAnswer, args=(row,))
+                st.checkbox(f"{value}:", value=True, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
             else:
-                st.checkbox(f"{value}:", value=False, key=f"moption_{index}", on_change=getMOptionAnswer, args=(row,))
+                st.checkbox(f"{value}:", value=False, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
     elif row[4] == '判断题':
+        option = ["A. 正确", "B. 错误"]
         if row[6] == "":
-            chosen = st.radio(" ", judOption, index=None, label_visibility="collapsed", horizontal=True)
+            chosen = st.radio(" ", option, index=None, label_visibility="collapsed", horizontal=True)
+            #print(f"Chosen:[{chosen}], {row[0]}, [{row[6]}]")
         else:
-            chosen = st.radio(" ", judOption, index=int(row[6]) ^ 1, label_visibility="collapsed", horizontal=True)
-            #st.write(f":red[你已选择: ] :blue[{judOption[int(row[6]) ^ 1]}]")
+            chosen = st.radio(" ", option, index=int(row[6]) ^ 1, label_visibility="collapsed", horizontal=True)
+        #st.write(f":red[你已选择: ] :blue[{option[int(row[6]) ^ 1]}")
         if chosen is not None:
-            getRadioAnswer(row[0], chosen)
+            updateRadioAnswer(row[0], chosen)
     elif row[4] == '填空题':
         st.session_state.answer = ""
         orgOption = row[6].replace("；", ";").split(";")
@@ -397,7 +400,6 @@ def updateTA():
     updateAnswer(st.session_state.curQues)
 
 
-@st.fragment
 def changeCurQues(step):
     st.session_state.curQues += step
     if st.session_state.curQues < 1:
@@ -514,7 +516,9 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
                     cpCount += 1
             if cpCount == quesCount:
                 iCol1.caption(":orange[作答提示: 全部题目已作答]")
-            elif cpCount > 0:
+            elif quesCount - cpCount > 40:
+                iCol1.caption(f":blue[作答提示:] :red[你还有{quesCount - cpCount}道题未作答, 请尽快完成]")
+            elif quesCount - cpCount > 0:
                 iCol1.caption(f":blue[作答提示:] :red[{cpStr[:-1]}] :blue[题还未作答, 可以在👉右测下拉列表中跳转]")
             else:
                 iCol1.caption(":red[你还未开始答题]")
