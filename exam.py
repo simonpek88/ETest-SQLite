@@ -168,6 +168,22 @@ def updateStudyInfo(studyRow):
 
 
 @st.fragment
+def delFavQues(favRow):
+    SQL = f"DELETE from favques where Question = '{favRow[1]}' and userName = {st.session_state.userName} and qType = '{favRow[4]}' and StationCN = '{st.session_state.StationCN}'"
+    mdb_del(conn, cur, SQL)
+    st.toast("已从关注题集中删除")
+
+
+@st.fragment
+def addFavQues(favRow):
+    SQL = f"SELECT ID from favques where Question = '{favRow[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
+    if not mdb_sel(cur, SQL):
+        SQL = f"INSERT INTO favques(Question, qOption, qAnswer, qType, qAnalysis, userName, StationCN, SourceType) VALUES('{favRow[1]}', '{favRow[2]}', '{favRow[3]}', '{favRow[4]}', '{favRow[5]}', {st.session_state.userName}, '{st.session_state.StationCN}', '{favRow[8]}')"
+        mdb_ins(conn, cur, SQL)
+        st.toast("已添加到关注题集")
+
+
+@st.fragment
 def exam(row):
     option, AIModelName, AIOption, AIOptionIndex, judOption = [], "", [], 0, ["A. 正确", "B. 错误"]
     st.session_state.answer = ""
@@ -187,10 +203,17 @@ def exam(row):
     if st.session_state.examType != "exam":
         updateStudyInfo(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
+    acol1, acol2 = st.columns(2)
     if st.session_state.debug and st.session_state.userType == "admin":
-        buttonConfirm = st.button("⚠️ 从所有题库中删除此题", type="primary")
+        buttonConfirm = acol1.button("⚠️ 从所有题库中删除此题", type="primary", help="此操作不可逆，请谨慎操作")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
+    if st.session_state.examType == "training":
+        SQL = f"SELECT ID from favques where Question = '{row[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
+        if mdb_sel(cur, SQL):
+            acol2.button(label="", icon=":material/heart_minus:", on_click=delFavQues, args=(row,), help="从关注题集中删除")
+        else:
+            acol2.button(label="", icon=":material/heart_plus:", on_click=addFavQues, args=(row,), help="添加到关注题集")
     st.write(f":red[本题为{row[4]}]:")
     if row[4] == '单选题':
         for index, value in enumerate(row[2].replace("；", ";").split(";")):

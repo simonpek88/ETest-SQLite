@@ -42,43 +42,26 @@ def training():
                 if generButtonQues:
                     st.session_state.examName = examName
                     st.spinner("正在生成题库...")
-                    SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and StationCN = '" + StationCN + "'"
+                    SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + StationCN + "'"
                     rows = mdb_sel(cur, SQL)
                     for row in rows:
                         generPack.append(row[0])
                     genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
         elif st.session_state.examType == "training":
-            col1, col2 = st.columns(2)
-            SQL = f"SELECT chapterRatio from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '公共题库'"
-            tempCR1 = mdb_sel(cur, SQL)[0][0]
-            SQL = f"SELECT chapterRatio from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '错题集'"
-            tempCR2 = mdb_sel(cur, SQL)[0][0]
-            with col1:
-                generPack.append(st.checkbox("公共题库", value=True))
-                for i in range(4):
-                    st.caption("")
-                generPack.append(st.checkbox("错题集", value=False))
-                for i in range(4):
-                    st.caption("")
-            with col2:
-                st.slider("章节权重", min_value=1, max_value=10, value=tempCR1, step=1, key="tempCR_1", on_change=updateCR)
-                st.slider("章节权重", min_value=1, max_value=10, value=tempCR2, step=1, key="tempCR_2", on_change=updateCR)
-            i, k = 0, 0
-            SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' order by chapterName"
+            for each in ["公共题库", "错题集", "关注题集"]:
+                SQL = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
+                row = mdb_sel(cur, SQL)[0]
+                if each == "公共题库":
+                    generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
+                else:
+                    generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=False))
+                st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCR)
+            SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
             rows = mdb_sel(cur, SQL)
             for row in rows:
-                with col1:
-                    generPack.append(st.checkbox(row[0], value=True))
-                    i = 2 if i > 2 else i
-                    for j in range(i + 1):
-                        st.caption("")
-                with col2:
-                    if k == 7 or k == 10:
-                        st.caption("")
-                    st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCR)
-                i += 1
-                k += 1
-            st.checkbox("仅未学习试题", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
+                generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
+                st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCR)
+            st.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
             generButtonQues = st.button("生成题库")
             if generButtonQues:
                 st.session_state.examName = "练习题库"
@@ -89,8 +72,10 @@ def training():
                             chapterPack.append("公共题库")
                         elif index == 1:
                             chapterPack.append("错题集")
+                        elif index == 2:
+                            chapterPack.append("关注题集")
                         else:
-                            chapterPack.append(rows[index - 2][0])
+                            chapterPack.append(rows[index - 3][0])
                 if chapterPack:
                     genResult = GenerExam(chapterPack, StationCN, userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
                 else:

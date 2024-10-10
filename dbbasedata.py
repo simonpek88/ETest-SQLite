@@ -206,7 +206,7 @@ def addStation():
                 cur.execute(SQL)
                 SQL = f"INSERT INTO setup_{sn}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
                 mdb_ins(conn, cur, SQL)
-            for each in ["公共题库", "错题集"]:
+            for each in ["公共题库", "错题集", "关注题集"]:
                 SQL = f"SELECT ID from questionaff where chapterName = '{each}' and StationCN = '{sn}'"
                 if not mdb_sel(cur, SQL):
                     SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{each}', '{sn}', 10, 10)"
@@ -300,7 +300,7 @@ elif selectFunc == "站室专用题库" or selectFunc == "公共题库":
     rows = mdb_sel(cur, SQL)
     for row in rows:
         qTypeOption.append(row[0])
-    SQL = "SELECT chapterName from questionaff where StationCN = '" + st.session_state.StationCN + "' and chapterName <> '错题集' and chapterName <> '公共题库' order by chapterName"
+    SQL = "SELECT chapterName from questionaff where StationCN = '" + st.session_state.StationCN + "' and chapterName <> '错题集' and chapterName <> '公共题库' and chapterName <> '关注题集' order by chapterName"
     rows = mdb_sel(cur, SQL)
     for row in rows:
         chapterName.append(row[0])

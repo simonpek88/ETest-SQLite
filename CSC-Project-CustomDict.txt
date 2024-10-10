@@ -1,3 +1,4 @@
+acol
 AIFIB
 aikey
 aikeys
@@ -17,6 +18,7 @@ deepseek
 dyna
 examidd
 examresult
+favques
 Fileinfo
 fontsize
 gener

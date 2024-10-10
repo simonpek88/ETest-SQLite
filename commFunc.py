@@ -332,6 +332,16 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
                     if not mdb_sel(cur, SQL):
                         SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
                         mdb_ins(conn, cur, SQL)
+        if "关注题集" in qAffPack and examType == "training":
+            chapterRatio = getChapterRatio(StationCN, "关注题集", examType)
+            for k in quesType:
+                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from favques where qType = '{k[0]}' and userName = {userName} order by ID"
+                rows = mdb_sel(cur, SQL)
+                for row in rows:
+                    SQL = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
+                    if not mdb_sel(cur, SQL):
+                        SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
+                        mdb_ins(conn, cur, SQL)
         if '公共题库' in qAffPack:
             chapterRatio = getChapterRatio(StationCN, "公共题库", examType)
             for k in quesType:

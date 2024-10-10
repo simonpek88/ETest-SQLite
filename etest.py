@@ -762,7 +762,7 @@ def inputWord():
 
 
 def resetTableID():
-    for tablename in ["questions", "commquestions", "morepractise", "questionaff", "studyinfo", "setup_默认", f"setup_{st.session_state.StationCN}"]:
+    for tablename in ["questions", "commquestions", "morepractise", "questionaff", "studyinfo", "setup_默认", f"setup_{st.session_state.StationCN}", "favques"]:
         SQL = f"SELECT ID from {tablename} order by ID"
         rows = mdb_sel(cur, SQL)
         for i, row in enumerate(rows):
