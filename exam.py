@@ -122,12 +122,14 @@ def updateOptionAnswer(chosenID, chosen, option):
 
 
 @st.fragment
-def updateRadioAnswer(chosenID, chosen):
-    if "正确" in chosen:
-        st.session_state.answer = 1
-    else:
-        st.session_state.answer = 0
-    updateAnswer(chosenID)
+def updateRadioAnswer(chosenID):
+    if st.session_state.radioChosen is not None:
+        if "正确" in st.session_state.radioChosen:
+            st.session_state.answer = 1
+        else:
+            st.session_state.answer = 0
+        st.session_state.radioCompleted = True
+        updateAnswer(chosenID)
 
 
 @st.fragment
@@ -228,7 +230,6 @@ def exam(row):
         if chosen is not None:
             updateOptionAnswer(row[0], chosen, option)
     elif row[4] == '多选题':
-        #st.session_state.answer = ""
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
             value = value.replace("\n", "").replace("\t", "").strip()
             option.append(f"{chr(65 + index)}. {value}")
@@ -242,17 +243,21 @@ def exam(row):
             else:
                 st.checkbox(f"{value}:", value=False, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
     elif row[4] == '判断题':
-        option = ["A. 正确", "B. 错误"]
-        if row[6] == "":
-            chosen = st.radio(" ", option, index=None, label_visibility="collapsed", horizontal=True)
-            #print(f"Chosen:[{chosen}], {row[0]}, [{row[6]}]")
-        else:
-            chosen = st.radio(" ", option, index=int(row[6]) ^ 1, label_visibility="collapsed", horizontal=True)
-        #st.write(f":red[你已选择: ] :blue[{option[int(row[6]) ^ 1]}")
-        if chosen is not None:
-            updateRadioAnswer(row[0], chosen)
+        radioArea = st.empty()
+        with radioArea.container():
+            option = ["A. 正确", "B. 错误"]
+            if row[6] == "":
+                st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
+                #print(f"Chosen:[{chosen}], {row[0]}, [{row[6]}]")
+            else:
+                chosen = st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
+                #print(row[6], chosen)
+                if chosen is None:
+                    st.write(f":red[你已选择: ] :blue[{option[int(row[6]) ^ 1]}]")
+        if st.session_state.radioCompleted:
+            radioArea.empty()
+            st.session_state.radioCompleted = False
     elif row[4] == '填空题':
-        st.session_state.answer = ""
         orgOption = row[6].replace("；", ";").split(";")
         textAnswerArea = st.empty()
         with textAnswerArea.container():

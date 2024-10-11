@@ -91,6 +91,7 @@ def training():
             st.session_state.flagCompleted = False
             st.session_state.examStartTime = int(time.time())
             st.session_state.goto = False
+            st.session_state.radioCompleted = False
             if st.session_state.examType != "training":
                 st.session_state.examChosen = True
                 updateActionUser(st.session_state.userName, "生成考试试题", st.session_state.loginTime)
