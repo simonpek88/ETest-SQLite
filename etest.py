@@ -660,7 +660,7 @@ def resetActiveUser():
 
 
 def deleteSingleQues():
-    tablename = st.selectbox("请选择要删除:red[单个试题]所在的题库", ("站室题库", "公共题库", "错题集"), index=None)
+    tablename = st.selectbox("请选择要删除:red[单个试题]所在的题库", ("站室题库", "公共题库", "错题集", "关注题集"), index=None)
     if tablename:
         st.number_input("请输入要删除的试题ID", min_value=1, max_value=999999, placeholder="每个题库试题的ID都不一样, 相同ID可以在不同题库, 一定要检查题库和ID是否一致", key="delQuesID")
         buttonConfirm = st.button("删除", type="primary")
@@ -675,6 +675,8 @@ def deleteQues(tablename):
         targetTable = "commquestions"
     elif tablename == "错题集":
         targetTable = "morepractise"
+    elif tablename == "关注题集":
+        targetTable = "favques"
     SQL = f"DELETE from {targetTable} where ID = {st.session_state.delQuesID}"
     mdb_modi(conn, cur, SQL)
     st.success(f"已 :red[删除] {tablename} 中ID为 {st.session_state.delQuesID} 的试题")
