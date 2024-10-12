@@ -133,6 +133,16 @@ def updateRadioAnswer(chosenID):
 
 
 @st.fragment
+def updateRadioAnswer2(chosenID):
+    if st.session_state.radioChosen2 is not None:
+        if "正确" in st.session_state.radioChosen2:
+            st.session_state.answer = 1
+        else:
+            st.session_state.answer = 0
+        updateAnswer(chosenID)
+
+
+@st.fragment
 def updateMOptionAnswer(row):
     mpAnswerPack = []
     for key in st.session_state.keys():
@@ -199,7 +209,7 @@ def exam(row):
             AIModelName = value[0]
             AIOptionIndex = index
     if row[4] == "填空题":
-        reviseQues = row[1].replace("(", ":red[( _ ]").replace(")", ":red[ _ _ )]")
+        reviseQues = row[1].replace("(", ":red[ ( _ ]").replace(")", ":red[ _ _ ) ]")
     else:
         reviseQues = row[1]
     standardAnswer = getStandardAnswer(row)
@@ -251,10 +261,14 @@ def exam(row):
             else:
                 chosen = st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
                 if chosen is None:
-                    st.write(f":red[你已选择: ] :blue[{option[int(row[6]) ^ 1]}]")
+                    st.write(f":red[**你已选择:** ] :blue[[**{option[int(row[6]) ^ 1][0]}**]]")
         if st.session_state.radioCompleted:
             radioArea.empty()
             st.session_state.radioCompleted = False
+            SQL = f"SELECT userAnswer from {st.session_state.examFinalTable} where ID = {row[0]}"
+            tempUserAnswer = mdb_sel(cur, SQL)[0][0]
+            if tempUserAnswer != "":
+                st.radio(" ", option, index=int(tempUserAnswer) ^ 1, key="radioChosen2", on_change=updateRadioAnswer2, args=(row[0],), label_visibility="collapsed", horizontal=True)
     elif row[4] == '填空题':
         orgOption = row[6].replace("；", ";").split(";")
         textAnswerArea = st.empty()
