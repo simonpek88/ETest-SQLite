@@ -248,10 +248,8 @@ def exam(row):
             option = ["A. 正确", "B. 错误"]
             if row[6] == "":
                 st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
-                #print(f"Chosen:[{chosen}], {row[0]}, [{row[6]}]")
             else:
                 chosen = st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
-                #print(row[6], chosen)
                 if chosen is None:
                     st.write(f":red[你已选择: ] :blue[{option[int(row[6]) ^ 1]}]")
         if st.session_state.radioCompleted:
