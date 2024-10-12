@@ -67,7 +67,8 @@ cur.execute("PRAGMA journal_mode = WAL")
 st.write("### :green[系统参数设置]")
 updateActionUser(st.session_state.userName, "设置系统参数", st.session_state.loginTime)
 with st.expander("# :blue[考试参数设置]"):
-    #st.subheader("考试参数设置")
+    col1, col2, col3, col4 = st.columns(4)
+    col5, col6, col7 = st.columns(3)
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'exam' order by ID"
     rows = mdb_sel(cur, SQL)
     for row in rows:
@@ -75,22 +76,28 @@ with st.expander("# :blue[考试参数设置]"):
             quesScore = row[1]
         if row[0] == "考题总数":
             quesTotal = row[1]
-        if "数量" in row[0]:
-            st.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+        if row[0] == "单选题数量":
+            col1.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+        elif row[0] == "多选题数量":
+            col2.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+        elif row[0] == "判断题数量":
+            col3.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+        elif row[0] == "填空题数量":
+            col4.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
         elif row[0] == "单题分值":
-            st.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}")
+            col5.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="所有题型统一分值")
         elif row[0] == "考题总数":
-            st.number_input(row[0], min_value=10, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help="仅对考试有效, 练习模式不受限制")
+            col6.number_input(row[0], min_value=10, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help="仅对考试有效, 练习模式不受限制")
         elif row[0] == "合格分数线":
-            st.slider(row[0], min_value=1, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
+            st.slider(row[0], min_value=60, max_value=120, value=row[1], step=10, key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
         elif row[0] == "同场考试次数限制":
-            st.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="最多5次")
+            col7.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="最多5次")
         elif row[0] == "考试题库每次随机生成":
             #st.toggle(row[0], value=row[1], key=f"dasetup_{row[2]}", help="开启有效, 关闭无效")
             sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
             updateSwitchOption(row[0])
         elif row[0] == "考试时间":
-            st.slider(row[0], min_value=30, max_value=150, value=row[1], step=10, key=f"dasetup_{row[2]}", help="单位:分钟, 建议为60-90分钟")
+            st.slider(row[0], min_value=30, max_value=150, value=row[1], step=15, key=f"dasetup_{row[2]}", help="建议为60-90分钟")
         elif row[0] == "使用大模型评判错误的填空题答案":
             sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
             updateSwitchOption(row[0])
@@ -119,10 +126,20 @@ with st.expander("# :green[题型设置]"):
         sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
         updateSwitchOption(row[0])
 with st.expander("# :violet[导出文件字体设置]"):
+    col20, col21, col22 = st.columns(3)
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'fontsize' order by ID"
     rows = mdb_sel(cur, SQL)
     for row in rows:
-        st.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}", help="题库导出至Word文件中的字体大小")
+        if row[0] == "抬头字体大小":
+            col20.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}", help="题库导出至Word文件中的字体大小")
+        elif row[0] == "题型字体大小":
+            col21.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}")
+        elif row[0] == "题目字体大小":
+            col22.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}")
+        elif row[0] == "选项字体大小":
+            col20.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}")
+        elif row[0] == "复核信息字体大小":
+            col21.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}")
     updateDA = st.button("字体设置更新", on_click=updateDAParam, args=("字体设置",))
 with st.expander("# :orange[其他设置]"):
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'others' order by ID"
