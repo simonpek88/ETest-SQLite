@@ -30,10 +30,7 @@ def calcScore():
     if "confirmSubmit-close" in st.session_state:
         del st.session_state["confirmSubmit-close"]
     flagUseAIFIB = bool(getParam("使用大模型评判错误的填空题答案", st.session_state.StationCN))
-    opScore = getParam("单选题单题分值", st.session_state.StationCN)
-    opmScore = getParam("多选题单题分值", st.session_state.StationCN)
-    rdScore = getParam("判断题单题分值", st.session_state.StationCN)
-    wrScore = getParam("填空题单题分值", st.session_state.StationCN)
+    quesScore = getParam("单题分值", st.session_state.StationCN)
     passScore = getParam("合格分数线", st.session_state.StationCN)
     userScore = 0
     SQL = f"SELECT qAnswer, qType, userAnswer, Question, qOption, qAnalysis, userName, SourceType from {st.session_state.examFinalTable} where userName = {st.session_state.userName} order by ID"
@@ -41,14 +38,7 @@ def calcScore():
     for row in rows:
         flagAIScore = False
         if row[0].replace(" ", "").lower() == row[2].replace(" ", "").lower():
-            if row[1] == "单选题":
-                userScore += opScore
-            elif row[1] == "多选题":
-                userScore += opmScore
-            elif row[1] == "判断题":
-                userScore += rdScore
-            elif row[1] == "填空题":
-                userScore += wrScore
+            userScore += quesScore
             SQL = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
             if mdb_sel(cur, SQL):
                 SQL = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
@@ -74,7 +64,7 @@ def calcScore():
                             if st.session_state.debug:
                                 print(f"debug: [{row[3]}] [Q:{row[0]} / A:{row[2]}] / A.I.判断: [{fibAI}]")
                             if fibAI == "正确":
-                                userScore += wrScore
+                                userScore += quesScore
                                 flagAIScore = True
                             else:
                                 flagAIScore = False
@@ -433,6 +423,43 @@ def quesGoto():
         st.session_state.curQues = int(cop.sub('', st.session_state.chosenID))
 
 
+@st.fragment
+def displayTime():
+    timeArea = st.empty()
+    with timeArea.container():
+        #st.write(f"### :red[{st.session_state.examName}]")
+        #st.markdown(f"<font face='微软雅黑' color=red size=16><center>**{st.session_state.examName}**</center></font>", unsafe_allow_html=True)
+        st.markdown(f"### <font face='微软雅黑' color=red><center>{st.session_state.examName}</center></font>", unsafe_allow_html=True)
+        info1, info2, info3, info4 = st.columns(4)
+        flagTime = bool(getParam("显示考试时间", st.session_state.StationCN))
+        if st.session_state.examType == "exam" or flagTime:
+            examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
+            remainingTime = examTimeLimit - (int(time.time()) - st.session_state.examStartTime)
+            hTime = "0" + str(int(remainingTime / 3600))
+            mTime = int((remainingTime % 3600) / 60)
+            if mTime < 10:
+                mTime = "0" + str(mTime)
+            sTime = int(remainingTime % 60)
+            if sTime < 10:
+                sTime = "0" + str(sTime)
+            info1.metric(label="考试剩余时间", value=f"{hTime}:{mTime}:{sTime}")
+            if remainingTime < 0:
+                if st.session_state.examType == "exam":
+                    st.warning("⚠️ 考试已结束, 将强制交卷!")
+                    calcScore()
+                else:
+                    st.session_state.examStartTime = int(time.time())
+            elif remainingTime < 900:
+                st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
+        SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
+        acAnswer1 = mdb_sel(cur, SQL)[0][0]
+        SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
+        acAnswer2 = mdb_sel(cur, SQL)[0][0]
+        info2.metric(label="已答题", value=acAnswer1)
+        info3.metric(label="未答题", value=acAnswer2)
+        info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
+
+
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
 cur.execute("PRAGMA cipher = 'aes256cbc'")
@@ -446,41 +473,12 @@ elif st.session_state.examType == "training":
 if "confirmSubmit" not in st.session_state:
     st.session_state.confirmSubmit = False
 if "examFinalTable" in st.session_state and "examName" in st.session_state and not st.session_state.confirmSubmit:
-    #st.write(f"## :red[{st.session_state.examName}]")
-    st.markdown(f"<font face='微软雅黑' color=red size=16><center>**{st.session_state.examName}**</center></font>", unsafe_allow_html=True)
-    flagTime = bool(getParam("显示考试时间", st.session_state.StationCN))
     SQL = f"SELECT userName, examName from examresult GROUP BY userName, examName HAVING count(userName) < {st.session_state.examLimit} and count(examName) < {st.session_state.examLimit} and userName = {st.session_state.userName} and examName = '{st.session_state.examName}'"
     if mdb_sel(cur, SQL) or st.session_state.examType == "training":
         for key in st.session_state.keys():
             if key.startswith("moption_") or key.startswith("textAnswer_"):
                 del st.session_state[key]
-        if st.session_state.examType == "exam" or flagTime:
-            examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
-            remainingTime = examTimeLimit - (int(time.time()) - st.session_state.examStartTime)
-            hTime = "0" + str(int(remainingTime / 3600))
-            mTime = int((remainingTime % 3600) / 60)
-            if mTime < 10:
-                mTime = "0" + str(mTime)
-            sTime = int(remainingTime % 60)
-            if sTime < 10:
-                sTime = "0" + str(sTime)
-            SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
-            acAnswer1 = mdb_sel(cur, SQL)[0][0]
-            SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
-            acAnswer2 = mdb_sel(cur, SQL)[0][0]
-            info1, info2, info3, info4 = st.columns(4)
-            info1.metric(label="考试剩余时间", value=f"{hTime}:{mTime}:{sTime}")
-            info2.metric(label="已答题", value=acAnswer1)
-            info3.metric(label="未答题", value=acAnswer2)
-            info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
-            if remainingTime < 0:
-                if st.session_state.examType == "exam":
-                    st.warning("⚠️ 考试已结束, 将强制交卷!")
-                    calcScore()
-                else:
-                    st.session_state.examStartTime = int(time.time())
-            elif remainingTime < 900:
-                st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
+        displayTime()
         qcol1, qcol2, qcol3, qcol4 = st.columns(4)
         examCon = st.empty()
         with examCon.container():

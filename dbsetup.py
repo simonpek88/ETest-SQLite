@@ -71,13 +71,18 @@ with st.expander("# :blue[考试参数设置]"):
     SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'exam' order by ID"
     rows = mdb_sel(cur, SQL)
     for row in rows:
-        #st.number_input(row[0], min_value=1, max_value=200, value=row[1], key=f"dasetup_{row[2]}")
+        if row[0] == "单题分值":
+            quesScore = row[1]
+        if row[0] == "考题总数":
+            quesTotal = row[1]
         if "数量" in row[0]:
             st.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
-        elif "分值" in row[0]:
-            st.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="最高5分")
+        elif row[0] == "单题分值":
+            st.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}")
+        elif row[0] == "考题总数":
+            st.number_input(row[0], min_value=10, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help="仅对考试有效, 练习模式不受限制")
         elif row[0] == "合格分数线":
-            st.slider(row[0], min_value=1, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help="建议为总分的80%")
+            st.slider(row[0], min_value=1, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
         elif row[0] == "同场考试次数限制":
             st.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="最多5次")
         elif row[0] == "考试题库每次随机生成":
@@ -85,7 +90,7 @@ with st.expander("# :blue[考试参数设置]"):
             sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
             updateSwitchOption(row[0])
         elif row[0] == "考试时间":
-            st.slider(row[0], min_value=30, max_value=90, value=row[1], step=10, key=f"dasetup_{row[2]}", help="单位:分钟, 建议为60分钟")
+            st.slider(row[0], min_value=30, max_value=150, value=row[1], step=10, key=f"dasetup_{row[2]}", help="单位:分钟, 建议为60-90分钟")
         elif row[0] == "使用大模型评判错误的填空题答案":
             sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
             updateSwitchOption(row[0])

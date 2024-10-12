@@ -359,11 +359,9 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
     for k in quesType:
         SQL = f"INSERT INTO {examFinalTable}(Question, qOption, qAnswer, qType, qAnalysis, SourceType) SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from {examTable} where qType = '{k[0]}' order by randomID limit 0, {k[1]}"
         mdb_ins(conn, cur, SQL)
-    quesCount, quesCS = 0, 0
+    quesCS = getParam("考题总数", StationCN)
     SQL = "SELECT Count(ID) from " + examFinalTable
     quesCount = mdb_sel(cur, SQL)[0][0]
-    for k in quesType:
-        quesCS += k[1]
     if quesCount == quesCS or (examType == 'training' and quesCount > 0):
         return True, quesCount, examTable, examFinalTable
     else:
