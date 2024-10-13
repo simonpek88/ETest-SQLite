@@ -804,9 +804,9 @@ def resetTableID():
 def AIGenerQues():
     quesPack, chars, chapterPack, dynaQuesType, generQuesCount = [], ["A", "B", "C", "D", "E", "F", "G", "H"], [], ["单选题", "多选题", "判断题", "填空题"], 0
     StationCNPack, chosenStationCN = [], st.session_state.StationCN
-    temp = "站室题库现有: "
+    temp = f"{st.session_state.StationCN} 站室题库现有: "
     for each in dynaQuesType:
-        SQL = f"SELECT Count(ID) from questions where qType = '{each}'"
+        SQL = f"SELECT Count(ID) from questions where qType = '{each}' where StationCN = '{st.session_state.StationCN}'"
         qCount = mdb_sel(cur, SQL)[0][0]
         temp = temp + "[:red[" + each + "]] " + str(qCount) + "道 "
     temp = temp + "\n\n公共题库现有: "
