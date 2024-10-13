@@ -239,9 +239,9 @@ def exam(row):
             orgOption = []
         for index, value in enumerate(option):
             if str(index) in orgOption:
-                st.checkbox(f"{value}:", value=True, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
+                st.checkbox(f"{value}", value=True, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
             else:
-                st.checkbox(f"{value}:", value=False, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
+                st.checkbox(f"{value}", value=False, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
     elif row[4] == '判断题':
         radioArea = st.empty()
         with radioArea.container():
@@ -324,7 +324,7 @@ def exam(row):
                         st.subheader(f":orange[解析 标准答案: :green[[{standardAnswer}]]]\n{AIAnswer}", divider="gray")
                         if flagAIUpdate:
                             AIAnswer = AIAnswer.replace('"', '""').replace("'", "''")
-                            for each in ["questions", "commquestions", "morepractise", st.session_state.examTable, st.session_state.examFinalTable]:
+                            for each in ["questions", "commquestions", "morepractise", "favques", st.session_state.examTable, st.session_state.examFinalTable]:
                                 SQL = f"UPDATE {each} set qAnalysis = '{AIAnswer}' where Question = '{row[1]}' and qType = '{row[4]}'"
                                 mdb_modi(conn, cur, SQL)
                             st.toast("A.I.答案解析内容已更新至题库")

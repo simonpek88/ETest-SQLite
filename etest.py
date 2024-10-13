@@ -392,6 +392,8 @@ def questoWord():
             st.warning("请先生成题库")
             quesTable = ""
     sac.switch(label="复核模式", on_label="On", align='start', size='md', value=False, key="sac_recheck")
+    if st.session_state.sac_recheck:
+        sac.switch(label="附加A.I.解析", on_label="On", align='start', size='md', value=False, key="sac_Analysis")
     if quesTable and quesType:
         buttonSubmit = st.button("导出为Word文件")
         if buttonSubmit:
@@ -424,11 +426,11 @@ def questoWord():
             for each in quesType:
                 if quesTable == "站室题库" or quesTable == "错题集":
                     if stationCN == "全站":
-                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType from {tablename} where qType = '{each}' order by ID"
+                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' order by ID"
                     else:
-                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
+                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
                 else:
-                    SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType from {tablename} where qType = '{each}' order by ID"
+                    SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' order by ID"
                 rows = mdb_sel(cur, SQL)
                 #st.write(f"{each} 共 {len(rows)}")
                 i = 1
@@ -505,11 +507,22 @@ def questoWord():
                                 textSource.font.color.rgb = RGBColor(155, 17, 30)
                                 textSource.font.underline = True
                             #textSource.font.italic = True
+                            if st.session_state.sac_Analysis and row[6] != "":
+                                pAnalysis = quesDOC.add_paragraph()
+                                if row[5] != "AI-LLM":
+                                    textAnalysis = pAnalysis.add_run(f"人工解析: [{row[6].replace(':red', '').replace('[', '').replace(']', '').replae('**', '')}]")
+                                else:
+                                    textAnalysis = pAnalysis.add_run(f"请特别注意 A.I.解析: [{row[6].replace('**', '')}]")
+                                textAnalysis.font.bold = True
+                                textAnalysis.font.size = Pt(answerFS)
+                                textAnalysis.font.color.rgb = RGBColor(79, 66, 181)
+                                #textAnalysis.font.underline = True
+                                #textAnalysis.font.italic = True
                         i += 1
             if headerExamName != "":
-                outputFile = f"./QuesDoc/{st.session_state.StationCN}-{headerExamName}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
+                outputFile = f"./QuesDoc/{stationCN}-{headerExamName}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
             else:
-                outputFile = f"./QuesDoc/{st.session_state.StationCN}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
+                outputFile = f"./QuesDoc/{stationCN}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
             if os.path.exists(outputFile):
                 os.remove(outputFile)
             quesDOC.save(outputFile)
@@ -563,15 +576,18 @@ def delExamTable():
 
 
 def dbinputSubmit(tarTable, orgTable):
+    os.system("cls")
     tmpTable = ""
     if tarTable == "站室题库":
         tablename = "questions"
-        SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        maxcol = 8
+        SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        maxcol = 7
     elif tarTable == "公共题库":
         tablename = "commquestions"
-        SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES (?, ?, ?, ?, ?, ?)"
-        maxcol = 6
+        SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis) VALUES (?, ?, ?, ?, ?)"
+        maxcol = 5
+    SQL2 = f"SELECT Max(ID) from {tablename}"
+    maxid = mdb_sel(cur, SQL2)[0][0]
     st.spinner(f"正在向 [{tarTable}] 导入题库...")
     for each in orgTable:
         listinsheet = openpyxl.load_workbook(f"./InputQues/{each}.xlsx")
@@ -587,6 +603,20 @@ def dbinputSubmit(tarTable, orgTable):
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
     mdb_modi(conn, cur, SQL)
+    SQL = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
+    rows = mdb_sel(cur, SQL)
+    for row in rows:
+        SQL2 = ""
+        if row[3] == "单选题" or row[3] == "多选题":
+            for each in row[2].split(";"):
+                if int(each) < 0 or int(each) >= len(row[1].split(";")):
+                    SQL2 = f"DELETE from {tablename} where ID = {row[0]}"
+        elif row[3] == "判断题":
+            if int(row[2]) < 0 or int(row[2]) > 1:
+                SQL2 = f"DELETE from {tablename} where ID = {row[0]}"
+        if SQL2 != "":
+            mdb_del(conn, cur, SQL2)
+            st.warning(f"试题: [{row[4]}] 题型: [{row[3]}] 选项: [{row[1]}] 答案: [{row[2]}] 因为选项及答案序号不相符, 没有导入")
     SQL = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
     mdb_ins(conn, cur, SQL)
     ClearTables()
@@ -624,7 +654,6 @@ def dbfunc():
             sac.SegmentedItem(label="删除所有试卷", icon="trash"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
             sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
-            sac.SegmentedItem(label="重置所有用户状态", icon="person-slash"),
         ], align="start", color="red"
     )
     if bc == "A.I.出题":
@@ -641,10 +670,6 @@ def dbfunc():
         delExamTable()
     elif bc == "删除静态题库":
         delStaticExamTable()
-    elif bc == "重置所有用户状态":
-        buttonReset = st.button("重置所有用户状态", type="primary")
-        if buttonReset:
-            st.button("确认重置", type="secondary", on_click=resetActiveUser)
     elif bc == "重置题库ID":
         buttonReset = st.button("重置题库ID", type="primary")
         if buttonReset:
@@ -1191,12 +1216,14 @@ def studyResetAction():
 
 def studyinfoDetail():
     scol1, scol2, scol3 = st.columns(3)
-    SQL = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集'"
+    SQL = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' and chapterName <> '关注题集'"
     rows = mdb_sel(cur, SQL)
     scol1.metric(label="章节总计", value=rows[0][0], help="包含公共题库, 不含错题集")
-    SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' UNION SELECT Count(ID) from commquestions"
-    rows = mdb_sel(cur, SQL)
-    ct = rows[0][0] + rows[1][0]
+    SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}'"
+    ct1 = mdb_sel(cur, SQL)[0][0]
+    SQL = "SELECT Count(ID) from commquestions"
+    ct2 = mdb_sel(cur, SQL)[0][0]
+    ct = ct1 + ct2
     scol2.metric(label="试题总计", value=ct, help="包含公共题库, 不含错题集")
     SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
     rows = mdb_sel(cur, SQL)
@@ -1231,8 +1258,25 @@ def studyinfoDetail():
                 st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{int((cs / ct) * 100)}%]")
 
 
-def actionUserStatus():
+def userStatus():
     st.subheader(":violet[在线用户状态]", divider="rainbow")
+    bc = sac.segmented(
+        items=[
+            sac.SegmentedItem(label="在线用户状态", icon="people"),
+            sac.SegmentedItem(label="重置所有用户状态", icon="person-slash"),
+        ], align="start", color="red"
+    )
+    if bc == "在线用户状态":
+        actionUserStatus()
+    elif bc == "重置所有用户状态":
+        buttonReset = st.button("重置所有用户状态", type="primary")
+        if buttonReset:
+            st.button("确认重置", type="secondary", on_click=resetActiveUser)
+    if bc is not None:
+        updateActionUser(st.session_state.userName, bc, st.session_state.loginTime)
+
+
+def actionUserStatus():
     SQL = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from user where activeUser = 1 order by ID"
     rows = mdb_sel(cur, SQL)
     df = pd.DataFrame(rows, dtype=str)
@@ -1277,7 +1321,7 @@ choseExam_page = st.Page("training.py", title="选择考试", icon=":material/da
 trainingQues_page = st.Page("exam.py", title="题库练习", icon=":material/format_list_bulleted:")
 execExam_page = st.Page("exam.py", title="开始考试", icon=":material/history_edu:")
 search_page = st.Page("search.py", title="信息查询", icon=":material/search:")
-actionUserStatus_menu = st.Page(actionUserStatus, title="用户状态", icon=":material/group:")
+actionUserStatus_menu = st.Page(userStatus, title="用户状态", icon=":material/group:")
 dbsetup_page = st.Page("dbsetup.py", title="参数设置", icon=":material/settings:")
 dbbasedata_page = st.Page("dbbasedata.py", title="数据录入", icon=":material/app_registration:")
 aboutInfo_menu = st.Page(aboutInfo, title="关于...", icon=":material/info:")
