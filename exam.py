@@ -351,7 +351,7 @@ def updateAIModel(AIOption, AIOptionIndex):
 
 @st.fragment
 def delAnalysis(row):
-    for each in ["questions", "commquestions", "morepractise", st.session_state.examTable, st.session_state.examFinalTable]:
+    for each in ["questions", "commquestions", "morepractise", "favques", st.session_state.examTable, st.session_state.examFinalTable]:
         SQL = f"UPDATE {each} set qAnalysis = '' where Question = '{row[1]}' and qType = '{row[4]}'"
         mdb_modi(conn, cur, SQL)
     st.info("本题解析已删除")
