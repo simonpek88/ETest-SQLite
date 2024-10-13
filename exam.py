@@ -6,7 +6,6 @@ import time
 import apsw
 import streamlit as st
 import streamlit_antd_components as sac
-from streamlit_modal import Modal
 
 from commFunc import (deepseek_AI, getParam, mdb_del, mdb_ins, mdb_modi,
                       mdb_sel, qianfan_AI, updateActionUser, xunfei_xh_AI,
@@ -22,13 +21,39 @@ def updateAnswer(userQuesID):
     mdb_modi(conn, cur, SQL)
 
 
+@st.dialog("考试成绩")
+def score_dialog(userScore, passScore):
+    examDate = int(time.mktime(time.strptime(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "%Y-%m-%d %H:%M:%S")))
+    if userScore >= passScore:
+        flagPass = 1
+    else:
+        flagPass = 0
+    st.write(f"考生ID:  {st.session_state.userName}")
+    st.write(f"考生姓名: {st.session_state.userCName}")
+    st.write(f"考试时间: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(examDate))}")
+    st.subheader(f"考试成绩: {userScore} 分 / 合格分数线为 {passScore} 分")
+    if flagPass == 1:
+        st.subheader("考试结果: :blue[通过] 👏")
+        st.balloons()
+    else:
+        st.subheader("考试结果: :red[未通过] 🤪")
+        #st.snow()
+    if st.session_state.examType == "training":
+        st.write("练习模式成绩不计入记录")
+    if st.session_state.examType == "exam" and st.session_state.calcScore:
+        SQL = "INSERT INTO examresult(userName, userCName, examScore, examDate, examPass, examName) VALUES(" + str(st.session_state.userName) + ", '" + st.session_state.userCName + "', " + str(userScore) + ", " + str(examDate) + ", " + str(flagPass) + ", '" + st.session_state.examName + "')"
+        mdb_ins(conn, cur, SQL)
+    st.session_state.calcScore = False
+    buttonScore = st.button("确定")
+    if buttonScore:
+        st.rerun()
+
+
 def calcScore():
     st.session_state.examStartTime = int(time.time())
     st.session_state.confirmSubmit = True
     st.session_state.curQues = 0
     st.session_state.flagCompleted = False
-    if "confirmSubmit-close" in st.session_state:
-        del st.session_state["confirmSubmit-close"]
     flagUseAIFIB = bool(getParam("使用大模型评判错误的填空题答案", st.session_state.StationCN))
     quesScore = getParam("单题分值", st.session_state.StationCN)
     passScore = getParam("合格分数线", st.session_state.StationCN)
@@ -78,29 +103,8 @@ def calcScore():
                 else:
                     SQL = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{row[2]}' where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
                     mdb_modi(conn, cur, SQL)
-    examDate = int(time.mktime(time.strptime(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "%Y-%m-%d %H:%M:%S")))
-    if userScore >= passScore:
-        flagPass = 1
-    else:
-        flagPass = 0
-    confirm_modal = Modal(title=f"{st.session_state.examName} 考试结果", key="examResult", max_width=500)
-    with confirm_modal.container():
-        st.write(f"考生ID:  {st.session_state.userName}")
-        st.write(f"考生姓名: {st.session_state.userCName}")
-        st.write(f"考试时间: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(examDate))}")
-        st.subheader(f"考试成绩: {userScore} 分 / 合格分数线为 {passScore} 分")
-        if flagPass == 1:
-            st.subheader("考试结果: :blue[通过] 👏")
-            st.balloons()
-        else:
-            st.subheader("考试结果: :red[未通过] 🤪")
-            #st.snow()
-        if st.session_state.examType == "training":
-            st.write("练习模式成绩不计入记录")
-        st.button("确定")
-    if st.session_state.examType == "exam":
-        SQL = "INSERT INTO examresult(userName, userCName, examScore, examDate, examPass, examName) VALUES(" + str(st.session_state.userName) + ", '" + st.session_state.userCName + "', " + str(userScore) + ", " + str(examDate) + ", " + str(flagPass) + ", '" + st.session_state.examName + "')"
-        mdb_ins(conn, cur, SQL)
+    if st.session_state.calcScore:
+        score_dialog(userScore, passScore)
 
 
 @st.fragment
@@ -207,7 +211,7 @@ def exam(row):
         updateStudyInfo(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
     acol1, acol2 = st.columns(2)
-    if st.session_state.debug and st.session_state.userType == "admin":
+    if st.session_state.debug and st.session_state.userType == "admin" and st.session_state.examType != "exam":
         buttonConfirm = acol1.button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
@@ -460,6 +464,19 @@ def displayTime():
         info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
 
 
+@st.dialog("交卷")
+def submit_dialog(prompt):
+    st.write(f":red[**{prompt}**]")
+    buttonSubmit = st.button("确定")
+    buttonCancel = st.button("取消")
+    if buttonSubmit:
+        st.session_state.calcScore = True
+        st.rerun()
+    elif buttonCancel:
+        st.session_state.calcScore = False
+        st.rerun()
+
+
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
 cur.execute("PRAGMA cipher = 'aes256cbc'")
@@ -467,14 +484,16 @@ cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
 if st.session_state.examType == "exam":
-    updateActionUser(st.session_stateuserName, "考试", st.session_state.loginTime)
+    updateActionUser(st.session_state.userName, "考试", st.session_state.loginTime)
 elif st.session_state.examType == "training":
     updateActionUser(st.session_state.userName, "练习", st.session_state.loginTime)
 if "confirmSubmit" not in st.session_state:
     st.session_state.confirmSubmit = False
 if "examFinalTable" in st.session_state and "examName" in st.session_state and not st.session_state.confirmSubmit:
-    SQL = f"SELECT userName, examName from examresult GROUP BY userName, examName HAVING count(userName) < {st.session_state.examLimit} and count(examName) < {st.session_state.examLimit} and userName = {st.session_state.userName} and examName = '{st.session_state.examName}'"
-    if mdb_sel(cur, SQL) or st.session_state.examType == "training":
+    SQL = f"SELECT userName, examName from examresult GROUP BY userName, examName HAVING Count(examName) >= {st.session_state.examLimit} and userName = {st.session_state.userName} and examName = '{st.session_state.examName}'"
+    if not mdb_sel(cur, SQL) or st.session_state.examType == "training":
+        if st.session_state.calcScore:
+            calcScore()
         for key in st.session_state.keys():
             if key.startswith("moption_") or key.startswith("textAnswer_"):
                 del st.session_state[key]
@@ -557,10 +576,7 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
                         emptyAnswer = emptyAnswer[:-2] + "]题, 请检查或直接交卷!"
                     else:
                         emptyAnswer = "你的所有题目均已作答, 确认交卷吗?"
-                    confirm_modal = Modal(title=emptyAnswer, key="confirmSubmit", max_width=500)
-                    with confirm_modal.container():
-                        st.button("确定", on_click=calcScore)
-                        st.button("取消")
+                    submit_dialog(emptyAnswer)
                 preButton, nextButton, submitButton = False, False, False
         if st.session_state.confirmSubmit:
             examCon.empty()
