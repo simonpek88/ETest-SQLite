@@ -48,8 +48,8 @@ def changePassword():
     changePW = st.empty()
     with changePW.container(border=True):
         oldPassword = st.text_input("请输入原密码", max_chars=8, type="password", autocomplete="off")
-        newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="off")
-        confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="off")
+        newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="new-password")
+        confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="new-password")
         buttonSubmit = st.button("确认修改")
     if oldPassword:
         SQL = "SELECT ID from user where userName = " + str(st.session_state.userName) + " and userPassword = '" + oldPassword + "'"
