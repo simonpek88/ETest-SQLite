@@ -586,4 +586,4 @@ else:
     if st.session_state.examType == "training":
         st.info("请先生成新的题库", icon="ℹ️")
     elif st.session_state.examType == "exam":
-        st.info("请先选择考试场次和点击开始考试", icon="ℹ️")
+        st.info("请先选择考试场次并点击开始考试", icon="ℹ️")
