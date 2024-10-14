@@ -115,6 +115,29 @@ def deepseek_AI(ques, option, quesType):
         return ""
 
 
+def deepseek_AI_GenerQues(reference, quesType, quesCount):
+    aikey = getEncryptKeys("deepseek")
+    prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是特定题型的试题"
+    prompt = prompt + "\n请按照以下格式出题\n题型: \n试题: \n选项: \n标准答案: \n试题解析: \n\n按以下内容出题\n参考资料:\n"
+    client = OpenAI(api_key=aikey, base_url="https://api.deepseek.com")
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {
+                "role": "system",
+                "content": prompt
+            },
+            {
+                "role": "user",
+                "content": reference
+            },
+        ],
+        stream=False
+    )
+
+    return response.choices[0].message.content
+
+
 def qianfan_AI(ques, AImodel, option, quesType):
     aikeyAK = getEncryptKeys("qianfan_ak")
     aikeySK = getEncryptKeys("qianfan_sk")

@@ -18,7 +18,7 @@ from streamlit_extras.badges import badge
 from xlsxwriter.workbook import Workbook
 
 from commFunc import (getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel,
-                      qianfan_AI_GenerQues, updatePyFileinfo, updateActionUser)
+                      deepseek_AI_GenerQues, qianfan_AI_GenerQues, updatePyFileinfo, updateActionUser)
 from streamlit_extras.metric_cards import style_metric_cards
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
@@ -803,10 +803,11 @@ def resetTableID():
 
 def AIGenerQues():
     quesPack, chars, chapterPack, dynaQuesType, generQuesCount = [], ["A", "B", "C", "D", "E", "F", "G", "H"], [], ["单选题", "多选题", "判断题", "填空题"], 0
+    AIModelNamePack, quesTypePack, generQuesCountPack, gqc = [], [], [], 0
     StationCNPack, chosenStationCN = [], st.session_state.StationCN
     temp = f"{st.session_state.StationCN} 站室题库现有: "
     for each in dynaQuesType:
-        SQL = f"SELECT Count(ID) from questions where qType = '{each}' where StationCN = '{st.session_state.StationCN}'"
+        SQL = f"SELECT Count(ID) from questions where qType = '{each}' and StationCN = '{st.session_state.StationCN}'"
         qCount = mdb_sel(cur, SQL)[0][0]
         temp = temp + "[:red[" + each + "]] " + str(qCount) + "道 "
     temp = temp + "\n\n公共题库现有: "
@@ -836,9 +837,18 @@ def AIGenerQues():
     elif table == "公共题库":
         chapter, textChapter = "", ""
     quesRefer = st.text_area("请输入参考资料")
-    quesType = st.radio(label="请选择要生成的题型", options=("单选题", "多选题", "判断题", "填空题"), index=None, horizontal=True)
+    AIModelNamePack = st.multiselect(
+        "可选LLM大模型",
+        ["DeepSeek", "文心千帆"],
+        ["DeepSeek", "文心千帆"],
+    )
+    quesTypePack = st.multiselect(
+        "请选择要生成的题型",
+        dynaQuesType,
+        dynaQuesType,
+    )
     quesCount = st.number_input("请输入要生成的题目数量", min_value=1, max_value=10, value=5, step=1)
-    if table is not None and quesRefer != "" and quesType is not None:
+    if table is not None and quesRefer != "" and AIModelNamePack != [] and quesTypePack != []:
         buttonGener = st.button("生成试题")
         if buttonGener:
             if chapter is None and textChapter != "":
@@ -849,125 +859,134 @@ def AIGenerQues():
                     st.toast(f"新的章节: :red[{textChapter}]添加完毕")
                 chapter = textChapter
             if chapter is not None and table == "站室题库" or table == "公共题库":
-                outputFile = f"./outputQues/{chosenStationCN}-{table}-{chapter}-{quesType}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.txt"
-                if os.path.exists(outputFile):
-                    os.remove(os.path)
                 if st.session_state.debug:
                     os.system("cls")
-                generQuesCount, displayQues = 0, ""
+                generQuesCount, displayQues, generQuesCountPack = 0, "", []
                 infoArea = st.empty()
-                with infoArea.container():
-                    st.info("正在使用 :red[文心千帆大模型] 进行试题生成, 请稍等...")
-                ques = qianfan_AI_GenerQues(quesRefer, quesType, quesCount, "ERNIE-Speed-8K")
-                quesPack = ques.split("题型")
-                for each in quesPack:
-                    if each != "":
-                        quesHeader, qOption, Option, qAnswer, qAnalysis, flagSuccess = "", "", [], "", "", True
-                        temp = each[:10]
-                        for dqt in dynaQuesType:
-                            if temp.find(dqt) != -1:
-                                quesType = dqt
-                                break
-                        b1 = each.find("试题")
-                        if b1 != -1:
-                            each = each[b1 + 3:]
-                            c1 = each.find("标准答案")
-                            c2 = each.find("试题解析")
-                            b2 = each.find("选项")
-                            if c1 != -1 and c2 != -1:
-                                if quesType == "填空题":
-                                    quesHeader = each[:c1].replace("\n\n", "").replace("\n", "").replace("**", "").replace("无选项，填写空白处即可。", "").replace("无选项，本题为填空题", "").replace("选项：", "").strip()
-                                else:
-                                    quesHeader = each[:b2].replace("\n\n", "").replace("\n", "").replace("**", "").strip()
-                                if quesHeader.startswith("*: "):
-                                    quesHeader = quesHeader[3:]
-                                if quesType == "单选题" or quesType == "多选题":
-                                    b3 = each.find("标准答案")
-                                    if b3 != -1:
-                                        Option = each[b2 + 3:b3].replace("\n\n", "").replace("正确的？ 选项：", "").replace("正确的？", "").strip().split("\n")
-                                        displayOption = each[b2 + 3:b3].replace("**", "").replace("正确的？ 选项：", "").replace("正确的？", "").strip()
-                                        displayOption = displayOption.replace("A. ", "\n\nA. ").replace("B. ", "\nB. ").replace("C. ", "\nC. ").replace("D. ", "\nD. ").replace("E. ", "\nE. ").replace("F. ", "\nF. ").replace("G. ", "\nG. ").replace("H. ", "\nH. ")
-                                        for each2 in Option:
-                                            for each3 in chars:
-                                                each2 = each2.replace(f"{each3}.", "").strip()
-                                            qOption = qOption + each2 + ";"
-                                        if qOption.endswith(";"):
-                                            qOption = qOption[:-1]
-                                        b4 = each.find("试题解析")
-                                        if b4 != -1:
-                                            qAnswer = each[b3 + 5:b4].replace("\n", "").replace("*", "").strip()
+                for quesType in quesTypePack:
+                    gqc = 0
+                    for AIModelName in AIModelNamePack:
+                        with infoArea.container(border=True):
+                            st.info(f"正在使用 :red[{AIModelName}大模型] 进行:blue[{quesType}] 试题生成, 请稍等...")
+                        if AIModelName == "文心千帆":
+                            ques = qianfan_AI_GenerQues(quesRefer, quesType, quesCount, "ERNIE-Speed-8K")
+                        elif AIModelName == "DeepSeek":
+                            ques = deepseek_AI_GenerQues(quesRefer, quesType, quesCount)
+                        quesPack = ques.split("题型")
+                        for each in quesPack:
+                            if each != "":
+                                quesHeader, qOption, Option, qAnswer, qAnalysis, flagSuccess = "", "", [], "", "", True
+                                temp = each[:10]
+                                for dqt in dynaQuesType:
+                                    if temp.find(dqt) != -1:
+                                        quesType = dqt
+                                        break
+                                b1 = each.find("试题")
+                                if b1 != -1:
+                                    each = each[b1 + 3:]
+                                    c1 = each.find("标准答案")
+                                    c2 = each.find("试题解析")
+                                    b2 = each.find("选项")
+                                    if c1 != -1 and c2 != -1:
+                                        if quesType == "填空题":
+                                            quesHeader = each[:c1].replace("\n\n", "").replace("\n", "").replace("**", "").replace("无选项，填写空白处即可。", "").replace("无选项，本题为填空题", "").replace("选项：", "").strip()
+                                        else:
+                                            quesHeader = each[:b2].replace("\n\n", "").replace("\n", "").replace("**", "").strip()
+                                        if quesHeader.startswith("*: "):
+                                            quesHeader = quesHeader[3:]
+                                        if quesType == "单选题" or quesType == "多选题":
+                                            b3 = each.find("标准答案")
+                                            if b3 != -1:
+                                                Option = each[b2 + 3:b3].replace("\n\n", "").replace("正确的？ 选项：", "").replace("正确的？", "").strip().split("\n")
+                                                displayOption = each[b2 + 3:b3].replace("**", "").replace("正确的？ 选项：", "").replace("正确的？", "").strip()
+                                                displayOption = displayOption.replace("A. ", "\n\nA. ").replace("B. ", "\nB. ").replace("C. ", "\nC. ").replace("D. ", "\nD. ").replace("E. ", "\nE. ").replace("F. ", "\nF. ").replace("G. ", "\nG. ").replace("H. ", "\nH. ")
+                                                for each2 in Option:
+                                                    for each3 in chars:
+                                                        each2 = each2.replace(f"{each3}.", "").strip()
+                                                    qOption = qOption + each2 + ";"
+                                                if qOption.endswith(";"):
+                                                    qOption = qOption[:-1]
+                                                b4 = each.find("试题解析")
+                                                if b4 != -1:
+                                                    qAnswer = each[b3 + 5:b4].replace("\n", "").replace("*", "").strip()
+                                                    displayAnswer = qAnswer
+                                                    qAnalysis = each[b4 + 5:].replace("\n", "").replace("*", "").strip()
+                                                    if quesType == "单选题":
+                                                        qAnswer = ord(qAnswer[0].upper()) - 65
+                                                        if qAnswer > 7 or qAnswer < 0:
+                                                            flagSuccess = False
+                                                    elif quesType == "多选题":
+                                                        qAnswer = qAnswer.replace("，", "").replace(",", "").replace("、", "").replace("。", "").replace(" ", "").replace("（", "(")
+                                                        if qAnswer.find("(") != -1:
+                                                            qAnswer = qAnswer[:qAnswer.find("(")].strip()
+                                                        temp = ""
+                                                        print(f"未处理前的多选题标准答案:{qAnswer}")
+                                                        for each4 in qAnswer:
+                                                            if ord(each4.upper()) - 65 > 7 or ord(each4.upper()) - 65 < 0:
+                                                                flagSuccess = False
+                                                                break
+                                                            else:
+                                                                temp = temp + str(ord(each4) - 65) + ";"
+                                                        qAnswer = temp
+                                                        if qAnswer.endswith(";"):
+                                                            qAnswer = qAnswer[:-1]
+                                        elif quesType == "判断题":
+                                            if each[c1 + 5:c2].find("正确") != -1 or each[c1 + 5:c2].find("A") != -1:
+                                                qAnswer = "1"
+                                                displayAnswer = "正确"
+                                            else:
+                                                qAnswer = "0"
+                                                displayAnswer = "错误"
+                                            displayOption = "A. 正确\nB. 错误\n"
+                                            qAnalysis = each[c2 + 5:].replace("\n", "").replace("*", "").strip()
+                                        elif quesType == "填空题":
+                                            displayOption = ""
+                                            qAnswer = each[c1 + 5:c2].replace("\n", "").replace("*", "").replace("无选项", "").replace("；", ";").replace("，", ";").replace("。", "").replace("、", ";").strip()
+                                            if qAnswer.startswith(":"):
+                                                qAnswer = qAnswer[1:]
                                             displayAnswer = qAnswer
-                                            qAnalysis = each[b4 + 5:].replace("\n", "").replace("*", "").strip()
-                                            if quesType == "单选题":
-                                                qAnswer = ord(qAnswer[0].upper()) - 65
-                                                if qAnswer > 7 or qAnswer < 0:
-                                                    flagSuccess = False
-                                            elif quesType == "多选题":
-                                                qAnswer = qAnswer.replace("，", "").replace(",", "").replace("、", "").replace("。", "").replace(" ", "").replace("（", "(")
-                                                if qAnswer.find("(") != -1:
-                                                    qAnswer = qAnswer[:qAnswer.find("(")].strip()
-                                                temp = ""
-                                                print(f"未处理前的多选题标准答案:{qAnswer}")
-                                                for each4 in qAnswer:
-                                                    if ord(each4.upper()) - 65 > 7 or ord(each4.upper()) - 65 < 0:
-                                                        flagSuccess = False
-                                                        break
-                                                    else:
-                                                        temp = temp + str(ord(each4) - 65) + ";"
-                                                qAnswer = temp
-                                                if qAnswer.endswith(";"):
-                                                    qAnswer = qAnswer[:-1]
-                                elif quesType == "判断题":
-                                    if each[c1 + 5:c2].find("正确") != -1 or each[c1 + 5:c2].find("A") != -1:
-                                        qAnswer = "1"
-                                        displayAnswer = "正确"
-                                    else:
-                                        qAnswer = "0"
-                                        displayAnswer = "错误"
-                                    displayOption = "A. 正确\nB. 错误\n"
-                                    qAnalysis = each[c2 + 5:].replace("\n", "").replace("*", "").strip()
-                                elif quesType == "填空题":
-                                    displayOption = ""
-                                    qAnswer = each[c1 + 5:c2].replace("\n", "").replace("*", "").replace("无选项", "").replace("；", ";").replace("，", ";").replace("。", "").replace("、", ";").strip()
-                                    if qAnswer.startswith(":"):
-                                        qAnswer = qAnswer[1:]
-                                    displayAnswer = qAnswer
-                                    qAnalysis = each[c2 + 5:].replace("\n", "").replace("*", "").strip()
-                                    i = 12
-                                    while i > 0:
-                                        if quesHeader.find("_" * i) != -1:
-                                            quesHeader = quesHeader.replace("_" * i, "()")
-                                        i -= 1
-                            if qAnalysis.startswith(":"):
-                                qAnalysis = qAnalysis[1:].strip()
-                            if qAnalysis.endswith("---"):
-                                qAnalysis = qAnalysis[:-3].strip()
-                            if quesType == "单选题" and len(str(qAnswer)) > 1:
-                                flagSuccess = False
-                            if st.session_state.debug:
-                                print(f"debug: 题目:[{quesHeader}] 选项:[{qOption}], 标准答案:[{qAnswer}] 答题解析:[{qAnalysis}]")
-                        if qAnswer != "" and quesHeader != "" and len(str(qAnswer)) < 200 and len(quesHeader) < 200 and flagSuccess:
-                            if table == "公共题库":
-                                SQL = f"SELECT ID from commquestions where Question = '{quesHeader}' and qType = '{quesType}'"
-                                if not mdb_sel(cur, SQL):
-                                    SQL = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', 'AI-LLM')"
-                                    mdb_ins(conn, cur, SQL)
-                                    generQuesCount += 1
-                            elif table == "站室题库":
-                                SQL = f"SELECT ID from questions where Question = '{quesHeader}' and qType = '{quesType}' and StationCN = '{chosenStationCN}' and chapterName = '{chapter}'"
-                                if not mdb_sel(cur, SQL):
-                                    SQL = f"INSERT INTO questions(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', '{chosenStationCN}', '{chapter}', 'AI-LLM')"
-                                    mdb_ins(conn, cur, SQL)
-                                    generQuesCount += 1
-                            displayQues = displayQues + f":blue[**第{generQuesCount}题:**]\n\n:red[题型: ]{quesType}\n\n:red[题目: ]{quesHeader}\n\n:red[选项: ]\n{displayOption}\n\n:red[答案: ]{displayAnswer}\n\n:red[解析: ]{qAnalysis}\n\n{'-' * 40}\n\n"
+                                            qAnalysis = each[c2 + 5:].replace("\n", "").replace("*", "").strip()
+                                            i = 12
+                                            while i > 0:
+                                                if quesHeader.find("_" * i) != -1:
+                                                    quesHeader = quesHeader.replace("_" * i, "()")
+                                                i -= 1
+                                    if qAnalysis.startswith(":"):
+                                        qAnalysis = qAnalysis[1:].strip()
+                                    if qAnalysis.endswith("---"):
+                                        qAnalysis = qAnalysis[:-3].strip()
+                                    if quesType == "单选题" and len(str(qAnswer)) > 1:
+                                        flagSuccess = False
+                                    if qOption.count(";") == 0 and (quesType == "单选题" or quesType == "多选题"):
+                                        flagSuccess = False
+                                    if st.session_state.debug:
+                                        print(f"debug: 题目:[{quesHeader}] 选项:[{qOption}], 标准答案:[{qAnswer}] 答题解析:[{qAnalysis}]")
+                                if qAnswer != "" and quesHeader != "" and len(str(qAnswer)) < 200 and len(quesHeader) < 200 and flagSuccess:
+                                    if table == "公共题库":
+                                        SQL = f"SELECT ID from commquestions where Question = '{quesHeader}' and qType = '{quesType}'"
+                                        if not mdb_sel(cur, SQL):
+                                            SQL = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', 'AI-LLM')"
+                                            mdb_ins(conn, cur, SQL)
+                                            generQuesCount += 1
+                                            gqc += 1
+                                            displayQues = displayQues + f":blue[**第{generQuesCount}题:**]\n\n:red[题型: ]{quesType}\n\n:red[题目: ]{quesHeader}\n\n:red[选项: ]\n{displayOption}\n\n:red[答案: ]{displayAnswer}\n\n:red[解析: ]{qAnalysis}\n\n{'-' * 40}\n\n"
+                                    elif table == "站室题库":
+                                        SQL = f"SELECT ID from questions where Question = '{quesHeader}' and qType = '{quesType}' and StationCN = '{chosenStationCN}' and chapterName = '{chapter}'"
+                                        if not mdb_sel(cur, SQL):
+                                            SQL = f"INSERT INTO questions(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', '{chosenStationCN}', '{chapter}', 'AI-LLM')"
+                                            mdb_ins(conn, cur, SQL)
+                                            generQuesCount += 1
+                                            gqc += 1
+                                            displayQues = displayQues + f":blue[**第{generQuesCount}题:**]\n\n:red[题型: ]{quesType}\n\n:red[题目: ]{quesHeader}\n\n:red[选项: ]\n{displayOption}\n\n:red[答案: ]{displayAnswer}\n\n:red[解析: ]{qAnalysis}\n\n{'-' * 40}\n\n"
+                    generQuesCountPack.append(gqc)
                 infoArea.empty()
                 if generQuesCount > 0:
-                    st.success("试题生成成功")
-                    st.subheader(f"A.I.生成{generQuesCount}道试题:", divider="green")
+                    tempInfo = f"试题生成完毕, 总计生成试题{generQuesCount}道, 其中"
+                    for index, value in enumerate(quesTypePack):
+                        tempInfo = tempInfo + f"{value}: {generQuesCountPack[index]}道, "
+                    st.success(tempInfo[:-2])
+                    st.subheader("具体如下:", divider="green")
                     st.markdown(displayQues)
-                    #with open(outputFile, mode="w", encoding='utf-8') as f:
-                    #f.write(displayQues.replace(" ]", "").replace("]", "").replace("**", "").replace("-" * 40, "").replace(":blue[", "").replace(":red[", "").replace("\n\n", "\n"))
-                    #f.close()
                 else:
                     st.info("A.I.未生成到任何试题, 请检查参考资料是否正确或是生成的试题已经在题库中")
             else:
