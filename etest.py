@@ -576,7 +576,6 @@ def delExamTable():
 
 
 def dbinputSubmit(tarTable, orgTable):
-    os.system("cls")
     tmpTable = ""
     if tarTable == "站室题库":
         tablename = "questions"
@@ -602,6 +601,8 @@ def dbinputSubmit(tarTable, orgTable):
     SQL = f"UPDATE {tablename} set qAnalysis = '' where qAnalysis is Null"
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
+    mdb_modi(conn, cur, SQL)
+    SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题')"
     mdb_modi(conn, cur, SQL)
     SQL = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
     rows = mdb_sel(cur, SQL)
@@ -798,7 +799,7 @@ def resetTableID():
             if tablename == "questions" or tablename == "commquestions":
                 SQL = f"UPDATE studyinfo set cid = {i + 1} where cid = {row[0]} and questable = '{tablename}'"
                 mdb_modi(conn, cur, SQL)
-        st.toast(f"重置 {tablename} 表ID完毕")
+        #st.toast(f"重置 {tablename} 表ID完毕")
     st.success("题库ID重置成功")
 
 
