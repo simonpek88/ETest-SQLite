@@ -789,7 +789,7 @@ def inputWord():
 
 
 def resetTableID():
-    for tablename in ["questions", "commquestions", "morepractise", "questionaff", "studyinfo", "setup_默认", f"setup_{st.session_state.StationCN}", "favques"]:
+    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "questionaff", "studyinfo", "user", "setup_默认", f"setup_{st.session_state.StationCN}"]:
         SQL = f"SELECT ID from {tablename} order by ID"
         rows = mdb_sel(cur, SQL)
         for i, row in enumerate(rows):
@@ -798,6 +798,7 @@ def resetTableID():
             if tablename == "questions" or tablename == "commquestions":
                 SQL = f"UPDATE studyinfo set cid = {i + 1} where cid = {row[0]} and questable = '{tablename}'"
                 mdb_modi(conn, cur, SQL)
+        st.toast(f"重置 {tablename} 表ID完毕")
     st.success("题库ID重置成功")
 
 
