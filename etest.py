@@ -5,6 +5,7 @@ import time
 
 import apsw
 import openpyxl
+import unicodedata
 import pandas as pd
 import streamlit as st
 import streamlit_antd_components as sac
@@ -16,6 +17,7 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 from streamlit_extras.badges import badge
 from xlsxwriter.workbook import Workbook
+from st_keyup import st_keyup
 
 from commFunc import (getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel,
                       deepseek_AI_GenerQues, qianfan_AI_GenerQues, updatePyFileinfo, updateActionUser)
@@ -27,6 +29,17 @@ from streamlit_extras.metric_cards import style_metric_cards
 
 def getUserCName(userName):
     SQL = "SELECT userCName, StationCN from user where userName = " + str(userName)
+    rows = mdb_sel(cur, SQL)
+    if rows:
+        st.session_state.userCName = rows[0][0]
+        st.session_state.StationCN = rows[0][1]
+    else:
+        st.session_state.userCName = "未找到"
+        st.session_state.StationCN = "未找到"
+
+
+def getUserCName2(userName):
+    SQL = "SELECT userCName, StationCN from user where userCName = " + str(userName)
     rows = mdb_sel(cur, SQL)
     if rows:
         st.session_state.userCName = rows[0][0]
@@ -48,7 +61,7 @@ def changePassword():
     changePW = st.empty()
     with changePW.container(border=True):
         oldPassword = st.text_input("请输入原密码", max_chars=8, type="password", autocomplete="off")
-        newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="new-password")
+        newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="off")
         confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="new-password")
         buttonSubmit = st.button("确认修改")
     if oldPassword:
@@ -72,15 +85,64 @@ def changePassword():
     updateActionUser(st.session_state.userName, "修改密码", st.session_state.loginTime)
 
 
+@st.cache_data
+def get_userName(searchUserName=""):
+    searchUserNameInfo = ""
+    if len(searchUserName) > 1:
+        SQL = f"SELECT userName, userCName, StationCN from user where userName like '{searchUserName}%'"
+        rows = mdb_sel(cur, SQL)
+        for row in rows:
+            searchUserNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
+    if searchUserNameInfo != "":
+        searchUserNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
+    return searchUserNameInfo
+
+
+@st.cache_data
+def get_userCName(searchUserCName=""):
+    searchUserCNameInfo = ""
+    if len(searchUserCName) > 1:
+        SQL = f"SELECT userName, userCName, StationCN from user where userCName like '{searchUserCName}%'"
+        rows = mdb_sel(cur, SQL)
+        for row in rows:
+            searchUserCNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
+    if searchUserCNameInfo != "":
+        searchUserCNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
+    return searchUserCNameInfo
+
+
 def login():
     #st.write("## :blue[专业技能考试系统 - 离线版]")
     st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
     login = st.empty()
     with login.container(border=True):
-        userName = st.text_input("请输入用户名", max_chars=8, placeholder="员工编码")
-        if userName != "":
-            getUserCName(userName)
-            st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :red[{st.session_state.StationCN}]")
+        userName = st_keyup("请输入用户编码", placeholder="请输入用户编码, 必填项", max_chars=8)
+        st.session_state.userCName = ""
+        if userName:
+            filtered = get_userName(userName)
+            if filtered == "":
+                getUserCName(userName)
+                st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
+        else:
+            filtered = ""
+        if st.session_state.userCName == "未找到" or filtered:
+            st.caption(filtered)
+        if userName == "" or st.session_state.userCName == "未找到":
+            userCName = st_keyup("请输入用户姓名", placeholder="请输入用户姓名, 至少2个字, 用于查询, 非必填项", max_chars=8)
+            st.session_state.userCName = ""
+            if userCName:
+                filtered = get_userCName(userCName)
+                if filtered == "":
+                    getUserCName2(userCName)
+                    st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
+            else:
+                filtered = ""
+            if st.session_state.userCName == "未找到" or filtered:
+                promptArea = st.empty()
+                with promptArea.container():
+                    st.caption(filtered)
+                if userName and filtered == "":
+                    promptArea.empty()
         userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
         examType = st.selectbox("请选择功能类型", ("练习", "考试"), index=0)
         buttonLogin = st.button("登录")
@@ -115,6 +177,8 @@ def login():
                 st.rerun()
             else:
                 st.warning("登录失败, 请检查用户名和密码")
+        else:
+            st.warning("请输入用户编码和密码")
 
 
 def logout():

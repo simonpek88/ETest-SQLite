@@ -23,6 +23,7 @@ Fileinfo
 fontsize
 gener
 JXQW
+keyup
 listinsheet
 maxcol
 maxid
