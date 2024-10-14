@@ -298,7 +298,7 @@ def examResulttoExcel():
     searchExamName = st.selectbox("请选择考试场次", searchOption, index=None)
     options = st.multiselect("查询类型", ["通过", "未通过"], default=["通过", "未通过"])
     if searchExamName:
-        searchButton = st.button("导出为Excel文件")
+        searchButton = st.button("导出为Excel文件", type="primary")
         if searchButton and searchExamName:
             if options:
                 SQL = "SELECT ID, userName, userCName, examScore, examDate, examPass from examresult where examName = '" + searchExamName + "' and ("
@@ -332,7 +332,13 @@ def examResulttoExcel():
                     k = k + 1
                 workbook.close()
                 if os.path.exists(outputFile):
+                    with open(outputFile, "rb") as file:
+                        content = file.read()
+                    file.close()
+                    buttonDL = st.download_button("点击下载", content, file_name=f"考试成绩_{outputFile[outputFile.rfind('/') + 1:]}", icon=":material/download:", type="secondary")
                     st.success(f":green[[{searchExamName}]] :gray[考试成绩成功导出至程序目录下] :orange[{outputFile[2:]}]")
+                    if buttonDL:
+                        st.toast("文件已下载至你的默认目录")
                 else:
                     st.warning(f":red[[{searchExamName}]] 考试成绩导出失败")
 
@@ -395,7 +401,7 @@ def questoWord():
     if st.session_state.sac_recheck:
         sac.switch(label="附加答题解析", on_label="On", align='start', size='md', value=False, key="sac_Analysis")
     if quesTable and quesType:
-        buttonSubmit = st.button("导出为Word文件")
+        buttonSubmit = st.button("导出为Word文件", type="primary")
         if buttonSubmit:
             if quesTable == "站室题库":
                 tablename = "questions"
@@ -527,7 +533,14 @@ def questoWord():
                 os.remove(outputFile)
             quesDOC.save(outputFile)
             if os.path.exists(outputFile):
-                st.success(f":green[[{quesTable}]] :gray[题库成功导出至程序目录下] :orange[{outputFile[2:]}]")
+                if os.path.exists(outputFile):
+                    with open(outputFile, "rb") as file:
+                        content = file.read()
+                    file.close()
+                    buttonDL = st.download_button("点击下载", content, file_name=outputFile[outputFile.rfind("/") + 1:], icon=":material/download:", type="secondary")
+                    st.success(f":green[[{quesTable}]] :gray[题库成功导出至程序目录下] :orange[{outputFile[2:]}]")
+                    if buttonDL:
+                        st.toast("文件已下载至你的默认目录")
             else:
                 st.warning(f":red[[{quesTable}]] 题库导出失败")
 
@@ -790,7 +803,7 @@ def inputWord():
 
 
 def resetTableID():
-    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "questionaff", "studyinfo", "user", "setup_默认", f"setup_{st.session_state.StationCN}"]:
+    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "examresult", "questionaff", "studyinfo", "user", "setup_默认", f"setup_{st.session_state.StationCN}"]:
         SQL = f"SELECT ID from {tablename} order by ID"
         rows = mdb_sel(cur, SQL)
         for i, row in enumerate(rows):
@@ -1082,7 +1095,7 @@ def displayCertificate():
         if rows2:
             flagGener = True
             if flagGener and flagInfo:
-                st.write(":orange[如需打印, 请打开 :green[程序目录下Image/Certificate] 或者点击右键另存为图片]")
+                st.write(":orange[如需打印, 请打开 :green[程序目录下Image/Certificate] 或者点击下载证书]")
                 flagInfo = False
             examDetail = rows2[0]
             with st.expander(label=f"{row[0]}", expanded=False):
@@ -1106,6 +1119,15 @@ def displayCertificate():
                     SQL = f"UPDATE examresult set CertificateNum = {maxCertNum} where ID = {examDetail[4]}"
                     mdb_modi(conn, cur, SQL)
                     st.image(certFile)
+                with open(certFile, "rb") as file:
+                    st.download_button(
+                        label="下载证书",
+                        data=file,
+                        file_name=certFile[certFile.rfind("/") + 1:].replace("Cert", "证书"),
+                        mime="image/png",
+                        icon=":material/download:"
+                    )
+                file.close()
     if not flagGener:
         st.info("您没有通过任何考试, 无法生成证书")
 
