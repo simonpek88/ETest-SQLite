@@ -393,7 +393,7 @@ def questoWord():
             quesTable = ""
     sac.switch(label="复核模式", on_label="On", align='start', size='md', value=False, key="sac_recheck")
     if st.session_state.sac_recheck:
-        sac.switch(label="附加A.I.解析", on_label="On", align='start', size='md', value=False, key="sac_Analysis")
+        sac.switch(label="附加答题解析", on_label="On", align='start', size='md', value=False, key="sac_Analysis")
     if quesTable and quesType:
         buttonSubmit = st.button("导出为Word文件")
         if buttonSubmit:
@@ -651,7 +651,7 @@ def dbfunc():
             #sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=st.session_state.debug ^ True),
             sac.SegmentedItem(label="错题集重置", icon="journal-x"),
             sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
-            sac.SegmentedItem(label="删除所有试卷", icon="trash"),
+            sac.SegmentedItem(label="删除所有试卷", icon="trash3"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
             sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
         ], align="start", color="red"
