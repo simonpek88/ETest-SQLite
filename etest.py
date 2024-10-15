@@ -790,24 +790,26 @@ def dbfunc():
 
 
 def delUserUploadFiles():
-    delFiles = []
+    flagDelUserFiles = False
     for root, dirs, files in os.walk("./InputQues"):
         for file in files:
             if os.path.splitext(file)[1].lower() == '.xlsx' and "_用户上传_" in os.path.splitext(file)[0]:
-                delFiles.append(os.path.splitext(file)[0])
-    if delFiles:
-        delUserFiles = st.multiselect("请选择要删除的用户上传文件", delFiles, default=None)
-        if delUserFiles:
-            buttonDel = st.button("删除", type="primary")
-            if buttonDel:
-                st.button("确认删除", type="secondary", on_click=actionDelUserUploadFiles, args=(delUserFiles,))
+                st.checkbox(os.path.splitext(file)[0], value=False, key=f"delUserFiles_{os.path.splitext(file)[0]}")
+                flagDelUserFiles = True
+    if flagDelUserFiles:
+        buttonDel = st.button("删除", type="primary")
+        if buttonDel:
+            st.button("确认删除", type="secondary", on_click=actionDelUserUploadFiles)
     else:
         st.warning("没有用户上传文件")
 
 
-def actionDelUserUploadFiles(delUserFiles):
-    for each in delUserFiles:
-        os.remove(f"./InputQues/{each}.xlsx")
+def actionDelUserUploadFiles():
+    for key in st.session_state.keys():
+        if key.startswith("delUserFiles_"):
+            if st.session_state[key]:
+                os.remove(f"./InputQues/{key.replace('delUserFiles_', '')}.xlsx")
+            del st.session_state[key]
     st.success("所选文件已经删除")
 
 
@@ -1563,6 +1565,9 @@ def actionQM(quesID, tablename):
 def actionDelQM(quesID, tablename):
     SQL = f"DELETE from {tablename} where ID = {quesID}"
     mdb_del(conn, cur, SQL)
+    for key in st.session_state.keys():
+        if key.startswith("qModifyQues_"):
+            del st.session_state[key]
     st.toast("试题删除成功")
 
 
