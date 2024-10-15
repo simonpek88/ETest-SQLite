@@ -426,18 +426,16 @@ def ClearTables():
 
 
 def questoWord():
-    allType, validType, stationCName = [], [], []
+    allType, stationCName, chapterNamePack, outChapterName = [], [], [], []
     st.subheader("题库导出", divider="blue")
     SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'questype'"
     rows = mdb_sel(cur, SQL)
     for row in rows:
         allType.append(row[0])
-        if row[1] == 1:
-            validType.append(row[0])
-    quesTable = st.selectbox("请选择功能类型", ("站室题库", "公共题库", "试卷", "错题集"), index=None)
+    quesTable = st.selectbox("请选择功能类型", ("站室题库", "公共题库", "试卷", "错题集", "关注题集"), index=None)
     quesType = st.multiselect("题型", allType, default=allType)
     stationCN, headerExamName = "全站", ""
-    if quesTable == "站室题库" or quesTable == "错题集":
+    if quesTable == "站室题库" or quesTable == "错题集" or quesTable == "关注题集":
         stationCName.append("全站")
         SQL = "SELECT Station from stations order by ID"
         rows = mdb_sel(cur, SQL)
@@ -463,6 +461,12 @@ def questoWord():
         else:
             st.warning("请先生成题库")
             quesTable = ""
+    if stationCN != "全站" and quesTable == "站室题库":
+        SQL = f"SELECT chapterName from questionaff where StationCN = '{stationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by ID"
+        rows = mdb_sel(cur, SQL)
+        for row in rows:
+            chapterNamePack.append(row[0])
+        outChapterName = st.multiselect("章节", chapterNamePack, default=chapterNamePack)
     sac.switch(label="复核模式", on_label="On", align='start', size='md', value=False, key="sac_recheck")
     if st.session_state.sac_recheck:
         sac.switch(label="附加答题解析", on_label="On", align='start', size='md', value=False, key="sac_Analysis")
@@ -477,6 +481,8 @@ def questoWord():
                 tablename = st.session_state.examFinalTable
             elif quesTable == "错题集":
                 tablename = "morepractise"
+            elif quesTable == "关注题集":
+                tablename = "favques"
             headerFS = getParam("抬头字体大小", st.session_state.StationCN)
             titleFS = getParam("题型字体大小", st.session_state.StationCN)
             quesFS = getParam("题目字体大小", st.session_state.StationCN)
@@ -496,13 +502,19 @@ def questoWord():
             textHeader.font.bold = True
             textHeader.font.color.rgb = RGBColor(40, 106, 205)
             for each in quesType:
-                if quesTable == "站室题库" or quesTable == "错题集":
-                    if stationCN == "全站":
-                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' order by ID"
-                    else:
-                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
-                else:
+                if stationCN == "全站" or quesTable == "试卷":
                     SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' order by ID"
+                else:
+                    if quesTable != "站室题库" and quesTable != "公共题库":
+                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
+                    elif quesTable == "站室题库":
+                        if outChapterName:
+                            SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' and (chapterName = "
+                            for each5 in outChapterName:
+                                SQL += f"'{each5}' or chapterName = "
+                            SQL = SQL[:-18] + ") order by ID"
+                        else:
+                            SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
                 rows = mdb_sel(cur, SQL)
                 #st.write(f"{each} 共 {len(rows)}")
                 i = 1
