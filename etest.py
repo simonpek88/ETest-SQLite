@@ -721,7 +721,7 @@ def dbinputSubmit(tarTable, orgTable):
 def dbinput():
     inputOption = []
     targetTable = st.radio("导入至:", ("站室题库", "公共题库"), index=None, horizontal=True)
-    inputType = st.radio("文件来源:", ("服务器中文件", "上传文件"), index=None, horizontal=True)
+    inputType = st.radio("文件来源:", ("服务器中文件", "上传文件"), index=0, horizontal=True)
     if targetTable:
         if inputType == "服务器中文件":
             for root, dirs, files in os.walk("./InputQues"):
