@@ -165,6 +165,7 @@ def addExamIDD():
         SQL = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
         if mdb_sel(cur, SQL):
             st.success(f"考试场次: [{examName}] 有效期: [{examDateStr} 23:59:59] 添加成功")
+            itemArea.empty()
         else:
             st.warning(f"考试场次 [{examName}] 添加失败")
 
@@ -212,6 +213,7 @@ def addStation():
                     SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{each}', '{sn}', 10, 10)"
                     mdb_ins(conn, cur, SQL)
             st.success(f"[{sn}] 站室添加成功")
+            itemArea.empty()
         else:
             st.warning(f"[{sn}] 添加站室失败")
 
@@ -221,11 +223,12 @@ def addUser():
     flagSuccess = False
     itemArea = st.empty()
     with itemArea.container():
-        userName = st.number_input("用户编码", min_value=1, max_value=999999, value=1, help="建议使用员工编码, 姓名和站室可以有重复, 但是编码必须具有唯一性")
-        userCName = st.text_input("用户姓名", max_chars=10, autocomplete="name", help="请输入用户中文姓名")
+        col1, col2 = st.columns(2)
+        userName = col1.number_input("用户编码", min_value=1, max_value=999999, value=1, help="建议使用员工编码, 姓名和站室可以有重复, 但是编码必须具有唯一性")
+        userCName = col2.text_input("用户姓名", max_chars=10, autocomplete="name", help="请输入用户中文姓名")
         station = st.select_slider("站室", stationCName, value=st.session_state.StationCN)
         userPassword1 = st.text_input("设置密码", max_chars=8, type="password", autocomplete="off", help="设置用户密码")
-        userPassword2 = st.text_input("请重新输入密码", max_chars=8, type="password", autocomplete="off")
+        userPassword2 = st.text_input("请再次输入密码", max_chars=8, type="password", placeholder="请与上一步输入的密码一致", autocomplete="off")
         userType = sac.switch(label="管理员", on_label="On", align='start', size='md', value=False)
         userCName = ClearStr(userCName)
         if userName and userCName and userPassword1 and userPassword2 and userPassword1 != "" and userPassword2 != "":
@@ -238,9 +241,9 @@ def addUser():
                     else:
                         ut = "user"
                     st.write(station)
-                    SQL = "SELECT ID from user where userName = " + str(un)
+                    SQL = "SELECT ID from users where userName = " + str(un)
                     if not mdb_sel(cur, SQL):
-                        SQL = f"INSERT INTO user(userName, userCName, userType, StationCN, userPassword) VALUES({un}, '{userCName}', '{ut}', '{station}', '{userPassword1}')"
+                        SQL = f"INSERT INTO users(userName, userCName, userType, StationCN, userPassword) VALUES({un}, '{userCName}', '{ut}', '{station}', '{userPassword1}')"
                         mdb_ins(conn, cur, SQL)
                         flagSuccess = True
                         itemArea.empty()
@@ -256,9 +259,10 @@ def addUser():
             elif not userPassword2:
                 st.warning("请确认密码")
     if flagSuccess:
-        SQL = "SELECT ID from user where userName = " + str(un) + " and StationCN = '" + station + "' and userCName = '" + userCName + "'"
+        SQL = "SELECT ID from users where userName = " + str(un) + " and StationCN = '" + station + "' and userCName = '" + userCName + "'"
         if mdb_sel(cur, SQL):
             st.success(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加成功")
+            itemArea.empty()
         else:
             st.warning(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加失败")
 

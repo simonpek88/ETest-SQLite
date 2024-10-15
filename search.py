@@ -166,12 +166,12 @@ def queryExamResultUsers():
         if options:
             tab1, tab2 = st.tabs(["简报", "详情"])
             if len(options) == 2:
-                SQL = "SELECT userName, userCName, StationCN from user where StationCN = '" + st.session_state.StationCN + "' order by ID"
+                SQL = "SELECT userName, userCName, StationCN from users where StationCN = '" + st.session_state.StationCN + "' order by ID"
             elif len(options) == 1:
                 if options[0] == "已参加考试":
-                    SQL = "SELECT user.userName, user.userCName, user.StationCN from user, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = user.userName and user.StationCN = '" + st.session_state.StationCN + "'"
+                    SQL = "SELECT users.userName, users.userCName, users.StationCN from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName and users.StationCN = '" + st.session_state.StationCN + "'"
                 elif options[0] == "未参加考试":
-                    SQL = "SELECT userName, userCName, StationCN from user where userName not in (SELECT user.userName from user, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = user.userName) and StationCN = '" + st.session_state.StationCN + "'"
+                    SQL = "SELECT userName, userCName, StationCN from users where userName not in (SELECT users.userName from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName) and StationCN = '" + st.session_state.StationCN + "'"
             rows = mdb_sel(cur, SQL)
             if rows:
                 df = pd.DataFrame(rows)

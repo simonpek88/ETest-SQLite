@@ -392,14 +392,14 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
 
 
 def updateActionUser(activeUser, actionUser, loginTime):
-    SQL = f"UPDATE user SET actionUser = '{actionUser}', activeTime_session = {int(time.time()) - loginTime} where userName = {activeUser}"
+    SQL = f"UPDATE users SET actionUser = '{actionUser}', activeTime_session = {int(time.time()) - loginTime} where userName = {activeUser}"
     mdb_modi(conn, cur, SQL)
 
 
 def updatePyFileinfo(flagDebug=False):
     if flagDebug:
         '''
-        SQL = "SELECT userCName, userType, StationCN from user where activeUser = 1"
+        SQL = "SELECT userCName, userType, StationCN from users where activeUser = 1"
         rows = mdb_sel(cur, SQL)
         for row in rows:
             print(f"  Active User: {row[0].ljust(10 - len(row[0]) * 2 + len(row[0]) % 2, ' ')} Type: {row[1].ljust(5, ' ')} Station: {row[2]}")

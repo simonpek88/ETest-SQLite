@@ -28,7 +28,7 @@ from streamlit_extras.metric_cards import style_metric_cards
 
 
 def getUserCName(userName):
-    SQL = "SELECT userCName, StationCN from user where userName = " + str(userName)
+    SQL = f"SELECT userCName, StationCN from users where userName = {userName}"
     rows = mdb_sel(cur, SQL)
     if rows:
         st.session_state.userCName = rows[0][0]
@@ -39,7 +39,7 @@ def getUserCName(userName):
 
 
 def getUserCName2(userName):
-    SQL = "SELECT userCName, StationCN from user where userCName = " + str(userName)
+    SQL = "SELECT userCName, StationCN from users where userCName = " + str(userName)
     rows = mdb_sel(cur, SQL)
     if rows:
         st.session_state.userCName = rows[0][0]
@@ -65,12 +65,12 @@ def changePassword():
         confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="new-password")
         buttonSubmit = st.button("确认修改")
     if oldPassword:
-        SQL = "SELECT ID from user where userName = " + str(st.session_state.userName) + " and userPassword = '" + oldPassword + "'"
+        SQL = "SELECT ID from users where userName = " + str(st.session_state.userName) + " and userPassword = '" + oldPassword + "'"
         if mdb_sel(cur, SQL):
             if newPassword and confirmPassword and newPassword != "":
                 if newPassword == confirmPassword:
                     if buttonSubmit:
-                        SQL = f"UPDATE user set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
+                        SQL = f"UPDATE users set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
                         mdb_modi(conn, cur, SQL)
                         st.toast("密码修改成功, 请重新登录")
                         logout()
@@ -89,7 +89,7 @@ def changePassword():
 def get_userName(searchUserName=""):
     searchUserNameInfo = ""
     if len(searchUserName) > 1:
-        SQL = f"SELECT userName, userCName, StationCN from user where userName like '{searchUserName}%'"
+        SQL = f"SELECT userName, userCName, StationCN from users where userName like '{searchUserName}%'"
         rows = mdb_sel(cur, SQL)
         for row in rows:
             searchUserNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
@@ -102,7 +102,7 @@ def get_userName(searchUserName=""):
 def get_userCName(searchUserCName=""):
     searchUserCNameInfo = ""
     if len(searchUserCName) > 1:
-        SQL = f"SELECT userName, userCName, StationCN from user where userCName like '{searchUserCName}%'"
+        SQL = f"SELECT userName, userCName, StationCN from users where userCName like '{searchUserCName}%'"
         rows = mdb_sel(cur, SQL)
         for row in rows:
             searchUserCNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
@@ -148,14 +148,14 @@ def login():
         buttonLogin = st.button("登录")
     if buttonLogin:
         if userName != "" and userPassword != "":
-            SQL = "SELECT userName, userCName, userType, StationCN from user where userName = " + str(userName) + " and userPassword = '" + userPassword + "'"
+            SQL = "SELECT userName, userCName, userType, StationCN from users where userName = " + str(userName) + " and userPassword = '" + userPassword + "'"
             result = mdb_sel(cur, SQL)
             if result:
                 st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
                 login.empty()
                 st.session_state.logged_in = True
                 st.session_state.userName = result[0][0]
-                st.session_state.userCName = result[0][1]
+                st.session_state.userCName = result[0][1].replace(" ", "")
                 st.session_state.userType = result[0][2]
                 st.session_state.StationCN = result[0][3]
                 st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
@@ -163,7 +163,7 @@ def login():
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
                 st.session_state.loginTime = int(time.time())
-                SQL = f"UPDATE user set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
+                SQL = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
                 mdb_modi(conn, cur, SQL)
                 ClearTables()
                 #cur.execute("VACUUM")
@@ -183,7 +183,7 @@ def login():
 
 def logout():
     delOutdatedTable()
-    SQL = f"UPDATE user set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
+    SQL = f"UPDATE users set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
     cur.execute("VACUUM")
 
@@ -329,7 +329,7 @@ def resultExcel():
             examResultPack2.append(row[0])
             tmp = row[0][:row[0].rfind("_")]
             tmp = tmp[tmp.rfind("_") + 1:]
-            SQL = "SELECT userCName from user where userName = " + str(tmp)
+            SQL = "SELECT userCName from users where userName = " + str(tmp)
             tempTable = mdb_sel(cur, SQL)
             if tempTable:
                 tempUserCName = tempTable[0][0]
@@ -418,6 +418,8 @@ def ClearTables():
     mdb_del(conn, cur, SQL)
     SQL = "DELETE from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' and chapterName not in (SELECT DISTINCT(chapterName) from questions)"
     mdb_del(conn, cur, SQL)
+    SQL = "UPDATE users set userCName = replace(userCName, ' ', '') where userCName like '% %'"
+    mdb_modi(conn, cur, SQL)
     for each in ["questions", "commquestions", "morepractise"]:
         mdb_modi(conn, cur, SQL=f"update {each} set Question = REPLACE(Question,'\n', '')")
     st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
@@ -580,7 +582,7 @@ def questoWord():
                             if st.session_state.sac_Analysis and row[6] != "":
                                 pAnalysis = quesDOC.add_paragraph()
                                 if row[5] != "AI-LLM":
-                                    textAnalysis = pAnalysis.add_run(f"人工解析: [{row[6].replace(':red', '').replace('[', '').replace(']', '').replae('**', '')}]")
+                                    textAnalysis = pAnalysis.add_run(f"人工解析: [{row[6].replace(':red', '').replace('[', '').replace(']', '').replace('**', '')}]")
                                 else:
                                     textAnalysis = pAnalysis.add_run(f"请特别注意 A.I.解析: [{row[6].replace('**', '')}]")
                                 textAnalysis.font.bold = True
@@ -757,7 +759,7 @@ def dbfunc():
 
 
 def resetActiveUser():
-    SQL = f"UPDATE user set activeUser = 0 where userName <> {st.session_state.userName}"
+    SQL = f"UPDATE users set activeUser = 0 where userName <> {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
     st.success("已重置所有用户状态")
 
@@ -867,7 +869,7 @@ def inputWord():
 
 
 def resetTableID():
-    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "examresult", "questionaff", "studyinfo", "user", "setup_默认", f"setup_{st.session_state.StationCN}"]:
+    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "examresult", "questionaff", "studyinfo", "users", "setup_默认", f"setup_{st.session_state.StationCN}"]:
         SQL = f"SELECT ID from {tablename} order by ID"
         rows = mdb_sel(cur, SQL)
         for i, row in enumerate(rows):
@@ -1384,7 +1386,7 @@ def userStatus():
 
 
 def actionUserStatus():
-    SQL = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from user where activeUser = 1 order by ID"
+    SQL = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from users where activeUser = 1 order by ID"
     rows = mdb_sel(cur, SQL)
     df = pd.DataFrame(rows, dtype=str)
     df.columns = ["姓名", "类型", "站室", "用户操作", "登录时间", "活动时间", "累计活动时间"]
