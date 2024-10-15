@@ -5,10 +5,10 @@ import time
 
 import apsw
 import openpyxl
-import unicodedata
 import pandas as pd
 import streamlit as st
 import streamlit_antd_components as sac
+
 from PIL import Image, ImageFont, ImageDraw
 from streamlit_timeline import st_timeline
 from docx import Document
@@ -695,7 +695,8 @@ def dbinputSubmit(tarTable, orgTable):
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题')"
     mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and where ID > {maxid}"
+    SQL = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and ID > {maxid}"
+    print(SQL)
     mdb_modi(conn, cur, SQL)
     SQL = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
     rows = mdb_sel(cur, SQL)
@@ -720,19 +721,32 @@ def dbinputSubmit(tarTable, orgTable):
 def dbinput():
     inputOption = []
     targetTable = st.radio("导入至:", ("站室题库", "公共题库"), index=None, horizontal=True)
+    inputType = st.radio("文件来源:", ("服务器中文件", "上传文件"), index=None, horizontal=True)
     if targetTable:
-        for root, dirs, files in os.walk("./InputQues"):
-            for file in files:
-                if os.path.splitext(file)[1].lower() == '.xlsx' and os.path.splitext(file)[0].endswith(f"_{targetTable}"):
-                    inputOption.append(os.path.splitext(file)[0])
-        if inputOption:
-            orgTable = st.multiselect("请选择导入文件", inputOption, default=None)
-            if orgTable:
-                st.button("导入", on_click=dbinputSubmit, args=(targetTable, orgTable))
+        if inputType == "服务器中文件":
+            for root, dirs, files in os.walk("./InputQues"):
+                for file in files:
+                    if os.path.splitext(file)[1].lower() == '.xlsx' and f"{st.session_state.StationCN}_{targetTable}" in os.path.splitext(file)[0]:
+                        inputOption.append(os.path.splitext(file)[0])
+            if inputOption:
+                orgTable = st.multiselect("请选择导入文件", inputOption, default=None)
+                if orgTable:
+                    st.button("导入", on_click=dbinputSubmit, args=(targetTable, orgTable))
+                else:
+                    st.warning("请选择要导入的文件")
             else:
-                st.warning("请选择要导入的文件")
-        else:
-            st.warning("没有可导入的文件")
+                st.warning("没有可导入的本站文件")
+        elif inputType == "上传文件":
+            uploaded_file = st.file_uploader("请选择Excel文件, 系统会自动改名为: :red[站室名称_站室题库/公共题库_用户上传_上传日期]")
+            if uploaded_file is not None:
+                bytes_data = uploaded_file.getvalue()
+                outFile = f"./InputQues/{st.session_state.StationCN}_{targetTable}_用户上传_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.xlsx"
+                if os.path.exists(outFile):
+                    os.remove(outFile)
+                with open(outFile, 'wb') as output_file:
+                    output_file.write(bytes_data)
+                if os.path.exists(outFile):
+                    st.success("文件上传成功, 请选择文件来源为: :red[**服务器中文件**]并重新导入")
     else:
         st.write("请选择要导入的题库")
 
@@ -747,6 +761,7 @@ def dbfunc():
             sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
             sac.SegmentedItem(label="删除所有试卷", icon="trash3"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
+            sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
             sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
         ], align="start", color="red"
     )
@@ -764,12 +779,36 @@ def dbfunc():
         delExamTable()
     elif bc == "删除静态题库":
         delStaticExamTable()
+    elif bc == "删除用户上传文件":
+        delUserUploadFiles()
     elif bc == "重置题库ID":
         buttonReset = st.button("重置题库ID", type="primary")
         if buttonReset:
             st.button("确认重置", type="secondary", on_click=resetTableID)
     if bc is not None:
         updateActionUser(st.session_state.userName, bc, st.session_state.loginTime)
+
+
+def delUserUploadFiles():
+    delFiles = []
+    for root, dirs, files in os.walk("./InputQues"):
+        for file in files:
+            if os.path.splitext(file)[1].lower() == '.xlsx' and "_用户上传_" in os.path.splitext(file)[0]:
+                delFiles.append(os.path.splitext(file)[0])
+    if delFiles:
+        delUserFiles = st.multiselect("请选择要删除的用户上传文件", delFiles, default=None)
+        if delUserFiles:
+            buttonDel = st.button("删除", type="primary")
+            if buttonDel:
+                st.button("确认删除", type="secondary", on_click=actionDelUserUploadFiles, args=(delUserFiles,))
+    else:
+        st.warning("没有用户上传文件")
+
+
+def actionDelUserUploadFiles(delUserFiles):
+    for each in delUserFiles:
+        os.remove(f"./InputQues/{each}.xlsx")
+    st.success("所选文件已经删除")
 
 
 def resetActiveUser():

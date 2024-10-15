@@ -203,9 +203,9 @@ def exam(row):
             AIModelName = value[0]
             AIOptionIndex = index
     if row[4] == "填空题":
-        reviseQues = row[1].replace("(", ":red[ ( _ ]").replace(")", ":red[ _ _ ) ]")
+        reviseQues = row[1].replace("(", ":red[ ( _ ]").replace(")", ":red[ _ _ ) ]").strip()
     else:
-        reviseQues = row[1]
+        reviseQues = row[1].strip()
     standardAnswer = getStandardAnswer(row)
     if st.session_state.examType != "exam":
         updateStudyInfo(row)

@@ -10,6 +10,8 @@ OYC/
 outputQues/
 Images/Certificate/
 Fonts/
+Upload/
+InputQues/*_用户上传_*.xlsx
 DB/*.db-shm
 DB/*.db-wal
 DB/Keys.docx
