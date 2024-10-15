@@ -124,9 +124,11 @@ cur.execute("PRAGMA journal_mode = WAL")
 
 if st.session_state.examType == "training":
     #st.write("### :red[生成练习题库]")
-    st.markdown("<font face='微软雅黑' color=blue size=20><center>**生成练习题库**</center></font>", unsafe_allow_html=True)
+    #st.markdown("<font face='微软雅黑' color=blue size=20><center>**生成练习题库**</center></font>", unsafe_allow_html=True)
+    st.markdown("### <font face='微软雅黑' color=blue><center>生成练习题库</center></font>", unsafe_allow_html=True)
 elif st.session_state.examType == "exam":
-    st.markdown("<font face='微软雅黑' color=red size=20><center>**选择考试**</center></font>", unsafe_allow_html=True)
+    #st.markdown("<font face='微软雅黑' color=red size=20><center>**选择考试**</center></font>", unsafe_allow_html=True)
+    st.markdown("### <font face='微软雅黑' color=red><center>选择考试</center></font>", unsafe_allow_html=True)
 if not st.session_state.examChosen or not st.session_state.calcScore:
     training()
 else:

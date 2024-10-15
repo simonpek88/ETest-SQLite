@@ -556,7 +556,7 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
                 iCol1.caption(f":blue[作答提示:] :red[{cpStr[:-1]}] :blue[题还未作答, 可以在👉右测下拉列表中跳转]")
             else:
                 iCol1.caption(":red[你还未开始答题]")
-            iCol2.selectbox(":green[试卷全部题目]", completedPack, index=None, on_change=quesGoto, key="chosenID")
+            iCol2.selectbox(":green[答题卡]", completedPack, index=None, on_change=quesGoto, key="chosenID")
             st.divider()
             if (preButton or nextButton or submitButton or st.session_state.goto) and not st.session_state.confirmSubmit:
                 SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"

@@ -693,7 +693,7 @@ def dbinputSubmit(tarTable, orgTable):
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
     mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题')"
+    SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题' or qType = '填空题')"
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and ID > {maxid}"
     print(SQL)
@@ -1467,43 +1467,103 @@ def actionUserStatus():
 
 
 @st.fragment
-def quesModify():
+def actionQuesModify(row):
     option = []
+    qQuestion, qOption, qAnswer, qType, qAnalysis = row
+    st.session_state.qModifyQues_qType = qType
+    st.write(f"**此题为{qType}**")
+    st.text_area(":blue[**题目**]", value=qQuestion, key="qModifyQues_Question")
+    if qType == "单选题":
+        qOption2 = qOption.split(";")
+        st.session_state.qModifyQues_optionCount = len(qOption2)
+        for index, value in enumerate(qOption2):
+            st.text_input(f":orange[**选项{chr(65 + index)}**]", value=value, key=f"qModifyQues_{index}")
+            option.append(chr(65 + index))
+        st.radio(":red[**答案**]", options=option, index=int(qAnswer), key="qModifyQues_Answer", horizontal=True)
+    elif qType == "多选题":
+        qOption2 = qOption.split(";")
+        qAnswer2 = qAnswer.split(";")
+        st.session_state.qModifyQues_optionCount = len(qOption2)
+        for index, value in enumerate(qOption2):
+            st.text_input(f":orange[**选项{chr(65 + index)}**]", value=value, key=f"qModifyQues_{index}")
+            if str(index) in qAnswer2:
+                st.checkbox(":blue[**选择**]", value=True, key=f"qModifyQues_Answer_{index}")
+            else:
+                st.checkbox(":blue[**选择**]", value=False, key=f"qModifyQues_Answer_{index}")
+    elif qType == "判断题":
+        st.radio(":red[**答案**]", ["A. 正确", "B. 错误"], key="qModifyQues_Answer", index=int(qAnswer) ^ 1, horizontal=True)
+    elif qType == "填空题":
+        qAnswer2 = qAnswer.split(";")
+        st.session_state.qModifyQues_optionCount = len(qAnswer2)
+        for index, value in enumerate(qAnswer2):
+            st.text_input(":orange[**答案**]", value=value, key=f"qModifyQues_Answer_{index}")
+    st.text_area(":green[**答案解析**]", value=qAnalysis, key="qModifyQues_Answer_Analysis")
+
+
+def quesModify():
     col1, col2 = st.columns(2)
     chosenTable = col1.selectbox(":red[选择题库]", ["站室题库", "公共题库"], index=None)
     quesID = col2.number_input(":blue[题目ID]", min_value=0, step=1)
     if chosenTable is not None and quesID > 0:
-        buttonModify = st.button("修改试题")
+        if chosenTable == "站室题库":
+            tablename = "questions"
+        elif chosenTable == "公共题库":
+            tablename = "commquestions"
+        col3, col4, col5 = st.columns(3)
+        buttonModify = col3.button("显示试题")
         if buttonModify:
-            if chosenTable == "站室题库":
-                tablename = "questions"
-            elif chosenTable == "公共题库":
-                tablename = "commquestions"
+            col4.button("修改试题", on_click=actionQM, args=(quesID, tablename,))
+            col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename,))
             SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis from {tablename} where ID = {quesID}"
             rows = mdb_sel(cur, SQL)
             if rows:
-                qQuestion, qOption, qAnswer, qType, qAnalysis = rows[0]
-                qQuestion2 = st.text_area(":blue[**题目**]", value=qQuestion)
-                if qType == "单选题":
-                    qOption2 = qOption.split(";")
-                    for index, value in enumerate(qOption2):
-                        st.text_input(f":orange[**选项{chr(65 + index)}**]", value=value, key=f"qModifyQues_{index}")
-                        option.append(chr(65 + index))
-                    st.radio(":red[**答案**]", options=option, index=int(qAnswer), horizontal=True)
-                elif qType == "多选题":
-                    qOption2 = qOption.split(";")
-                    qAnswer2 = qAnswer.split(";")
-                    for index, value in enumerate(qOption2):
-                        st.text_input(f":orange[**选项{chr(65 + index)}**]", value=value, key=f"qModifyQues_{index}")
-                        if str(index) in qAnswer2:
-                            st.checkbox(":blue[**选择**]", value=True, key=f"qModifyQues_Answer_{index}")
-                        else:
-                            st.checkbox(":blue[**选择**]", value=False, key=f"qModifyQues_Answer_{index}")
-                elif qType == "判断题":
-                    st.radio(":red[**答案**]", ["A. 正确", "B. 错误"], key="qModifyQues", index=int(qAnswer) ^ 1, horizontal=True)
-                qAnalysis2 = st.text_area(":green[**答案解析**]", value=qAnalysis)
+                actionQuesModify(rows[0])
     else:
         st.error("请选择题库")
+
+
+def actionQM(quesID, tablename):
+    mOption, mAnswer, Option = "", "", ["A", "B", "C", "D", "E", "F", "G", "H"]
+    mQues = st.session_state.qModifyQues_Question
+    mAnalysis = st.session_state.qModifyQues_Answer_Analysis
+    if st.session_state.qModifyQues_qType == "单选题" or st.session_state.qModifyQues_qType == "多选题":
+        for i in range(st.session_state.qModifyQues_optionCount):
+            mOption = mOption + st.session_state[f"qModifyQues_{i}"] + ";"
+        if mOption.endswith(";"):
+            mOption = mOption[:-1]
+        if st.session_state.qModifyQues_qType == "单选题":
+            for index, value in enumerate(Option):
+                if value == st.session_state.qModifyQues_Answer:
+                    mAnswer = index
+                    break
+        else:
+            for i in range(st.session_state.qModifyQues_optionCount):
+                if st.session_state[f"qModifyQues_Answer_{i}"]:
+                    mAnswer = mAnswer + str(i) + ";"
+            if mAnswer.endswith(";"):
+                mAnswer = mAnswer[:-1]
+    elif st.session_state.qModifyQues_qType == "判断题":
+        if "正确" in st.session_state.qModifyQues_Answer:
+            mAnswer = 1
+        else:
+            mAnswer = 0
+    elif st.session_state.qModifyQues_qType == "填空题":
+        for i in range(st.session_state.qModifyQues_optionCount):
+            mAnswer = mAnswer + st.session_state[f"qModifyQues_Answer_{i}"] + ";"
+        if mAnswer.endswith(";"):
+            mAnswer = mAnswer[:-1]
+    SQL = f"UPDATE {tablename} set Question = '{mQues}', qOption = '{mOption}', qAnswer = '{mAnswer}', qAnalysis = '{mAnalysis}' where ID = {quesID}"
+    mdb_modi(conn, cur, SQL)
+    for key in st.session_state.keys():
+        if key.startswith("qModifyQues_"):
+            del st.session_state[key]
+    st.toast("试题修改成功")
+
+
+def actionDelQM(quesID, tablename):
+    SQL = f"DELETE from {tablename} where ID = {quesID}"
+    mdb_del(conn, cur, SQL)
+    st.toast("试题删除成功")
 
 
 conn = apsw.Connection("./DB/ETest_enc.db")
