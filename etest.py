@@ -695,6 +695,8 @@ def dbinputSubmit(tarTable, orgTable):
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题')"
     mdb_modi(conn, cur, SQL)
+    SQL = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and where ID > {maxid}"
+    mdb_modi(conn, cur, SQL)
     SQL = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
     rows = mdb_sel(cur, SQL)
     for row in rows:
