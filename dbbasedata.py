@@ -30,7 +30,7 @@ def addNewQues():
             qQuestion = ClearStr(qQuestion)
             qAnalysis = ClearStr(qAnalysis)
             for i in range(0, 4):
-                st.text_input(f"选项{i+1}", key=f"qAddQues_{i}")
+                st.text_input(f"选项{i + 1}", key=f"qAddQues_{i}")
             qAddAnswer = st.radio("答案", ["A", "B", "C", "D"], index=None, horizontal=True)
             if qQuestion == "":
                 flag = False

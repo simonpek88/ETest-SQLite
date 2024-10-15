@@ -1466,6 +1466,46 @@ def actionUserStatus():
     st.dataframe(df, use_container_width=True)
 
 
+@st.fragment
+def quesModify():
+    option = []
+    col1, col2 = st.columns(2)
+    chosenTable = col1.selectbox(":red[选择题库]", ["站室题库", "公共题库"], index=None)
+    quesID = col2.number_input(":blue[题目ID]", min_value=0, step=1)
+    if chosenTable is not None and quesID > 0:
+        buttonModify = st.button("修改试题")
+        if buttonModify:
+            if chosenTable == "站室题库":
+                tablename = "questions"
+            elif chosenTable == "公共题库":
+                tablename = "commquestions"
+            SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis from {tablename} where ID = {quesID}"
+            rows = mdb_sel(cur, SQL)
+            if rows:
+                qQuestion, qOption, qAnswer, qType, qAnalysis = rows[0]
+                qQuestion2 = st.text_area(":blue[**题目**]", value=qQuestion)
+                if qType == "单选题":
+                    qOption2 = qOption.split(";")
+                    for index, value in enumerate(qOption2):
+                        st.text_input(f":orange[**选项{chr(65 + index)}**]", value=value, key=f"qModifyQues_{index}")
+                        option.append(chr(65 + index))
+                    st.radio(":red[**答案**]", options=option, index=int(qAnswer), horizontal=True)
+                elif qType == "多选题":
+                    qOption2 = qOption.split(";")
+                    qAnswer2 = qAnswer.split(";")
+                    for index, value in enumerate(qOption2):
+                        st.text_input(f":orange[**选项{chr(65 + index)}**]", value=value, key=f"qModifyQues_{index}")
+                        if str(index) in qAnswer2:
+                            st.checkbox(":blue[**选择**]", value=True, key=f"qModifyQues_Answer_{index}")
+                        else:
+                            st.checkbox(":blue[**选择**]", value=False, key=f"qModifyQues_Answer_{index}")
+                elif qType == "判断题":
+                    st.radio(":red[**答案**]", ["A. 正确", "B. 错误"], key="qModifyQues", index=int(qAnswer) ^ 1, horizontal=True)
+                qAnalysis2 = st.text_area(":green[**答案解析**]", value=qAnalysis)
+    else:
+        st.error("请选择题库")
+
+
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
 cur.execute("PRAGMA cipher = 'aes256cbc'")
@@ -1491,6 +1531,7 @@ aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/licen
 dboutput_menu = st.Page(dboutput, title="文件导出", icon=":material/output:")
 dbfunc_menu = st.Page(dbfunc, title="题库功能", icon=":material/input:")
 studyinfo_menu = st.Page(studyinfo, title="学习信息", icon=":material/import_contacts:")
+quesModify_menu = st.Page(quesModify, title="试题修改", icon=":material/border_color:")
 
 
 if "logged_in" not in st.session_state:
@@ -1512,7 +1553,7 @@ if st.session_state.logged_in:
         if st.session_state.userType == "admin":
             pg = st.navigation(
                 {
-                    "功能": [dashboard_page, trainingQues_page, dbbasedata_page, dboutput_menu, dbfunc_menu, dbsetup_page],
+                    "功能": [dashboard_page, trainingQues_page, dbbasedata_page, quesModify_menu, dboutput_menu, dbfunc_menu, dbsetup_page],
                     "查询": [search_page, actionUserStatus_menu],
                     "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
