@@ -1512,19 +1512,21 @@ def quesModify():
         elif chosenTable == "公共题库":
             tablename = "commquestions"
         col3, col4, col5 = st.columns(3)
-        buttonModify = col3.button("显示试题")
-        if buttonModify:
-            col4.button("修改试题", on_click=actionQM, args=(quesID, tablename,))
-            col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename,))
+        buttonDisplayQues = col3.button("显示试题")
+        if buttonDisplayQues:
             SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis from {tablename} where ID = {quesID}"
             rows = mdb_sel(cur, SQL)
             if rows:
+                col4.button("修改试题", on_click=actionQM, args=(quesID, tablename, rows[0]))
+                col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename, rows[0]))
                 actionQuesModify(rows[0])
+            else:
+                st.error("未找到该题目, 请检查题库名称及题目ID是否正确")
     else:
         st.error("请选择题库")
 
 
-def actionQM(quesID, tablename):
+def actionQM(quesID, tablename, mRow):
     mOption, mAnswer, Option = "", "", ["A", "B", "C", "D", "E", "F", "G", "H"]
     mQues = st.session_state.qModifyQues_Question
     mAnalysis = st.session_state.qModifyQues_Answer_Analysis
@@ -1556,19 +1558,30 @@ def actionQM(quesID, tablename):
             mAnswer = mAnswer[:-1]
     SQL = f"UPDATE {tablename} set Question = '{mQues}', qOption = '{mOption}', qAnswer = '{mAnswer}', qAnalysis = '{mAnalysis}' where ID = {quesID}"
     mdb_modi(conn, cur, SQL)
+    clearModifyQues(quesID, tablename, mRow)
     for key in st.session_state.keys():
         if key.startswith("qModifyQues_"):
             del st.session_state[key]
     st.toast("试题修改成功")
 
 
-def actionDelQM(quesID, tablename):
+def actionDelQM(quesID, tablename, mRow):
     SQL = f"DELETE from {tablename} where ID = {quesID}"
     mdb_del(conn, cur, SQL)
+    clearModifyQues(quesID, tablename, mRow)
     for key in st.session_state.keys():
         if key.startswith("qModifyQues_"):
             del st.session_state[key]
     st.toast("试题删除成功")
+
+
+def clearModifyQues(quesID, tablename, mRow):
+    delTablePack = ["morepractise", "favques"]
+    for each in delTablePack:
+        SQL = f"DELETE from {each} where Question = '{mRow[0]}' and qOption = '{mRow[1]}' and qAnswer = '{mRow[2]}' and qType = '{mRow[3]}'"
+        mdb_del(conn, cur, SQL)
+    SQL = f"DELETE from studyinfo where cid = {quesID} and quesTable = '{tablename}'"
+    mdb_del(conn, cur, SQL)
 
 
 conn = apsw.Connection("./DB/ETest_enc.db")
