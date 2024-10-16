@@ -737,7 +737,7 @@ def dbinput():
             else:
                 st.warning("没有可导入的本站文件")
         elif inputType == "上传文件":
-            uploaded_file = st.file_uploader("请选择Excel文件, 系统会自动改名为: :red[站室名称_站室题库/公共题库_用户上传_上传日期]")
+            uploaded_file = st.file_uploader("请选择Excel文件, 系统会自动改名为: :red[站室名称_站室题库/公共题库_用户上传_上传日期]", type=["xlsx"])
             if uploaded_file is not None:
                 bytes_data = uploaded_file.getvalue()
                 outFile = f"./InputQues/{st.session_state.StationCN}_{targetTable}_用户上传_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.xlsx"
