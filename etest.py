@@ -657,7 +657,7 @@ def dboutput():
     bc = sac.segmented(
         items=[
             sac.SegmentedItem(label="题库导出(Word格式)", icon="database-down"),
-            sac.SegmentedItem(label="试卷导出(DF格式)", icon="journal-arrow-down"),
+            #sac.SegmentedItem(label="试卷导出(DF格式)", icon="journal-arrow-down"),
             sac.SegmentedItem(label="考试成绩导出(Excel格式)", icon="layout-text-sidebar-reverse"),
         ], color="green", align="center"
     )
@@ -685,7 +685,7 @@ def delExamTable():
     SQL = "SELECT name from sqlite_master where type = 'table' and name like 'exam_%'"
     tempTable = mdb_sel(cur, SQL)
     if tempTable:
-        st.subheader("删除所有试卷", divider="red")
+        st.subheader("删除试卷", divider="red")
         for row in tempTable:
             if row[0].count("_") == 3 or row[0].count("_") == 4:
                 st.checkbox(f"{row[0]}", key=f"delExamTable_{row[0]}")
@@ -787,11 +787,10 @@ def dbfunc():
             sac.SegmentedItem(label="A.I.出题", icon="robot"),
             sac.SegmentedItem(label="题库导入", icon="database-up"),
             #sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=st.session_state.debug ^ True),
-            sac.SegmentedItem(label="错题集重置", icon="journal-x"),
-            sac.SegmentedItem(label="删除单个试题", icon="x-circle"),
-            sac.SegmentedItem(label="删除所有试卷", icon="trash3"),
+            sac.SegmentedItem(label="删除试卷", icon="trash3"),
             sac.SegmentedItem(label="删除静态题库", icon="trash3"),
             sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
+            sac.SegmentedItem(label="错题集重置", icon="journal-x"),
             sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
         ], align="start", color="red"
     )
@@ -803,9 +802,7 @@ def dbfunc():
         inputWord()
     elif bc == "错题集重置":
         ClearMP()
-    elif bc == "删除单个试题":
-        deleteSingleQues()
-    elif bc == "删除所有试卷":
+    elif bc == "删除试卷":
         delExamTable()
     elif bc == "删除静态题库":
         delStaticExamTable()
@@ -847,29 +844,6 @@ def resetActiveUser():
     SQL = f"UPDATE users set activeUser = 0 where userName <> {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
     st.success("已重置所有用户状态")
-
-
-def deleteSingleQues():
-    tablename = st.selectbox("请选择要删除:red[单个试题]所在的题库", ("站室题库", "公共题库", "错题集", "关注题集"), index=None)
-    if tablename:
-        st.number_input("请输入要删除的试题ID", min_value=1, max_value=999999, placeholder="每个题库试题的ID都不一样, 相同ID可以在不同题库, 一定要检查题库和ID是否一致", key="delQuesID")
-        buttonConfirm = st.button("删除", type="primary")
-        if buttonConfirm:
-            st.button("确认删除", type="secondary", on_click=deleteQues, args=(tablename,))
-
-
-def deleteQues(tablename):
-    if tablename == "站室题库":
-        targetTable = "questions"
-    elif tablename == "公共题库":
-        targetTable = "commquestions"
-    elif tablename == "错题集":
-        targetTable = "morepractise"
-    elif tablename == "关注题集":
-        targetTable = "favques"
-    SQL = f"DELETE from {targetTable} where ID = {st.session_state.delQuesID}"
-    mdb_modi(conn, cur, SQL)
-    st.success(f"已 :red[删除] {tablename} 中ID为 {st.session_state.delQuesID} 的试题")
 
 
 def inputWord():
@@ -971,16 +945,16 @@ def AIGenerQues():
     quesPack, chars, chapterPack, dynaQuesType, generQuesCount = [], ["A", "B", "C", "D", "E", "F", "G", "H"], [], ["单选题", "多选题", "判断题", "填空题"], 0
     AIModelNamePack, quesTypePack, generQuesCountPack, gqc = [], [], [], 0
     StationCNPack, chosenStationCN = [], st.session_state.StationCN
-    temp = f"{st.session_state.StationCN} 站室题库现有: "
+    temp = f"{st.session_state.StationCN}-站室题库现有: "
     for each in dynaQuesType:
         SQL = f"SELECT Count(ID) from questions where qType = '{each}' and StationCN = '{st.session_state.StationCN}'"
         qCount = mdb_sel(cur, SQL)[0][0]
-        temp = temp + "[:red[" + each + "]] " + str(qCount) + "道 "
+        temp = temp + ":red[" + each + "]: " + str(qCount) + "道 "
     temp = temp + "\n\n公共题库现有: "
     for each in dynaQuesType:
         SQL = f"SELECT Count(ID) from commquestions where qType = '{each}'"
         qCount = mdb_sel(cur, SQL)[0][0]
-        temp = temp + "[:red[" + each + "]] " + str(qCount) + "道 "
+        temp = temp + ":red[" + each + "]: " + str(qCount) + "道 "
     temp = temp.strip()
     st.caption(temp)
     table = st.radio(label="请选择要生成的题库", options=("站室题库", "公共题库"), horizontal=True, index=None)
@@ -1635,7 +1609,7 @@ actionUserStatus_menu = st.Page(userStatus, title="用户状态", icon=":materia
 dbsetup_page = st.Page("dbsetup.py", title="参数设置", icon=":material/settings:")
 dbbasedata_page = st.Page("dbbasedata.py", title="数据录入", icon=":material/app_registration:")
 aboutInfo_menu = st.Page(aboutInfo, title="关于...", icon=":material/info:")
-aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/license:")
+aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/copyright:")
 dboutput_menu = st.Page(dboutput, title="文件导出", icon=":material/output:")
 dbfunc_menu = st.Page(dbfunc, title="题库功能", icon=":material/input:")
 studyinfo_menu = st.Page(studyinfo, title="学习信息", icon=":material/import_contacts:")
