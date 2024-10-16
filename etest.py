@@ -12,6 +12,7 @@ import streamlit_antd_components as sac
 from PIL import Image, ImageFont, ImageDraw
 from streamlit_timeline import st_timeline
 from docx import Document
+from docx.oxml import OxmlElement
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
@@ -425,6 +426,30 @@ def ClearTables():
     st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
 
 
+def create_element(name):
+    return OxmlElement(name)
+
+
+def create_attribute(element, name, value):
+    element.set(qn(name), value)
+
+
+def add_page_number(run):
+    fldChar1 = create_element('w:fldChar')
+    create_attribute(fldChar1, 'w:fldCharType', 'begin')
+
+    instrText = create_element('w:instrText')
+    create_attribute(instrText, 'xml:space', 'preserve')
+    instrText.text = "PAGE"
+
+    fldChar2 = create_element('w:fldChar')
+    create_attribute(fldChar2, 'w:fldCharType', 'end')
+
+    run._r.append(fldChar1)
+    run._r.append(instrText)
+    run._r.append(fldChar2)
+
+
 def questoWord():
     allType, stationCName, chapterNamePack, outChapterName = [], [], [], []
     st.subheader("题库导出", divider="blue")
@@ -603,6 +628,11 @@ def questoWord():
                                 #textAnalysis.font.underline = True
                                 #textAnalysis.font.italic = True
                         i += 1
+            add_page_number(quesDOC.sections[0].footer.paragraphs[0].add_run())
+            quesDOC.sections[0].footer.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            header = quesDOC.sections[0].header.paragraphs[0]
+            header.text = f"{stationCN} - {quesTable}"
+            header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
             if headerExamName != "":
                 outputFile = f"./QuesDoc/{stationCN}-{headerExamName}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
             else:
@@ -1140,7 +1170,7 @@ def ClearMP():
 
 
 def ClearMPAction(bcArea):
-    mdb_del(conn, cur, SQL="DELETE FROM morepractise")
+    mdb_del(conn, cur, SQL="DELETE from morepractise")
     bcArea.empty()
     st.success("错题集已重置")
 
