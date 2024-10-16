@@ -631,8 +631,8 @@ def questoWord():
             add_page_number(quesDOC.sections[0].footer.paragraphs[0].add_run())
             quesDOC.sections[0].footer.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             header = quesDOC.sections[0].header.paragraphs[0]
-            header.text = f"{stationCN} - {quesTable}"
-            header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            header.text = f"{stationCN}\t\t{quesTable}"
+            header.style = quesDOC.styles["Header"]
             if headerExamName != "":
                 outputFile = f"./QuesDoc/{stationCN}-{headerExamName}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
             else:
@@ -767,7 +767,7 @@ def dbinput():
             else:
                 st.warning("没有可导入的本站文件")
         elif inputType == "上传文件":
-            uploaded_file = st.file_uploader("请选择Excel文件, 系统会自动改名为: :red[站室名称_站室题库/公共题库_用户上传_上传日期]", type=["xlsx"])
+            uploaded_file = st.file_uploader("**请选择Excel文件, 系统会自动改名为: :red[站室名称_站室题库/公共题库_用户上传_上传日期]**", type=["xlsx"])
             if uploaded_file is not None:
                 bytes_data = uploaded_file.getvalue()
                 outFile = f"./InputQues/{st.session_state.StationCN}_{targetTable}_用户上传_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.xlsx"
