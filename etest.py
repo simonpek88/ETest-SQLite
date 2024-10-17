@@ -1586,7 +1586,7 @@ actionUserStatus_menu = st.Page(userStatus, title="用户状态", icon=":materia
 dbsetup_page = st.Page("dbsetup.py", title="参数设置", icon=":material/settings:")
 dbbasedata_page = st.Page("dbbasedata.py", title="数据录入", icon=":material/app_registration:")
 aboutInfo_menu = st.Page(aboutInfo, title="关于...", icon=":material/info:")
-aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/copyright:")
+#aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/copyright:")
 aboutReadme_menu = st.Page(aboutReadme, title="Readme", icon=":material/library_books:")
 dboutput_menu = st.Page(dboutput, title="文件导出", icon=":material/output:")
 dbfunc_menu = st.Page(dbfunc, title="题库功能", icon=":material/input:")
@@ -1605,7 +1605,7 @@ if st.session_state.logged_in:
             {
                 "功能": [choseExam_page, execExam_page],
                 "账户": [changePassword_menu, logout_page],
-                "关于": [aboutReadme_menu, aboutLicense_menu, aboutInfo_menu],
+                "关于": [aboutReadme_menu, aboutInfo_menu],
 
             }
         )
@@ -1617,7 +1617,7 @@ if st.session_state.logged_in:
                     "查询": [search_page, actionUserStatus_menu],
                     "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
-                    "关于": [aboutReadme_menu, aboutLicense_menu, aboutInfo_menu],
+                    "关于": [aboutReadme_menu, aboutInfo_menu],
                 }
             )
         elif st.session_state.userType == "user":
@@ -1626,7 +1626,7 @@ if st.session_state.logged_in:
                     "功能": [dashboard_page, trainingQues_page],
                     "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
-                    "关于": [aboutReadme_menu, aboutLicense_menu, aboutInfo_menu],
+                    "关于": [aboutReadme_menu, aboutInfo_menu],
                 }
             )
     st.sidebar.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
