@@ -32,6 +32,7 @@ mcol
 mktime
 moption
 morepractise
+openpyxl
 oxml
 qcol
 qianfan
@@ -44,6 +45,7 @@ Resultto
 rowid
 scol
 selectbox
+streamlit
 studyinfo
 unpad
 verinfo
