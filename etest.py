@@ -1511,13 +1511,13 @@ def quesModify():
         elif chosenTable == "公共题库":
             tablename = "commquestions"
         col3, col4, col5 = st.columns(3)
-        buttonDisplayQues = col3.button("显示试题")
+        buttonDisplayQues = col3.button("显示试题", icon=":material/dvr:")
         if buttonDisplayQues:
             SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis from {tablename} where ID = {quesID}"
             rows = mdb_sel(cur, SQL)
             if rows:
-                col4.button("修改试题", on_click=actionQM, args=(quesID, tablename, rows[0]))
-                col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename, rows[0]))
+                col4.button("更新试题", on_click=actionQM, args=(quesID, tablename, rows[0]), icon=":material/published_with_changes:")
+                col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename, rows[0]), icon=":material/delete:")
                 actionQuesModify(rows[0])
             else:
                 st.error("未找到该题目, 请检查题库名称及题目ID是否正确")

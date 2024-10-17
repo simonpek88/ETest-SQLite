@@ -16,6 +16,7 @@ dboutput
 dbsetup
 deepseek
 dyna
+etest
 examidd
 examresult
 favques
