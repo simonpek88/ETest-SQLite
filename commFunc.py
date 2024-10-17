@@ -398,13 +398,6 @@ def updateActionUser(activeUser, actionUser, loginTime):
 
 def updatePyFileinfo(flagDebug=False):
     if flagDebug:
-        '''
-        SQL = "SELECT userCName, userType, StationCN from users where activeUser = 1"
-        rows = mdb_sel(cur, SQL)
-        for row in rows:
-            print(f"  Active User: {row[0].ljust(10 - len(row[0]) * 2 + len(row[0]) % 2, ' ')} Type: {row[1].ljust(5, ' ')} Station: {row[2]}")
-        print("<--------------------------------------------------->")
-        '''
         for root, dirs, files in os.walk("./"):
             for file in files:
                 if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):

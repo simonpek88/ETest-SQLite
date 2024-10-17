@@ -28,19 +28,11 @@ from streamlit_extras.metric_cards import style_metric_cards
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
 
 
-def getUserCName(userName):
-    SQL = f"SELECT userCName, StationCN from users where userName = {userName}"
-    rows = mdb_sel(cur, SQL)
-    if rows:
-        st.session_state.userCName = rows[0][0]
-        st.session_state.StationCN = rows[0][1]
-    else:
-        st.session_state.userCName = "未找到"
-        st.session_state.StationCN = "未找到"
-
-
-def getUserCName2(userName):
-    SQL = "SELECT userCName, StationCN from users where userCName = " + str(userName)
+def getUserCName(sUserName, sType="Digit"):
+    if sType.capitalize() == "Digit":
+        SQL = f"SELECT userCName, StationCN from users where userName = {sUserName}"
+    elif sType.capitalize() == "Str":
+        SQL = f"SELECT userCName, StationCN from users where userCName = '{sUserName}'"
     rows = mdb_sel(cur, SQL)
     if rows:
         st.session_state.userCName = rows[0][0]
@@ -107,8 +99,11 @@ def get_userCName(searchUserCName=""):
         rows = mdb_sel(cur, SQL)
         for row in rows:
             searchUserCNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
-    if searchUserCNameInfo != "":
+    else:
+        searchUserCNameInfo = ":red[**请输入至少2个字**]"
+    if searchUserCNameInfo != "" and "请输入至少2个字" not in searchUserCNameInfo:
         searchUserCNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
+
     return searchUserCNameInfo
 
 
@@ -122,7 +117,7 @@ def login():
         if userName:
             filtered = get_userName(userName)
             if filtered == "":
-                getUserCName(userName)
+                getUserCName(userName, "Digit")
                 st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         else:
             filtered = ""
@@ -134,7 +129,7 @@ def login():
             if userCName:
                 filtered = get_userCName(userCName)
                 if filtered == "":
-                    getUserCName2(userCName)
+                    getUserCName(userCName, "Str")
                     st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
             else:
                 filtered = ""
