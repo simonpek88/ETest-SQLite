@@ -264,29 +264,7 @@ def display_pypi():
 
 def aboutLicense():
     st.subheader("License", divider="green")
-    st.markdown('''
-        MIT License
-
-        Copyright (c) 2024 :blue[Simon Lau] TradeMark :rainbow[Enjoy for AP] ™
-
-        Permission is hereby granted, free of charge, to any person obtaining a copy
-        of this software and associated documentation files (the "Software"), to deal
-        in the Software without restriction, including without limitation the rights
-        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-        copies of the Software, and to permit persons to whom the Software is
-        furnished to do so, subject to the following conditions:
-
-        The above copyright notice and this permission notice shall be included in all
-        copies or substantial portions of the Software.
-
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-        SOFTWARE.
-        ''')
+    st.markdown(open("./LICENSE", "r", encoding="utf-8").read())
     updateActionUser(st.session_state.userName, "浏览License信息", st.session_state.loginTime)
 
 
@@ -1583,6 +1561,10 @@ def clearModifyQues(quesID, tablename, mRow):
     mdb_del(conn, cur, SQL)
 
 
+def aboutReadme():
+    st.markdown(open("./README.md", "r", encoding="utf-8").read())
+
+
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
 cur.execute("PRAGMA cipher = 'aes256cbc'")
@@ -1605,6 +1587,7 @@ dbsetup_page = st.Page("dbsetup.py", title="参数设置", icon=":material/setti
 dbbasedata_page = st.Page("dbbasedata.py", title="数据录入", icon=":material/app_registration:")
 aboutInfo_menu = st.Page(aboutInfo, title="关于...", icon=":material/info:")
 aboutLicense_menu = st.Page(aboutLicense, title="License", icon=":material/copyright:")
+aboutReadme_menu = st.Page(aboutReadme, title="Readme", icon=":material/library_books:")
 dboutput_menu = st.Page(dboutput, title="文件导出", icon=":material/output:")
 dbfunc_menu = st.Page(dbfunc, title="题库功能", icon=":material/input:")
 studyinfo_menu = st.Page(studyinfo, title="学习信息", icon=":material/import_contacts:")
@@ -1622,7 +1605,7 @@ if st.session_state.logged_in:
             {
                 "功能": [choseExam_page, execExam_page],
                 "账户": [changePassword_menu, logout_page],
-                "关于": [aboutLicense_menu, aboutInfo_menu],
+                "关于": [aboutReadme_menu, aboutLicense_menu, aboutInfo_menu],
 
             }
         )
@@ -1634,7 +1617,7 @@ if st.session_state.logged_in:
                     "查询": [search_page, actionUserStatus_menu],
                     "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
-                    "关于": [aboutLicense_menu, aboutInfo_menu],
+                    "关于": [aboutReadme_menu, aboutLicense_menu, aboutInfo_menu],
                 }
             )
         elif st.session_state.userType == "user":
@@ -1643,7 +1626,7 @@ if st.session_state.logged_in:
                     "功能": [dashboard_page, trainingQues_page],
                     "信息": [studyinfo_menu],
                     "账户": [changePassword_menu, logout_page],
-                    "关于": [aboutLicense_menu, aboutInfo_menu],
+                    "关于": [aboutReadme_menu, aboutLicense_menu, aboutInfo_menu],
                 }
             )
     st.sidebar.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")

@@ -1,10 +1,10 @@
 # 专业技能考试系统
 
-## E-Test考试系统 是一个前端基于 Streamlit 框架，后端数据处理基于 Python 的web应用，旨在帮助用户进行自我评估和技能提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
+### E-Test 考试系统 是一个前端基于 Streamlit 框架，后端数据处理基于 Python 的web应用，旨在帮助用户进行自我评估和技能提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
 
 ## 目录
 
-- [E-Test](https://github.com/simonpek88/ETest-SQLite.git)
+- E-Test 考试系统
   - [目录](#目录)
   - [安装](#安装)
   - [项目结构](#项目结构)
@@ -69,8 +69,8 @@
 
 ## Git Repository
 
-[E-Test](https://github.com/simonpek88/ETest-SQLite.git)
+[E-Test 考试系统](https://github.com/simonpek88/ETest-SQLite.git)
 
 ## License
 
-MIT © 2024 Simon Lau TradeMark [Enjoy for AP] ™
+MIT © 2024 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
