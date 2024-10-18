@@ -19,127 +19,8 @@ def ClearStr(strValue):
 
 
 @st.fragment
-def addNewQues():
-    flagSuccess = False
-    qAnswer, qOption, qAnalysis, flag = "", "", "", True
-    itemArea = st.empty()
-    with itemArea.container():
-        if qType == "单选题":
-            qQuestion = st.text_input("题目", value="")
-            qAnalysis = st.text_input("答案解析", value="")
-            qQuestion = ClearStr(qQuestion)
-            qAnalysis = ClearStr(qAnalysis)
-            for i in range(0, 4):
-                st.text_input(f"选项{i + 1}", key=f"qAddQues_{i}")
-            qAddAnswer = st.radio("答案", ["A", "B", "C", "D"], index=None, horizontal=True)
-            if qQuestion == "":
-                flag = False
-                st.warning("题目不能为空")
-            if flag:
-                qOption = ""
-                for i in range(0, 4):
-                    if st.session_state[f"qAddQues_{i}"] == "":
-                        st.warning(f"选项{i+1} 不能为空")
-                        flag = False
-                        qOption = ""
-                        break
-                    else:
-                        tmp = ClearStr(st.session_state[f"qAddQues_{i}"])
-                        qOption = qOption + tmp + ";"
-            if flag:
-                if qAddAnswer is not None:
-                    for index, value in enumerate(["A", "B", "C", "D"]):
-                        if value == qAddAnswer:
-                            qAnswer = index
-                else:
-                    st.warning("必须有一个答案")
-                    flag = False
-            if qOption != "":
-                qOption = qOption[:-1]
-        elif qType == "判断题":
-            qQuestion = st.text_input("题目", value="")
-            qAnalysis = st.text_input("答案解析", value="")
-            qOption = ""
-            st.radio("答案", ["正确", "错误"], key="qAddAnswer", index=None, horizontal=True)
-            if qQuestion == "":
-                st.warning("题目不能为空")
-                flag = False
-            if st.session_state.qAddAnswer != "":
-                if st.session_state.qAddAnswer == "正确":
-                    qAnswer = 1
-                else:
-                    qAnswer = 0
-            else:
-                st.warning("必须有一个答案")
-                flag = False
-        if qAnalysis == "":
-            st.warning("建议填写答案解析, 本内容仅在练习中显示, 不会在考试中显示")
-        if flag:
-            buttonSubmit = st.button("添加题目")
-            if buttonSubmit:
-                if selectFunc == "站室专用题库":
-                    SQL = "SELECT ID from questions where Question = '" + qQuestion + "' and StationCN = " + str(st.session_state.StationCN) + " and chapterName = '" + qAff + "'"
-                    if not mdb_sel(cur, SQL):
-                        SQL = f"INSERT INTO questions(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES('{qQuestion}', '{qOption}', '{qAnswer}', '{qType}', '{qAnalysis}', '{st.session_state.StationCN}', '{qAff}', '人工')"
-                        mdb_ins(conn, cur, SQL)
-                        flagSuccess = True
-                        itemArea.empty()
-                    else:
-                        st.warning("考题已存在")
-                elif selectFunc == "公共题库":
-                    SQL = "SELECT ID from commquestions where Question = '" + qQuestion + "'"
-                    if not mdb_sel(cur, SQL):
-                        SQL = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{qQuestion}', '{qOption}', '{qAnswer}', '{qType}', '{qAnalysis}', '人工')"
-                        mdb_ins(conn, cur, SQL)
-                        flagSuccess = True
-                        itemArea.empty()
-                    else:
-                        st.warning("考题已存在")
-    if flagSuccess:
-        if selectFunc == "站室专用题库":
-            SQL = "SELECT ID from questions where Question = '" + qQuestion + "' and StationCN = " + str(st.session_state.StationCN) + " and chapterName = '" + qAff + "'"
-        elif selectFunc == "公共题库":
-            SQL = "SELECT ID from commquestions where Question = '" + qQuestion + "'"
-        if mdb_sel(cur, SQL):
-            st.success(f"考题: [{qQuestion}] 类型: [{qType}] 所属站室: [{st.session_state.StationCN}] 题库: [{selectFunc}] 已添加成功")
-        else:
-            st.warning(f"考题添加至 [{selectFunc}] 失败")
-
-
-@st.fragment
-def addChapter():
-    flagSuccess = False
-    itemArea = st.empty()
-    with itemArea.container():
-        chapter = st.text_input("章节名称")
-        chapter = ClearStr(chapter)
-        if chapter and chapterRatio:
-            buttonSubmit = st.button("添加章节")
-            if buttonSubmit:
-                sc = st.session_state.StationCN
-                cr = int(chapterRatio)
-                SQL = "SELECT ID from questionaff where chapterName = '" + chapter + "' and StationCN = '" + sc + "'"
-                if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{chapter}', '{sc}', {cr}, {cr})"
-                    mdb_ins(conn, cur, SQL)
-                    flagSuccess = True
-                    itemArea.empty()
-                else:
-                    st.warning(f"[{chapter}] 章节已存在")
-        else:
-            if not chapter:
-                st.warning("请输入章节名称")
-    if flagSuccess:
-        SQL = "SELECT ID from questionaff where chapterName = '" + chapter + "' and StationCN = '" + sc + "'"
-        if mdb_sel(cur, SQL):
-            st.success(f"章节: [{chapter}] 所属站室: [{st.session_state.StationCN}] 权重: [{cr}] 添加成功")
-        else:
-            st.warning(f"[{chapter}] 章节添加失败")
-
-
-@st.fragment
 def addExamIDD():
-    flagSuccess = False
+    flagSuccess, examDateStr = False, ""
     itemArea = st.empty()
     with itemArea.container():
         examName = st.text_input("考试名称", value="", help="名称不能设置为练习题库(此为保留题库)")
@@ -281,12 +162,7 @@ SQL = "SELECT Station from stations order by ID"
 rows = mdb_sel(cur, SQL)
 for row in rows:
     stationCName.append(row[0])
-if selectFunc == "章节信息":
-    chapterRatio = st.slider("章节权重", min_value=1, max_value=10, value=5, help="数值越高权重越大")
-    buttonAdd = st.button("新增")
-    if buttonAdd:
-        addChapter()
-elif selectFunc == "考试场次":
+if selectFunc == "考试场次":
     buttonAdd = st.button("新增")
     if buttonAdd:
         addExamIDD()
@@ -298,21 +174,5 @@ elif selectFunc == "用户":
     buttonAdd = st.button("新增")
     if buttonAdd:
         addUser()
-elif selectFunc == "站室专用题库" or selectFunc == "公共题库":
-    qTypeOption, chapterName = [], []
-    SQL = f"SELECT paramName from setup_{st.session_state.StationCN} where paramType = 'questype' and param = 1"
-    rows = mdb_sel(cur, SQL)
-    for row in rows:
-        qTypeOption.append(row[0])
-    SQL = "SELECT chapterName from questionaff where StationCN = '" + st.session_state.StationCN + "' and chapterName <> '错题集' and chapterName <> '公共题库' and chapterName <> '关注题集' order by chapterName"
-    rows = mdb_sel(cur, SQL)
-    for row in rows:
-        chapterName.append(row[0])
-    if qTypeOption != [] and chapterName != []:
-        qAff = st.select_slider("章节", chapterName, value=chapterName[0])
-        qType = st.select_slider("题型", qTypeOption, value="单选题")
-        buttonAdd = st.button("新增")
-        if buttonAdd:
-            addNewQues()
 if selectFunc is not None:
     updateActionUser(st.session_state.userName, f"添加{selectFunc}", st.session_state.loginTime)

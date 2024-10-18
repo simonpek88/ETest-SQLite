@@ -166,6 +166,8 @@ def updateStudyInfo(studyRow):
             SQL = f"SELECT ID, chapterName from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}' and StationCN = '{st.session_state.StationCN}'"
         elif each == "commquestions":
             SQL = f"SELECT ID, '公共题库' from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}'"
+        else:
+            SQL = ""
         studyResult = mdb_sel(cur, SQL)
         if studyResult:
             SQL = f"SELECT ID from studyinfo where cid = {studyResult[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyResult[0][1]}'"
@@ -411,12 +413,12 @@ def updateTA():
     updateAnswer(st.session_state.curQues)
 
 
-def changeCurQues(step):
+def changeCurQues(step, cQuesCount):
     st.session_state.curQues += step
     if st.session_state.curQues < 1:
         st.session_state.curQues = 1
-    elif st.session_state.curQues > quesCount:
-        st.session_state.curQues = quesCount
+    elif st.session_state.curQues > cQuesCount:
+        st.session_state.curQues = cQuesCount
 
 
 @st.fragment
@@ -504,16 +506,17 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
             SQL = "SELECT * from " + st.session_state.examFinalTable + " order by ID"
             rows = mdb_sel(cur, SQL)
             quesCount = len(rows)
+            preButton, nextButton, submitButton = False, False, False
             #st.write(f"Cur:{st.session_state.curQues} Comp:{st.session_state.flagCompleted}")
             if st.session_state.flagCompleted:
                 if st.session_state.curQues == 1:
                     preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
                 else:
-                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1,))
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
                 if st.session_state.curQues == quesCount:
                     nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
                 else:
-                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
                 submitButton = qcol1.button("交卷", icon=":material/publish:")
             elif st.session_state.confirmSubmit:
                 preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
@@ -521,21 +524,21 @@ if "examFinalTable" in st.session_state and "examName" in st.session_state and n
                 submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
             elif st.session_state.curQues == 0:
                 preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
-                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
                 submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
                 exam(rows[0])
             elif st.session_state.curQues == 1:
                 preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
-                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
                 submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
             elif st.session_state.curQues == quesCount:
-                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1,))
+                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
                 nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
                 submitButton = qcol1.button("交卷", icon=":material/publish:")
                 st.session_state.flagCompleted = True
             elif st.session_state.curQues > 1 and st.session_state.curQues < quesCount:
-                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1,))
-                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1,))
+                preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
+                nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
                 submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
             iCol1, iCol2 = st.columns(2)
             completedPack, cpStr, cpCount = [], "", 0

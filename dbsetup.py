@@ -46,7 +46,6 @@ def setupReset():
     mdb_modi(conn, cur, SQL)
     SQL = f"UPDATE questionaff set chapterRatio = 5, examChapterRatio = 5 where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
     mdb_modi(conn, cur, SQL)
-    bcArea.empty()
     st.success("所有设置已重置")
 
 
@@ -159,7 +158,5 @@ with st.expander("# :orange[其他设置]"):
 st.divider()
 buttonReset = st.button("重置所有设置", type="primary")
 if buttonReset:
-    bcArea = st.empty()
-    with bcArea.container():
-        buttonConfirm = st.button("确认重置", type="secondary", on_click=setupReset)
+    buttonConfirm = st.button("确认重置", type="secondary", on_click=setupReset)
     updateActionUser(st.session_state.userName, "重置所有设置", st.session_state.loginTime)

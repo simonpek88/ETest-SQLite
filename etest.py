@@ -8,21 +8,21 @@ import openpyxl
 import pandas as pd
 import streamlit as st
 import streamlit_antd_components as sac
-
-from PIL import Image, ImageFont, ImageDraw
-from streamlit_timeline import st_timeline
 from docx import Document
-from docx.oxml import OxmlElement
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
-from streamlit_extras.badges import badge
-from xlsxwriter.workbook import Workbook
+from PIL import Image, ImageDraw, ImageFont
 from st_keyup import st_keyup
-
-from commFunc import (getParam, mdb_del, mdb_ins, mdb_modi, mdb_sel,
-                      deepseek_AI_GenerQues, qianfan_AI_GenerQues, updatePyFileinfo, updateActionUser)
+from streamlit_extras.badges import badge
 from streamlit_extras.metric_cards import style_metric_cards
+from streamlit_timeline import st_timeline
+from xlsxwriter.workbook import Workbook
+
+from commFunc import (deepseek_AI_GenerQues, getParam, mdb_del, mdb_ins,
+                      mdb_modi, mdb_sel, qianfan_AI_GenerQues,
+                      updateActionUser, updatePyFileinfo)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -486,6 +486,8 @@ def questoWord():
                 tablename = "morepractise"
             elif quesTable == "关注题集":
                 tablename = "favques"
+            else:
+                tablename = ""
             headerFS = getParam("抬头字体大小", st.session_state.StationCN)
             titleFS = getParam("题型字体大小", st.session_state.StationCN)
             quesFS = getParam("题目字体大小", st.session_state.StationCN)
@@ -543,16 +545,17 @@ def questoWord():
                         aa = row[2].replace("；", ";").split(";")
                         if each != "填空题":
                             pOption = quesDOC.add_paragraph()
-                        if each == "单选题" or each == "多选题":
+                        elif each == "单选题" or each == "多选题":
                             qa = row[1].replace("；", ";").split(";")
                             for each2 in qa:
                                 tmp = tmp + f"{option[qa.index(each2)]}. {each2}{' ' * 8}"
                             textOption = pOption.add_run(tmp)
+                            textOption.font.size = Pt(optionFS)
                         elif each == "判断题":
                             textOption = pOption.add_run(f"A. 正确{' ' * 15}B. 错误{' ' * 15}")
+                            textOption.font.size = Pt(optionFS)
                         #textOption.font.name = "Microsoft YaHei"
                         #textOption.element.rPr.rFonts.set(qn("w:eastAsia"), "Microsoft YaHei")
-                        textOption.font.size = Pt(optionFS)
                         #textOption.italic = True
                         if st.session_state.sac_recheck:
                             if each == "单选题" or each == "多选题":
@@ -677,7 +680,7 @@ def delExamTable():
 
 
 def dbinputSubmit(tarTable, orgTable):
-    tmpTable = ""
+    tmpTable, SQL, maxcol = "", "", 0
     if tarTable == "站室题库":
         tablename = "questions"
         SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName) VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -686,46 +689,48 @@ def dbinputSubmit(tarTable, orgTable):
         tablename = "commquestions"
         SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis) VALUES (?, ?, ?, ?, ?)"
         maxcol = 5
-    SQL2 = f"SELECT Max(ID) from {tablename}"
-    maxid = mdb_sel(cur, SQL2)[0][0]
-    st.spinner(f"正在向 [{tarTable}] 导入题库...")
-    for each in orgTable:
-        listinsheet = openpyxl.load_workbook(f"./InputQues/{each}.xlsx")
-        datainlist = listinsheet.active
-        for row in datainlist.iter_rows(min_row=2, max_col=maxcol, max_row=datainlist.max_row):
-            singleQues = [cell.value for cell in row]
-            cur.execute(SQL, singleQues)
-        listinsheet.close()
-        tmpTable = tmpTable + each + ", "
-    SQL = f"UPDATE {tablename} set qOption = '' where qOption is Null"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE {tablename} set qAnalysis = '' where qAnalysis is Null"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题' or qType = '填空题')"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and ID > {maxid}"
-    print(SQL)
-    mdb_modi(conn, cur, SQL)
-    SQL = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
-    rows = mdb_sel(cur, SQL)
-    for row in rows:
-        SQL2 = ""
-        if row[3] == "单选题" or row[3] == "多选题":
-            for each in row[2].split(";"):
-                if int(each) < 0 or int(each) >= len(row[1].split(";")):
-                    SQL2 = f"DELETE from {tablename} where ID = {row[0]}"
-        elif row[3] == "判断题":
-            if int(row[2]) < 0 or int(row[2]) > 1:
-                SQL2 = f"DELETE from {tablename} where ID = {row[0]}"
-        if SQL2 != "":
-            mdb_del(conn, cur, SQL2)
-            st.warning(f"试题: [{row[4]}] 题型: [{row[3]}] 选项: [{row[1]}] 答案: [{row[2]}] 因为选项及答案序号不相符, 没有导入")
-    SQL = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
-    mdb_ins(conn, cur, SQL)
-    ClearTables()
-    st.success(f":green[[{tmpTable[:-2]}] 向 [{tarTable}]] :gray[导入成功]")
+    if SQL != "":
+        st.spinner(f"正在向 [{tarTable}] 导入题库...")
+        SQL2 = f"SELECT Max(ID) from {tablename}"
+        maxid = mdb_sel(cur, SQL2)[0][0]
+        if maxid is None:
+            maxid = 0
+        for each in orgTable:
+            listinsheet = openpyxl.load_workbook(f"./InputQues/{each}.xlsx")
+            datainlist = listinsheet.active
+            for row in datainlist.iter_rows(min_row=2, max_col=maxcol, max_row=datainlist.max_row):
+                singleQues = [cell.value for cell in row]
+                cur.execute(SQL, singleQues)
+            listinsheet.close()
+            tmpTable = tmpTable + each + ", "
+        SQL = f"UPDATE {tablename} set qOption = '' where qOption is Null"
+        mdb_modi(conn, cur, SQL)
+        SQL = f"UPDATE {tablename} set qAnalysis = '' where qAnalysis is Null"
+        mdb_modi(conn, cur, SQL)
+        SQL = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
+        mdb_modi(conn, cur, SQL)
+        SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题' or qType = '填空题')"
+        mdb_modi(conn, cur, SQL)
+        SQL = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and ID > {maxid}"
+        mdb_modi(conn, cur, SQL)
+        SQL = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
+        rows = mdb_sel(cur, SQL)
+        for row in rows:
+            SQL = ""
+            if row[3] == "单选题" or row[3] == "多选题":
+                for each in row[2].split(";"):
+                    if int(each) < 0 or int(each) >= len(row[1].split(";")):
+                        SQL = f"DELETE from {tablename} where ID = {row[0]}"
+            elif row[3] == "判断题":
+                if int(row[2]) < 0 or int(row[2]) > 1:
+                    SQL = f"DELETE from {tablename} where ID = {row[0]}"
+            if SQL != "":
+                mdb_del(conn, cur, SQL)
+                st.warning(f"试题: [{row[4]}] 题型: [{row[3]}] 选项: [{row[1]}] 答案: [{row[2]}] 因为选项及答案序号不相符, 没有导入")
+        SQL = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
+        mdb_ins(conn, cur, SQL)
+        ClearTables()
+        st.success(f":green[[{tmpTable[:-2]}] 向 [{tarTable}]] :gray[导入成功]")
 
 
 def dbinput():
@@ -992,6 +997,8 @@ def AIGenerQues():
                             ques = qianfan_AI_GenerQues(quesRefer, quesType, quesCount, "ERNIE-Speed-8K")
                         elif AIModelName == "DeepSeek":
                             ques = deepseek_AI_GenerQues(quesRefer, quesType, quesCount)
+                        else:
+                            ques = ""
                         quesPack = ques.split("题型")
                         for each in quesPack:
                             if each != "":
@@ -1495,6 +1502,8 @@ def quesModify():
             tablename = "questions"
         elif chosenTable == "公共题库":
             tablename = "commquestions"
+        else:
+            tablename = ""
         col3, col4, col5 = st.columns(3)
         buttonDisplayQues = col3.button("显示试题", icon=":material/dvr:")
         if buttonDisplayQues:
@@ -1601,6 +1610,7 @@ studyinfo_menu = st.Page(studyinfo, title="学习信息", icon=":material/import
 quesModify_menu = st.Page(quesModify, title="试题修改", icon=":material/border_color:")
 
 
+pg = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.rerun()

@@ -38,6 +38,10 @@ def queryExamAnswer(tablename):
                     SQL = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and qAnswer = userAnswer and userName = " + str(st.session_state.userName) + " order by ID"
                 elif options[0] == "错题":
                     SQL = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and qAnswer <> userAnswer and userName = " + str(st.session_state.userName) + " order by ID"
+                else:
+                    SQL = ""
+            else:
+                SQL = ""
             rows = mdb_sel(cur, SQL)
             if rows:
                 for row in rows:
