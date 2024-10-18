@@ -29,14 +29,19 @@ from streamlit_extras.metric_cards import style_metric_cards
 
 
 def getUserCName(sUserName, sType="Digit"):
+    SQL = ""
     if sType.capitalize() == "Digit":
         SQL = f"SELECT userCName, StationCN from users where userName = {sUserName}"
     elif sType.capitalize() == "Str":
         SQL = f"SELECT userCName, StationCN from users where userCName = '{sUserName}'"
-    rows = mdb_sel(cur, SQL)
-    if rows:
-        st.session_state.userCName = rows[0][0]
-        st.session_state.StationCN = rows[0][1]
+    if SQL != "":
+        rows = mdb_sel(cur, SQL)
+        if rows:
+            st.session_state.userCName = rows[0][0]
+            st.session_state.StationCN = rows[0][1]
+        else:
+            st.session_state.userCName = "未找到"
+            st.session_state.StationCN = "未找到"
     else:
         st.session_state.userCName = "未找到"
         st.session_state.StationCN = "未找到"
@@ -578,6 +583,8 @@ def questoWord():
                                 SQL = f"SELECT ID from commquestions where Question = '{row[0]}'"
                                 if mdb_sel(cur, SQL):
                                     fhQT = "公共题库"
+                                else:
+                                    fhQT = "未知"
                             pSource = quesDOC.add_paragraph()
                             if row[5] != "AI-LLM":
                                 textSource = pSource.add_run(f"试题来源: [{stationCN}] 章节名称: [{fhQT}] 试题生成类别: [{row[5]}]")
