@@ -6,6 +6,8 @@ import time
 import apsw
 import openpyxl
 import pandas as pd
+import numpy as np
+import pydeck as pdk
 import streamlit as st
 import streamlit_antd_components as sac
 from docx import Document
@@ -1181,7 +1183,7 @@ def displayUserRanking():
     if boardType == "个人榜":
         SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
     elif boardType == "站室榜":
-        SQL = "SELECT StationCN, ID, sum(userRanking) from users GROUP BY StationCN order by sum(userRanking) DESC"
+        SQL = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN order by Count DESC"
     else:
         SQL = ""
     rows = mdb_sel(cur, SQL)
@@ -1196,7 +1198,46 @@ def displayUserRanking():
             boardInfo = ""
     itemArea = st.empty()
     with itemArea.container(border=True):
-        st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", color=(155, 17, 30), use_container_width=True)
+        st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", color=(155, 17, 30))
+    if boardType == "站室榜":
+        data = []
+        for row in rows:
+            SQL = f"SELECT lat, lon, Station from stations where Station = '{row[0]}'"
+            tmpTable = mdb_sel(cur, SQL)
+            data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
+        chart_data = pd.DataFrame(data, columns=["lat", "lon"],)
+        st.pydeck_chart(
+            pdk.Deck(
+                map_style="road",
+                initial_view_state=pdk.ViewState(
+                    latitude=39.12,
+                    longitude=117.34,
+                    #latitude=data[0][0],
+                    #longitude=data[0][1],
+                    zoom=10,
+                    pitch=50,
+                ),
+                layers=[
+                    pdk.Layer(
+                        "HexagonLayer",
+                        data=chart_data,
+                        get_position="[lon, lat]",
+                        radius=200,
+                        elevation_scale=4,
+                        elevation_range=[0, 500],
+                        pickable=True,
+                        extruded=True,
+                    ),
+                    pdk.Layer(
+                        "ScatterplotLayer",
+                        data=chart_data,
+                        get_position="[lon, lat]",
+                        get_color="[200, 30, 0, 160]",
+                        get_radius=200,
+                    ),
+                ],
+            )
+        )
     st.subheader(boardInfo)
 
 

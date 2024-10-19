@@ -34,6 +34,7 @@ moption
 morepractise
 openpyxl
 oxml
+pickable
 qcol
 qianfan
 QIANFAN
