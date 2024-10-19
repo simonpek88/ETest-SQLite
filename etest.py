@@ -6,7 +6,6 @@ import time
 import apsw
 import openpyxl
 import pandas as pd
-import numpy as np
 import pydeck as pdk
 import streamlit as st
 import streamlit_antd_components as sac
@@ -1204,16 +1203,17 @@ def displayUserRanking():
         for row in rows:
             SQL = f"SELECT lat, lon, Station from stations where Station = '{row[0]}'"
             tmpTable = mdb_sel(cur, SQL)
-            data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
+            for i in range(row[2]):
+                data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
         chart_data = pd.DataFrame(data, columns=["lat", "lon"],)
         st.pydeck_chart(
             pdk.Deck(
                 map_style="road",
                 initial_view_state=pdk.ViewState(
-                    latitude=39.12,
-                    longitude=117.34,
-                    #latitude=data[0][0],
-                    #longitude=data[0][1],
+                    #latitude=39.12,
+                    #longitude=117.34,
+                    latitude=data[0][0],
+                    longitude=data[0][1],
                     zoom=10,
                     pitch=50,
                 ),
@@ -1224,7 +1224,7 @@ def displayUserRanking():
                         get_position="[lon, lat]",
                         radius=200,
                         elevation_scale=4,
-                        elevation_range=[0, 500],
+                        elevation_range=[0, 3000],
                         pickable=True,
                         extruded=True,
                     ),
@@ -1232,7 +1232,7 @@ def displayUserRanking():
                         "ScatterplotLayer",
                         data=chart_data,
                         get_position="[lon, lat]",
-                        get_color="[200, 30, 0, 160]",
+                        get_color="[37, 150, 209, 160]",
                         get_radius=200,
                     ),
                 ],
