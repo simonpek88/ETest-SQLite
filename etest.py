@@ -1160,7 +1160,7 @@ def studyinfo():
 def userRanking():
     study = sac.segmented(
         items=[
-            sac.SegmentedItem(label="榜单", icon="stars"),
+            sac.SegmentedItem(label="榜单", icon="bookmark-star"),
             sac.SegmentedItem(label="证书", icon="patch-check"),
             sac.SegmentedItem(label="荣誉榜", icon="mortarboard"),
         ], align="center", color="red"
@@ -1176,14 +1176,28 @@ def userRanking():
 
 
 def displayUserRanking():
-    xData, yData = [], []
-    SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
+    xData, yData, boardInfo = [], [], ""
+    boardType = st.radio("选择类型", options=["个人榜", "站室榜"], index=0, horizontal=True)
+    if boardType == "个人榜":
+        SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
+    elif boardType == "站室榜":
+        SQL = "SELECT StationCN, ID, sum(userRanking) from users GROUP BY StationCN order by sum(userRanking) DESC"
+    else:
+        SQL = ""
     rows = mdb_sel(cur, SQL)
-    print(rows)
-    for row in rows:
+    for index, row in enumerate(rows):
         xData.append(row[0])
         yData.append(row[2])
-    st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", use_container_width=True)
+        if boardType == "个人榜":
+            boardInfo = boardInfo + f"第 {index + 1} 名: {row[0]} 站室: {row[1]} 刷题数: {row[2]}\n\n"
+        elif boardType == "站室榜":
+            boardInfo = boardInfo + f"第 {index + 1} 名: {row[0]} 刷题数: {row[2]}\n\n"
+        else:
+            boardInfo = ""
+    itemArea = st.empty()
+    with itemArea.container(border=True):
+        st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", color=(155, 17, 30), use_container_width=True)
+    st.subheader(boardInfo)
 
 
 def generTimeline():
