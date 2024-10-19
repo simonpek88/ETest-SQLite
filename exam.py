@@ -64,6 +64,8 @@ def calcScore():
         flagAIScore = False
         if row[0].replace(" ", "").lower() == row[2].replace(" ", "").lower():
             userScore += quesScore
+            SQL = f"UPDATE users set userRanking = userRanking + 1 where ID = {st.session_state.userName}"
+            mdb_modi(conn, cur, SQL)
             SQL = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
             if mdb_sel(cur, SQL):
                 SQL = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
@@ -90,6 +92,8 @@ def calcScore():
                                 print(f"debug: [{row[3]}] [Q:{row[0]} / A:{row[2]}] / A.I.判断: [{fibAI}]")
                             if fibAI == "正确":
                                 userScore += quesScore
+                                SQL = f"UPDATE users set userRanking = userRanking + 1 where ID = {st.session_state.userName}"
+                                mdb_modi(conn, cur, SQL)
                                 flagAIScore = True
                             else:
                                 flagAIScore = False

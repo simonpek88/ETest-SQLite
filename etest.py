@@ -1141,8 +1141,6 @@ def studyinfo():
         items=[
             sac.SegmentedItem(label="学习进度", icon="grid-3x2-gap"),
             sac.SegmentedItem(label="错题集", icon="list-stars"),
-            sac.SegmentedItem(label="证书", icon="patch-check"),
-            sac.SegmentedItem(label="荣誉榜", icon="mortarboard"),
             sac.SegmentedItem(label="章节时间线", icon="clock-history"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
         ], align="center", color="red"
@@ -1151,16 +1149,41 @@ def studyinfo():
         studyinfoDetail()
     elif study == "错题集":
         displayErrorQues()
-    elif study == "证书":
-        displayCertificate()
-    elif study == "荣誉榜":
-        displayMedals()
     elif study == "章节时间线":
         generTimeline()
     elif study == "学习记录重置":
         studyReset()
     if study is not None:
         updateActionUser(st.session_state.userName, f"查看信息-{study}", st.session_state.loginTime)
+
+
+def userRanking():
+    study = sac.segmented(
+        items=[
+            sac.SegmentedItem(label="榜单", icon="stars"),
+            sac.SegmentedItem(label="证书", icon="patch-check"),
+            sac.SegmentedItem(label="荣誉榜", icon="mortarboard"),
+        ], align="center", color="red"
+    )
+    if study == "榜单":
+        displayUserRanking()
+    elif study == "证书":
+        displayCertificate()
+    elif study == "荣誉榜":
+        displayMedals()
+    if study is not None:
+        updateActionUser(st.session_state.userName, f"证书及榜单-{study}", st.session_state.loginTime)
+
+
+def displayUserRanking():
+    xData, yData = [], []
+    SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
+    rows = mdb_sel(cur, SQL)
+    print(rows)
+    for row in rows:
+        xData.append(row[0])
+        yData.append(row[2])
+    st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", use_container_width=True)
 
 
 def generTimeline():
@@ -1607,6 +1630,8 @@ aboutReadme_menu = st.Page(aboutReadme, title="Readme", icon=":material/library_
 dboutput_menu = st.Page(dboutput, title="文件导出", icon=":material/output:")
 dbfunc_menu = st.Page(dbfunc, title="题库功能", icon=":material/input:")
 studyinfo_menu = st.Page(studyinfo, title="学习信息", icon=":material/import_contacts:")
+Ranking_menu = st.Page(userRanking, title="证书及榜单", icon=":material/stars:")
+studyinfo_menu = st.Page(studyinfo, title="学习信息", icon=":material/import_contacts:")
 quesModify_menu = st.Page(quesModify, title="试题修改", icon=":material/border_color:")
 
 
@@ -1632,7 +1657,7 @@ if st.session_state.logged_in:
                 {
                     "功能": [dashboard_page, trainingQues_page, dbbasedata_page, quesModify_menu, dboutput_menu, dbfunc_menu, dbsetup_page],
                     "查询": [search_page, actionUserStatus_menu],
-                    "信息": [studyinfo_menu],
+                    "信息": [studyinfo_menu, Ranking_menu],
                     "账户": [changePassword_menu, logout_page],
                     "关于": [aboutReadme_menu, aboutInfo_menu],
                 }
@@ -1641,7 +1666,7 @@ if st.session_state.logged_in:
             pg = st.navigation(
                 {
                     "功能": [dashboard_page, trainingQues_page],
-                    "信息": [studyinfo_menu],
+                    "信息": [studyinfo_menu, Ranking_menu],
                     "账户": [changePassword_menu, logout_page],
                     "关于": [aboutReadme_menu, aboutInfo_menu],
                 }
