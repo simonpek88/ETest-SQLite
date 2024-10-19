@@ -1179,7 +1179,7 @@ def userRanking():
 
 def displayUserRanking():
     xData, yData, boardInfo = [], [], ""
-    boardType = st.radio("选择类型", options=["个人榜", "站室榜"], index=0, horizontal=True)
+    boardType = st.radio(" ", options=["个人榜", "站室榜"], index=0, horizontal=True, label_visibility="collapsed")
     if boardType == "个人榜":
         SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
     elif boardType == "站室榜":
