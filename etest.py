@@ -1201,11 +1201,11 @@ def displayUserRanking():
     if boardType == "站室榜":
         data = []
         for row in rows:
-            SQL = f"SELECT lat, lon, Station from stations where Station = '{row[0]}'"
+            SQL = f"SELECT lat, lng, Station from stations where Station = '{row[0]}'"
             tmpTable = mdb_sel(cur, SQL)
             for i in range(row[2]):
                 data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
-        chart_data = pd.DataFrame(data, columns=["lat", "lon"],)
+        chart_data = pd.DataFrame(data, columns=["lat", "lng"],)
         st.pydeck_chart(
             pdk.Deck(
                 map_style="road",
@@ -1221,19 +1221,21 @@ def displayUserRanking():
                     pdk.Layer(
                         "HexagonLayer",
                         data=chart_data,
-                        get_position="[lon, lat]",
+                        get_position="[lng, lat]",
                         radius=200,
                         elevation_scale=4,
                         elevation_range=[0, 3000],
                         pickable=True,
                         extruded=True,
+                        coverage=1,
                     ),
                     pdk.Layer(
                         "ScatterplotLayer",
                         data=chart_data,
-                        get_position="[lon, lat]",
+                        get_position="[lng, lat]",
                         get_color="[37, 150, 209, 160]",
                         get_radius=200,
+                        coverage=1,
                     ),
                 ],
             )
