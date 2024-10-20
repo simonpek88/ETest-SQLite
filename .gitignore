@@ -22,6 +22,8 @@ vsc-extensions.txt
 
 # secret configurations
 .streamlit/
+.venv/
+.idea/
 # C extensions
 *.so
 
