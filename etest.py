@@ -2193,6 +2193,28 @@ def quesGoto():
 
 @st.fragment
 def displayTime():
+    remindTimeText = """
+    <html>
+    <head>
+    </head>
+    <body>
+    <div id="countdown"></div>
+    <script>
+        var targetDate = new Date(remindTime);
+        function updateCountdown() {
+        var now = new Date();
+        var timeLeft = targetDate - now;
+        var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        document.getElementById("countdown").innerHTML = "0" + hours + ":" + minutes + ":" + seconds;
+        setTimeout(updateCountdown, 1000);
+        }
+        updateCountdown();
+    </script>
+    </body>
+    </html>
+    """
     timeArea = st.empty()
     with timeArea.container():
         #st.write(f"### :red[{st.session_state.examName}]")
@@ -2202,15 +2224,10 @@ def displayTime():
         flagTime = bool(getParam("显示考试时间", st.session_state.StationCN))
         if st.session_state.examType == "exam" or flagTime:
             examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
+            examEndTime = st.session_state.examStartTime + examTimeLimit
+            examTimeLimitText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examEndTime))
+            remindTimeText = remindTimeText.replace("remindTime", f'"{examTimeLimitText}"')
             remainingTime = examTimeLimit - (int(time.time()) - st.session_state.examStartTime)
-            hTime = "0" + str(int(remainingTime / 3600))
-            mTime = int((remainingTime % 3600) / 60)
-            if mTime < 10:
-                mTime = "0" + str(mTime)
-            sTime = int(remainingTime % 60)
-            if sTime < 10:
-                sTime = "0" + str(sTime)
-            info1.metric(label="考试剩余时间", value=f"{hTime}:{mTime}:{sTime}")
             if remainingTime < 0:
                 if st.session_state.examType == "exam":
                     st.warning("⚠️ 考试已结束, 将强制交卷!")
@@ -2219,6 +2236,9 @@ def displayTime():
                     st.session_state.examStartTime = int(time.time())
             elif remainingTime < 900:
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
+        with info1:
+            st.write(":red[**考试剩余时间:**]")
+            components.html(remindTimeText)
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
         acAnswer1 = mdb_sel(cur, SQL)[0][0]
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
@@ -2757,37 +2777,7 @@ if st.session_state.logged_in:
                 for key in st.session_state.keys():
                     if key.startswith("moption_") or key.startswith("textAnswer_"):
                         del st.session_state[key]
-                    remindTimeText = """
-                    <html>
-                    <head>
-                    <title>倒计时示例</title>
-                    </head>
-                    <body>
-                    <h1>距离考试结束时间还有：</h1>
-                    <div id="countdown"></div>
-                    <script>
-                        var targetDate = new Date(remindTime);
-                        function updateCountdown() {
-                        var now = new Date();
-                        var timeLeft = targetDate - now;
-                        var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                        var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                        document.getElementById("countdown").innerHTML = hours + "小时 " + minutes + "分钟 " + seconds + "秒";
-                        setTimeout(updateCountdown, 1000);
-                        }
-                        updateCountdown();
-                    </script>
-                    </body>
-                    </html>
-                    """
-                examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
-                examTimeLimit = st.session_state.examStartTime + examTimeLimit
-                examTimeLimitText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examTimeLimit))
-                remindTimeText = remindTimeText.replace("remindTime", f'"{examTimeLimitText}"')
                 displayTime()
-                components.html(remindTimeText, height=120)
-                #st.markdown(displayTimeJS, unsafe_allow_html=True)
                 qcol1, qcol2, qcol3, qcol4 = st.columns(4)
                 examCon = st.empty()
                 with examCon.container():
