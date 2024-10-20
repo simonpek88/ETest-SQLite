@@ -1747,10 +1747,10 @@ def training():
                 st.success(f"题库生成完毕, 总共生成{genResult[1]}道试题, 请在👈左侧边栏选择题库练习")
             st.session_state.examTable = genResult[2]
             st.session_state.examFinalTable = genResult[3]
-            st.session_state.confirmSubmit = False
             st.session_state.curQues = 0
-            st.session_state.flagCompleted = False
             st.session_state.examStartTime = int(time.time())
+            st.session_state.confirmSubmit = False
+            st.session_state.flagCompleted = False
             st.session_state.goto = False
             st.session_state.radioCompleted = False
             st.session_state.calcScore = False
@@ -1762,7 +1762,7 @@ def training():
                 updateActionUser(st.session_state.userName, "生成练习试题", st.session_state.loginTime)
         else:
             st.session_state.examChosen = False
-            st.warning("题库生成试题不满足要求, 请检查生成设置或联系管理员")
+            st.warning("题库生成试题不满足要求, 请检查考试参数设置或个别题型试题候选数量不够或联系管理员")
 
 
 @st.fragment
@@ -2193,7 +2193,7 @@ def quesGoto():
         st.session_state.curQues = int(cop.sub('', st.session_state.chosenID))
 
 
-@st.fragment
+#@st.fragment
 def displayTime():
     remindTimeText = """
         <html>
@@ -2234,18 +2234,19 @@ def displayTime():
     with timeArea.container():
         #st.write(f"### :red[{st.session_state.examName}]")
         #st.markdown(f"<font face='微软雅黑' color=red size=16><center>**{st.session_state.examName}**</center></font>", unsafe_allow_html=True)
-        st.markdown(f"### <font face='微软雅黑' color=red><center>{st.session_state.examName}</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"### <font face='微软雅黑' color=red><center>{st.session_state.examName}</center></font>", unsafe_allow_html=True)
         info1, info2, info3, info4 = st.columns(4)
         flagTime = bool(getParam("显示考试时间", st.session_state.StationCN))
         if st.session_state.examType == "exam" or flagTime:
             examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
             examEndTime = st.session_state.examStartTime + examTimeLimit
-            examTimeLimitText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examEndTime))
-            remindTimeText = remindTimeText.replace("remindTime", f'"{examTimeLimitText}"')
-            remainingTime = examTimeLimit - (int(time.time()) - st.session_state.examStartTime)
+            examEndTimeText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examEndTime))
+            remindTimeText = remindTimeText.replace("remindTime", f'"{examEndTimeText}"')
+            remainingTime = examTimeLimit - (int(time.time() - st.session_state.examStartTime))
             if remainingTime < 0:
                 if st.session_state.examType == "exam":
                     st.warning("⚠️ 考试已结束, 将强制交卷!")
+                    st.session_state.calcScore = True
                     calcScore()
                 else:
                     st.session_state.examStartTime = int(time.time())
