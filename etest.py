@@ -207,7 +207,7 @@ def logout():
 
 
 def aboutInfo():
-    emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😏", "not bad!"], ["😋", "happy!"], ["😊", "fab, thank u so much!"]]
+    emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
     st.subheader("关于本软件", divider="rainbow")
     st.subheader(":blue[Powered by Python and Streamlit]")
     logo1, logo2, logo3, logo4, logo5, logo6 = st.columns(6)
@@ -242,7 +242,8 @@ def aboutInfo():
     display_pypi()
     st.write("###### :violet[为了获得更好的使用体验, 请使用浅色主题]")
     verinfo, verLM, likeCM = getVerInfo()
-    st.caption(f"Version: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo} Last Modified: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))} 😍 {likeCM}")
+    st.caption(f"Version: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo} Last Modified: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
+    st.caption(f"Reviews: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]")
     sac.divider(align="center", color="blue")
     stars = sac.rate(label='Please give me a star if you like it!', align='start')
     if stars > 0:
@@ -257,8 +258,9 @@ def getVerInfo():
     verinfo = mdb_sel(cur, SQL)[0][0]
     SQL = "SELECT Max(pyLM) from verinfo"
     verLM = mdb_sel(cur, SQL)[0][0]
-    SQL = "SELECT CAST(Sum(pyLM * pyMC) / Sum(pyMC) as FLOAT) from verinfo where pyFile = 'thumbs-up-stars'"
-    likeCM = round(mdb_sel(cur, SQL)[0][0], 1)
+    SQL = "SELECT Sum(pyLM * pyMC), Sum(pyMC) from verinfo where pyFile = 'thumbs-up-stars'"
+    tmpTable = mdb_sel(cur, SQL)
+    likeCM = round(tmpTable[0][0] / tmpTable[0][1], 1)
 
     return verinfo, verLM, likeCM
 
@@ -1670,99 +1672,114 @@ def aboutReadme():
 
 
 def training():
-    StationCN = st.session_state.StationCN
-    userName = st.session_state.userName
-    for each in ["questions", "commquestions"]:
-        for each2 in [['（', '('], ['）', ')']]:
-            SQL = f"UPDATE {each} set Question = replace(Question, '{each2[0]}', '{each2[1]}') where qType = '填空题' and Question like '%{each2[0]}%'"
-            mdb_modi(conn, cur, SQL)
-        for each2 in ['( )', '(  )', '(   )', '(    )']:
-            SQL = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
-            mdb_modi(conn, cur, SQL)
+    flagProc, failInfo = True, ""
     quesType = []
     SQL = f"SELECT paramName from setup_{st.session_state.StationCN} where paramType = 'questype' and param = 1 order by ID"
     rows = mdb_sel(cur, SQL)
     for row in rows:
         quesType.append([row[0], getParam(f"{row[0]}数量", st.session_state.StationCN)])
-    generPack, examIDPack, chapterPack, tempCP, genResult = [], [], [], [], []
-    generQues = st.empty()
-    with generQues.container():
-        if st.session_state.examType == "exam":
-            #date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            date = int(time.time())
-            SQL = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and validDate >= {date} order by validDate"
-            rows = mdb_sel(cur, SQL)
-            for row in rows:
-                examIDPack.append(row[0])
-            examName = st.selectbox("请选择考试场次", examIDPack, index=None)
-            if examName:
-                generButtonQues = st.button("开始考试")
-                if generButtonQues:
-                    st.session_state.examName = examName
-                    st.spinner("正在生成题库...")
-                    SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + StationCN + "'"
-                    rows = mdb_sel(cur, SQL)
-                    for row in rows:
-                        generPack.append(row[0])
-                    genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
-        elif st.session_state.examType == "training":
-            for each in ["公共题库", "错题集", "关注题集"]:
-                SQL = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
-                row = mdb_sel(cur, SQL)[0]
-                if each == "公共题库":
-                    generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
-                else:
-                    generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=False))
-                st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
-            SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
-            rows = mdb_sel(cur, SQL)
-            for row in rows:
-                generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
-                st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
-            st.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
-            generButtonQues = st.button("生成题库")
-            if generButtonQues:
-                st.session_state.examName = "练习题库"
-                st.spinner("正在生成题库...")
-                for index, value in enumerate(generPack):
-                    if value:
-                        if index == 0:
-                            chapterPack.append("公共题库")
-                        elif index == 1:
-                            chapterPack.append("错题集")
-                        elif index == 2:
-                            chapterPack.append("关注题集")
-                        else:
-                            chapterPack.append(rows[index - 3][0])
-                if chapterPack:
-                    genResult = GenerExam(chapterPack, StationCN, userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
-                else:
-                    st.warning("题库生成试题失败, 请检查题库设置")
-    if genResult:
-        if genResult[0]:
-            generQues.empty()
+    if st.session_state.examType == "exam":
+        for each in quesType:
+            quesTypeCount = 0
+            tmp = each[0].replace("数量", "")
+            SQL = f"SELECT count(ID) from questions where qType = '{tmp}' and StationCN = '{st.session_state.StationCN}'"
+            quesTypeCount += int(mdb_sel(cur, SQL)[0][0])
+            SQL = f"SELECT count(ID) from commquestions where qType = '{tmp}'"
+            quesTypeCount += int(mdb_sel(cur, SQL)[0][0])
+            if quesTypeCount < each[1]:
+                flagProc = False
+                failInfo = failInfo + f"{tmp}/"
+    if flagProc:
+        StationCN = st.session_state.StationCN
+        userName = st.session_state.userName
+        for each in ["questions", "commquestions"]:
+            for each2 in [['（', '('], ['）', ')']]:
+                SQL = f"UPDATE {each} set Question = replace(Question, '{each2[0]}', '{each2[1]}') where qType = '填空题' and Question like '%{each2[0]}%'"
+                mdb_modi(conn, cur, SQL)
+            for each2 in ['( )', '(  )', '(   )', '(    )']:
+                SQL = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
+                mdb_modi(conn, cur, SQL)
+        generPack, examIDPack, chapterPack, genResult = [], [], [], []
+        generQues = st.empty()
+        with generQues.container():
             if st.session_state.examType == "exam":
-                st.success(f"题库生成完毕, 总共生成{genResult[1]}道试题, 请在👈左侧边栏选择开始考试")
-            else:
-                st.success(f"题库生成完毕, 总共生成{genResult[1]}道试题, 请在👈左侧边栏选择题库练习")
-            st.session_state.examTable = genResult[2]
-            st.session_state.examFinalTable = genResult[3]
-            st.session_state.curQues = 0
-            st.session_state.examStartTime = int(time.time())
-            st.session_state.confirmSubmit = False
-            st.session_state.flagCompleted = False
-            st.session_state.goto = False
-            st.session_state.radioCompleted = False
-            st.session_state.calcScore = False
-            if st.session_state.examType != "training":
-                st.session_state.examChosen = True
-                updateActionUser(st.session_state.userName, "生成考试试题", st.session_state.loginTime)
+                #date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                date = int(time.time())
+                SQL = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and validDate >= {date} order by validDate"
+                rows = mdb_sel(cur, SQL)
+                for row in rows:
+                    examIDPack.append(row[0])
+                examName = st.selectbox("请选择考试场次", examIDPack, index=None)
+                if examName:
+                    generButtonQues = st.button("开始考试")
+                    if generButtonQues:
+                        st.session_state.examName = examName
+                        st.spinner("正在生成题库...")
+                        SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + StationCN + "'"
+                        rows = mdb_sel(cur, SQL)
+                        for row in rows:
+                            generPack.append(row[0])
+                        genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
+            elif st.session_state.examType == "training":
+                for each in ["公共题库", "错题集", "关注题集"]:
+                    SQL = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
+                    row = mdb_sel(cur, SQL)[0]
+                    if each == "公共题库":
+                        generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
+                    else:
+                        generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=False))
+                    st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
+                SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
+                rows = mdb_sel(cur, SQL)
+                for row in rows:
+                    generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
+                    st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
+                st.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
+                generButtonQues = st.button("生成题库")
+                if generButtonQues:
+                    st.session_state.examName = "练习题库"
+                    st.spinner("正在生成题库...")
+                    for index, value in enumerate(generPack):
+                        if value:
+                            if index == 0:
+                                chapterPack.append("公共题库")
+                            elif index == 1:
+                                chapterPack.append("错题集")
+                            elif index == 2:
+                                chapterPack.append("关注题集")
+                            else:
+                                chapterPack.append(rows[index - 3][0])
+                    if chapterPack:
+                        genResult = GenerExam(chapterPack, StationCN, userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
+                    else:
+                        st.warning("题库生成试题失败, 请检查题库设置")
+        if genResult:
+            if genResult[0]:
+                generQues.empty()
+                if st.session_state.examType == "exam":
+                    st.success(f"题库生成完毕, 总共生成{genResult[1]}道试题, 请在👈左侧边栏选择开始考试")
+                else:
+                    st.success(f"题库生成完毕, 总共生成{genResult[1]}道试题, 请在👈左侧边栏选择题库练习")
+                st.session_state.examTable = genResult[2]
+                st.session_state.examFinalTable = genResult[3]
+                st.session_state.curQues = 0
+                st.session_state.examStartTime = int(time.time())
+                st.session_state.confirmSubmit = False
+                st.session_state.flagCompleted = False
+                st.session_state.goto = False
+                st.session_state.radioCompleted = False
+                st.session_state.calcScore = False
+                if st.session_state.examType != "training":
+                    st.session_state.examChosen = True
+                    updateActionUser(st.session_state.userName, "生成考试试题", st.session_state.loginTime)
+                else:
+                    st.session_state.examChosen = False
+                    updateActionUser(st.session_state.userName, "生成练习试题", st.session_state.loginTime)
             else:
                 st.session_state.examChosen = False
-                updateActionUser(st.session_state.userName, "生成练习试题", st.session_state.loginTime)
-        else:
-            st.session_state.examChosen = False
-            st.warning("题库生成试题不满足要求, 请检查考试参数设置或个别题型试题候选数量不够或联系管理员")
+                st.warning("题库生成试题不满足要求, 请检查考试参数设置或个别题型试题候选数量不够或联系管理员")
+    else:
+        st.error(f":red[⚠️] **{st.session_state.StationCN}试卷生成失败, :red[{failInfo[:-1]}] 试题数量不足, 请检查题库设置或增加以上题型候选试题**")
 
 
 @st.fragment
@@ -2200,16 +2217,19 @@ def displayTime():
         <head>
             <style>
                 h1 {
-                font-size: 16px;
+                font-size: 20px;
                 color: red;
+                text-align: center;
                 }
-                .countdown {
-                font-size: 14px;
+                div{
+                font-size: 26px;
+                color: green;
+                text-align: center;
                 }
             </style>
         </head>
         <body>
-        <h1>考试剩余时间:</h1>
+        <h1>考试剩余时间</h1>
         <div id="countdown"></div>
         <script>
             var targetDate = new Date(remindTime);
@@ -2261,6 +2281,7 @@ def displayTime():
         info2.metric(label="已答题", value=acAnswer1)
         info3.metric(label="未答题", value=acAnswer2)
         info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
+        style_metric_cards(border_left_color="#ed872d")
 
 
 @st.dialog("交卷")
@@ -2688,18 +2709,14 @@ if st.session_state.logged_in:
                     sac.MenuItem('选择考试', icon='list-task'),
                     sac.MenuItem('开始考试', icon='pencil-square'),
                 ]),
-                sac.MenuItem('信息', icon='info-circle', children=[
-                    sac.MenuItem('学习信息', icon='book'),
-                    sac.MenuItem('证书及榜单', icon='bookmark-star'),
-                ]),
                 sac.MenuItem('账户', icon='person-gear', children=[
-                    sac.MenuItem('修改密码', icon='key'),
+                    sac.MenuItem('修改密码', icon='key', disabled=True),
                     sac.MenuItem('登出', icon='box-arrow-right'),
                 ]),
                 sac.MenuItem('关于', icon='layout-wtf', children=[
-                    sac.MenuItem('Readme', icon='github'),
-                    sac.MenuItem('关于...', icon='link-45deg'),
-                ]),
+                    sac.MenuItem('Readme', icon='github', disabled=True),
+                    sac.MenuItem('关于...', icon='link-45deg', disabled=True),
+                ], disabled=True),
             ], open_all=True)
     elif st.session_state.examType == "training":
         if st.session_state.userType == "admin":
@@ -2757,14 +2774,15 @@ if st.session_state.logged_in:
     st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
     updatePyFileinfo()
     if selected == "主页":
+        emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
         #st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
         st.header("")
         st.markdown(f"<font face='微软雅黑' color=purple size=20>**{appName}**</font>", unsafe_allow_html=True)
         st.header("")
         verinfo, verLM, likeCM = getVerInfo()
         st.subheader(f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
-        st.subheader(f"Last Modified: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
-        #st.subheader(f"Review: 😍 {likeCM}")
+        st.subheader(f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
+        st.subheader(f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]")
     elif selected == "生成题库" or selected == "选择考试":
         if st.session_state.examType == "training":
             #st.write("### :red[生成练习题库]")
