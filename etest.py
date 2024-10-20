@@ -8,9 +8,11 @@ import apsw
 import openpyxl
 import pandas as pd
 import pydeck as pdk
+
 import streamlit as st
-import streamlit_antd_components as sac
 import streamlit.components.v1 as components
+import streamlit_antd_components as sac
+
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -2194,26 +2196,39 @@ def quesGoto():
 @st.fragment
 def displayTime():
     remindTimeText = """
-    <html>
-    <head>
-    </head>
-    <body>
-    <div id="countdown"></div>
-    <script>
-        var targetDate = new Date(remindTime);
-        function updateCountdown() {
-        var now = new Date();
-        var timeLeft = targetDate - now;
-        var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-        document.getElementById("countdown").innerHTML = "0" + hours + ":" + minutes + ":" + seconds;
-        setTimeout(updateCountdown, 1000);
-        }
-        updateCountdown();
-    </script>
-    </body>
-    </html>
+        <html>
+        <head>
+            <style>
+                h1 {
+                font-size: 16px;
+                color: red;
+                }
+                .countdown {
+                font-size: 14px;
+                }
+            </style>
+        </head>
+        <body>
+        <h1>考试剩余时间:</h1>
+        <div id="countdown"></div>
+        <script>
+            var targetDate = new Date(remindTime);
+            function updateCountdown() {
+            var now = new Date();
+            var timeLeft = targetDate - now;
+            var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            hours = hours<10? '0'+hours : hours;
+            var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            minutes = minutes<10? '0'+minutes : minutes;
+            var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            seconds = seconds<10? '0'+seconds : seconds;
+            document.getElementById("countdown").innerHTML = hours + ":" + minutes + ":" + seconds;
+            setTimeout(updateCountdown, 1000);
+            }
+            updateCountdown();
+        </script>
+        </body>
+        </html>
     """
     timeArea = st.empty()
     with timeArea.container():
@@ -2237,7 +2252,6 @@ def displayTime():
             elif remainingTime < 900:
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
         with info1:
-            st.write(":red[**考试剩余时间:**]")
             components.html(remindTimeText)
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
         acAnswer1 = mdb_sel(cur, SQL)[0][0]
