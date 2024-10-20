@@ -10,6 +10,7 @@ import pandas as pd
 import pydeck as pdk
 import streamlit as st
 import streamlit_antd_components as sac
+import streamlit.components.v1 as components
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -2756,7 +2757,37 @@ if st.session_state.logged_in:
                 for key in st.session_state.keys():
                     if key.startswith("moption_") or key.startswith("textAnswer_"):
                         del st.session_state[key]
+                    remindTimeText = """
+                    <html>
+                    <head>
+                    <title>倒计时示例</title>
+                    </head>
+                    <body>
+                    <h1>距离考试结束时间还有：</h1>
+                    <div id="countdown"></div>
+                    <script>
+                        var targetDate = new Date(remindTime);
+                        function updateCountdown() {
+                        var now = new Date();
+                        var timeLeft = targetDate - now;
+                        var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                        var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                        document.getElementById("countdown").innerHTML = hours + "小时 " + minutes + "分钟 " + seconds + "秒";
+                        setTimeout(updateCountdown, 1000);
+                        }
+                        updateCountdown();
+                    </script>
+                    </body>
+                    </html>
+                    """
+                examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
+                examTimeLimit = st.session_state.examStartTime + examTimeLimit
+                examTimeLimitText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examTimeLimit))
+                remindTimeText = remindTimeText.replace("remindTime", f'"{examTimeLimitText}"')
                 displayTime()
+                components.html(remindTimeText, height=120)
+                #st.markdown(displayTimeJS, unsafe_allow_html=True)
                 qcol1, qcol2, qcol3, qcol4 = st.columns(4)
                 examCon = st.empty()
                 with examCon.container():
