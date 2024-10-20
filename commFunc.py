@@ -397,21 +397,20 @@ def updateActionUser(activeUser, actionUser, loginTime):
 
 
 def updatePyFileinfo(flagDebug=False):
-    if flagDebug:
-        for root, dirs, files in os.walk("./"):
-            for file in files:
-                if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
-                    pathIn = os.path.join(root, file)
-                    pyFile = os.path.splitext(file)[0]
-                    SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}'"
+    for root, dirs, files in os.walk("./"):
+        for file in files:
+            if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
+                pathIn = os.path.join(root, file)
+                pyFile = os.path.splitext(file)[0]
+                SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}'"
+                if not mdb_sel(cur, SQL):
+                    SQL = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
+                    mdb_ins(conn, cur, SQL)
+                else:
+                    SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}' and pyLM = {int(os.path.getmtime(pathIn))}"
                     if not mdb_sel(cur, SQL):
-                        SQL = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
-                        mdb_ins(conn, cur, SQL)
-                    else:
-                        SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}' and pyLM = {int(os.path.getmtime(pathIn))}"
-                        if not mdb_sel(cur, SQL):
-                            SQL = f"UPDATE verinfo SET pyLM = {int(os.path.getmtime(pathIn))}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
-                            mdb_modi(conn, cur, SQL)
+                        SQL = f"UPDATE verinfo SET pyLM = {int(os.path.getmtime(pathIn))}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
+                        mdb_modi(conn, cur, SQL)
 
 
 conn = apsw.Connection("./DB/ETest_enc.db")

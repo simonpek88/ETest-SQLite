@@ -39,11 +39,6 @@
 │   ├── ETest_enc.db # 加密后的数据库文件
 ├── etest # 入口文件及主程序
 ├── commFunc # 公共函数
-├── dbbasedata # 基础数据录入模块
-├── dbsetup # 数据库设置模块
-├── exam # 考试模块
-├── search # 查询模块
-├── training # 试卷生成模块
 ```
 
 ## 功能
