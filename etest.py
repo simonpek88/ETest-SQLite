@@ -711,7 +711,8 @@ def dbinputSubmit(tarTable, orgTable):
             datainlist = listinsheet.active
             for row in datainlist.iter_rows(min_row=2, max_col=maxcol, max_row=datainlist.max_row):
                 singleQues = [cell.value for cell in row]
-                cur.execute(SQL, singleQues)
+                if singleQues[0] is not None:
+                    cur.execute(SQL, singleQues)
             listinsheet.close()
             tmpTable = tmpTable + each + ", "
         SQL = f"UPDATE {tablename} set qOption = '' where qOption is Null"
@@ -730,7 +731,7 @@ def dbinputSubmit(tarTable, orgTable):
             SQL = ""
             if row[3] == "单选题" or row[3] == "多选题":
                 for each in row[2].split(";"):
-                    if int(each) < 0 or int(each) >= len(row[1].split(";")):
+                    if int(each) < 0 or int(each) >= len(row[1].split(";")) or len(row[1].split(";")) > 8:
                         SQL = f"DELETE from {tablename} where ID = {row[0]}"
             elif row[3] == "判断题":
                 if int(row[2]) < 0 or int(row[2]) > 1:
@@ -752,7 +753,7 @@ def dbinput():
         if inputType == "服务器中文件":
             for root, dirs, files in os.walk("./InputQues"):
                 for file in files:
-                    if os.path.splitext(file)[1].lower() == '.xlsx' and f"{st.session_state.StationCN}_{targetTable}" in os.path.splitext(file)[0]:
+                    if os.path.splitext(file)[1].lower() == '.xlsx' and f"{st.session_state.StationCN}_{targetTable}" in os.path.splitext(file)[0] and not os.path.splitext(file)[0].startswith("~$"):
                         inputOption.append(os.path.splitext(file)[0])
             if inputOption:
                 orgTable = st.multiselect("请选择导入文件", inputOption, default=None)
@@ -2793,7 +2794,7 @@ if st.session_state.logged_in:
     st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
     updatePyFileinfo()
     if selected == "主页":
-        displayTime()
+        #displayTime()
         emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
         #st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
         st.header("")
