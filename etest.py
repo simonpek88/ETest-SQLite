@@ -13,7 +13,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
 
-from streamlit.components.v1 import html
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -2285,9 +2284,11 @@ def displayTimeCountdown():
         style_metric_cards(border_left_color="#ed872d")
 
 
+@st.fragment
 def displayTime():
-    timeText = """
-        <head>
+    components.html(
+        """
+        <html>
         <script type="text/javascript" src="./JS/jquery.min.js"></script>
         <script type="text/javascript" src="./JS/jquery.flipcountdown.js"></script>
         <link rel="stylesheet" type="text/css" href="./CSS/jquery.flipcountdown.css" />
@@ -2297,11 +2298,9 @@ def displayTime():
             $('#retroclockbox_sm').flipcountdown({size:'sm'});
         })
         </script>
-        </div>
-        </body>
         </html>
-    """
-    html(timeText)
+        """,
+    )
 
 
 @st.dialog("交卷")
