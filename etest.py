@@ -2961,13 +2961,13 @@ if st.session_state.logged_in:
                 if row[0] == "考题总数":
                     quesTotal = row[1]
                 if row[0] == "单选题数量":
-                    col1.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+                    col1.slider(row[0], min_value=0, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
                 elif row[0] == "多选题数量":
-                    col2.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+                    col2.slider(row[0], min_value=0, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
                 elif row[0] == "判断题数量":
-                    col3.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+                    col3.slider(row[0], min_value=0, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
                 elif row[0] == "填空题数量":
-                    col4.slider(row[0], min_value=1, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
+                    col4.slider(row[0], min_value=0, max_value=100, value=row[1], key=f"dasetup_{row[2]}")
                 elif row[0] == "单题分值":
                     col5.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="所有题型统一分值")
                 elif row[0] == "考题总数":
