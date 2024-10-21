@@ -2308,18 +2308,39 @@ def displayTime():
     components.html(
         """
         <html>
-        <script type="text/javascript" src="./JS/jquery.min.js"></script>
-        <script type="text/javascript" src="./JS/jquery.flipcountdown.js"></script>
-        <link rel="stylesheet" type="text/css" href="./CSS/jquery.flipcountdown.css" />
+        <head>
+            <style>
+                h1 {
+                font-size: 20px;
+                color: red;
+                text-align: center;
+                }
+                div{
+                font-size: 26px;
+                color: green;
+                text-align: center;
+                }
+            </style>
+        </head>
+        <body>
+        <script type="text/javascript" src="./js/jquery.min.js"></script>
+        <script type="text/javascript" src="./js/jquery.flipcountdown.js"></script>
+        <link rel="stylesheet" type="text/css" href="./css/jquery.flipcountdown.css" />
         <div id="retroclockbox_sm"></div>
         <script>
         jQuery(function($){
             $('#retroclockbox_sm').flipcountdown({size:'sm'});
         })
         </script>
+        </body>
         </html>
         """,
     )
+
+
+@st.fragment
+def displayBigTime():
+    components.html(open("./Clock.txt", "r", encoding="utf-8").read())
 
 
 @st.dialog("交卷")
@@ -2812,7 +2833,7 @@ if st.session_state.logged_in:
     st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
     updatePyFileinfo()
     if selected == "主页":
-        #displayTime()
+        displayBigTime()
         emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
         #st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
         st.header("")

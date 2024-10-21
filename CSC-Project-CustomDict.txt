@@ -2,9 +2,11 @@ acol
 AIFIB
 aikey
 aikeys
+ampm
 antd
 apsw
 breakline
+clearex
 commquestions
 crsetup
 dasetup
@@ -52,5 +54,6 @@ streamlit
 studyinfo
 unpad
 verinfo
+xdsoft
 xfxh
 xunfei
