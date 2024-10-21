@@ -628,9 +628,15 @@ def questoWord():
             header.text = f"{stationCN}\t\t{quesTable}"
             header.style = quesDOC.styles["Header"]
             if headerExamName != "":
-                outputFile = f"./QuesDoc/{stationCN}-{headerExamName}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
+                if st.session_state.sac_recheck:
+                    outputFile = f"./QuesDoc/{stationCN}-{headerExamName}-{quesTable}-带审核信息_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
+                else:
+                    outputFile = f"./QuesDoc/{stationCN}-{headerExamName}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
             else:
-                outputFile = f"./QuesDoc/{stationCN}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
+                if st.session_state.sac_recheck:
+                    outputFile = f"./QuesDoc/{stationCN}-{quesTable}-带审核信息_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
+                else:
+                    outputFile = f"./QuesDoc/{stationCN}-{quesTable}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.docx"
             if os.path.exists(outputFile):
                 os.remove(outputFile)
             quesDOC.save(outputFile)
