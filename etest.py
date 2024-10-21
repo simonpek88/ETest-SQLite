@@ -2323,15 +2323,15 @@ def displayTime():
             </style>
         </head>
         <body>
-        <script type="text/javascript" src="./js/jquery.min.js"></script>
-        <script type="text/javascript" src="./js/jquery.flipcountdown.js"></script>
-        <link rel="stylesheet" type="text/css" href="./css/jquery.flipcountdown.css" />
-        <div id="retroclockbox_sm"></div>
-        <script>
-        jQuery(function($){
-            $('#retroclockbox_sm').flipcountdown({size:'sm'});
-        })
-        </script>
+            <script type="text/javascript" src="./js/jquery.min.js"></script>
+            <script type="text/javascript" src="./js/jquery.flipcountdown.js"></script>
+            <link rel="stylesheet" type="text/css" href="./css/jquery.flipcountdown.css" />
+            <div id="retroclockbox_sm"></div>
+            <script>
+            jQuery(function($){
+                $('#retroclockbox_sm').flipcountdown({size:'sm'});
+            })
+            </script>
         </body>
         </html>
         """,
