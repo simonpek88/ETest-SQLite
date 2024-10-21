@@ -13,6 +13,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
 
+from streamlit.components.v1 import html
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -2210,8 +2211,8 @@ def quesGoto():
         st.session_state.curQues = int(cop.sub('', st.session_state.chosenID))
 
 
-#@st.fragment
-def displayTime():
+@st.fragment
+def displayTimeCountdown():
     remindTimeText = """
         <html>
         <head>
@@ -2282,6 +2283,25 @@ def displayTime():
         info3.metric(label="未答题", value=acAnswer2)
         info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
         style_metric_cards(border_left_color="#ed872d")
+
+
+def displayTime():
+    timeText = """
+        <head>
+        <script type="text/javascript" src="./JS/jquery.min.js"></script>
+        <script type="text/javascript" src="./JS/jquery.flipcountdown.js"></script>
+        <link rel="stylesheet" type="text/css" href="./CSS/jquery.flipcountdown.css" />
+        <div id="retroclockbox_sm"></div>
+        <script>
+        jQuery(function($){
+            $('#retroclockbox_sm').flipcountdown({size:'sm'});
+        })
+        </script>
+        </div>
+        </body>
+        </html>
+    """
+    html(timeText)
 
 
 @st.dialog("交卷")
@@ -2774,6 +2794,7 @@ if st.session_state.logged_in:
     st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
     updatePyFileinfo()
     if selected == "主页":
+        displayTime()
         emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
         #st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
         st.header("")
@@ -2810,7 +2831,7 @@ if st.session_state.logged_in:
                 for key in st.session_state.keys():
                     if key.startswith("moption_") or key.startswith("textAnswer_"):
                         del st.session_state[key]
-                displayTime()
+                displayTimeCountdown()
                 qcol1, qcol2, qcol3, qcol4 = st.columns(4)
                 examCon = st.empty()
                 with examCon.container():
