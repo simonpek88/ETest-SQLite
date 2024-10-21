@@ -748,7 +748,7 @@ def dbinputSubmit(tarTable, orgTable):
         SQL = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
         mdb_ins(conn, cur, SQL)
         ClearTables()
-        st.success(f":green[[{tmpTable[:-2]}] 向 [{tarTable}]] :gray[导入成功]")
+        st.success(f":green[{tmpTable[:-2]}.xlsx] 向 :red[{tarTable}] :gray[导入成功]")
 
 
 def dbinput():
@@ -770,7 +770,7 @@ def dbinput():
             else:
                 st.warning("没有可导入的本站文件")
         elif inputType == "上传文件":
-            uploaded_file = st.file_uploader("**请选择Excel文件, 系统会自动改名为: :red[站室名称_站室题库/公共题库_用户上传_上传日期]**", type=["xlsx"])
+            uploaded_file = st.file_uploader("**请选择Excel文件**", type=["xlsx"])
             if uploaded_file is not None:
                 bytes_data = uploaded_file.getvalue()
                 outFile = f"./InputQues/{st.session_state.StationCN}_{targetTable}_用户上传_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.xlsx"
@@ -779,24 +779,36 @@ def dbinput():
                 with open(outFile, 'wb') as output_file:
                     output_file.write(bytes_data)
                 if os.path.exists(outFile):
-                    st.success("文件上传成功, 请选择文件来源为: :red[**服务器中文件**]并重新导入")
+                    dbinputSubmit(targetTable, [outFile[12:-5]])
     else:
         st.write("请选择要导入的题库")
 
 
 def dbfunc():
-    bc = sac.segmented(
-        items=[
-            sac.SegmentedItem(label="A.I.出题", icon="robot"),
-            sac.SegmentedItem(label="题库导入", icon="database-up"),
-            #sac.SegmentedItem(label="Word文件导入", icon="text-wrap", disabled=st.session_state.debug ^ True),
-            sac.SegmentedItem(label="删除试卷", icon="trash3"),
-            sac.SegmentedItem(label="删除静态题库", icon="trash3"),
-            sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
-            sac.SegmentedItem(label="错题集重置", icon="journal-x"),
-            sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot", disabled=st.session_state.debug ^ True),
-        ], align="start", color="red"
-    )
+    if st.session_state.debug:
+        bc = sac.segmented(
+            items=[
+                sac.SegmentedItem(label="A.I.出题", icon="robot"),
+                sac.SegmentedItem(label="题库导入", icon="database-up"),
+                #sac.SegmentedItem(label="Word文件导入", icon="text-wrap"),
+                sac.SegmentedItem(label="删除试卷", icon="trash3"),
+                sac.SegmentedItem(label="删除静态题库", icon="trash3"),
+                #sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
+                sac.SegmentedItem(label="错题集重置", icon="journal-x"),
+                sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot"),
+            ], align="start", color="red"
+        )
+    else:
+        bc = sac.segmented(
+            items=[
+                sac.SegmentedItem(label="A.I.出题", icon="robot"),
+                sac.SegmentedItem(label="题库导入", icon="database-up"),
+                sac.SegmentedItem(label="删除试卷", icon="trash3"),
+                sac.SegmentedItem(label="删除静态题库", icon="trash3"),
+                #sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
+                sac.SegmentedItem(label="错题集重置", icon="journal-x"),
+            ], align="start", color="red"
+        )
     if bc == "A.I.出题":
         AIGenerQues()
     elif bc == "题库导入":
