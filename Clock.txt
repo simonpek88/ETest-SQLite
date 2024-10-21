@@ -6,8 +6,8 @@
     <style>
         body {
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: left;
+            align-items: left;
             height: 100vh;
             margin: 0;
             background: #fff;
@@ -122,7 +122,6 @@
                 <div class="card-bottom"></div>
             </div>
         </div>
-        <div id="ampm" class="ampm"></div>
     </div>
     <script>
         function updateClock() {
@@ -130,16 +129,15 @@
             let hours = now.getHours();
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
-            const isPm = hours >= 12;
-            hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const isPm = hours >= 24;
+            hours = hours % 24;
+            hours = hours ? hours : 24; // the hour '0' should be '12'
             setFlipCard('hour-ten', Math.floor(hours / 10));
             setFlipCard('hour-unit', hours % 10);
             setFlipCard('minute-ten', Math.floor(minutes / 10));
             setFlipCard('minute-unit', minutes % 10);
             setFlipCard('second-ten', Math.floor(seconds / 10));
             setFlipCard('second-unit', seconds % 10);
-            document.getElementById('ampm').textContent = isPm ? 'PM' : 'AM';
         }
         function setFlipCard(id, value) {
             const card = document.getElementById(id);
@@ -148,7 +146,7 @@
             let currentValue = cardTop.textContent;
             let newValue = value.toString();
             if (currentValue !== newValue) {
-                cardBottom.textContent = newValue; 
+                cardBottom.textContent = newValue;
                 cardTop.classList.add('flip');
                 cardTop.addEventListener('animationend', () => {
                     cardTop.classList.remove('flip');
