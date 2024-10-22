@@ -29,6 +29,7 @@ gener
 JXQW
 keyup
 listinsheet
+maptype
 maxcol
 maxid
 mcol

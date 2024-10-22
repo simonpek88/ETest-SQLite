@@ -5,23 +5,24 @@ import re
 import time
 
 import apsw
+import folium
 import openpyxl
 import pandas as pd
 import pydeck as pdk
-
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
-
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
+from folium.plugins import HeatMap
 from PIL import Image, ImageDraw, ImageFont
 from st_keyup import st_keyup
 from streamlit_extras.badges import badge
 from streamlit_extras.metric_cards import style_metric_cards
+from streamlit_folium import st_folium
 from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook
 
@@ -207,7 +208,6 @@ def logout():
 
 
 def aboutInfo():
-    emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
     st.subheader("关于本软件", divider="rainbow")
     st.subheader(":blue[Powered by Python and Streamlit]")
     logo1, logo2, logo3, logo4, logo5, logo6 = st.columns(6)
@@ -1207,7 +1207,10 @@ def userRanking():
 
 def displayUserRanking():
     xData, yData, boardInfo = [], [], ""
-    boardType = st.radio(" ", options=["个人榜", "站室榜"], index=0, horizontal=True, label_visibility="collapsed")
+    col1, col2, col3 = st.columns(3)
+    boardType = col1.radio("榜单", options=["个人榜", "站室榜"], index=0, horizontal=True)
+    heatmap = col2.radio("热力图", options=["Folium", "Pydeck"], index=0, horizontal=True)
+    maptype = col3.radio("地图", options=["OpenStreetMap", "高德"], index=0, horizontal=True)
     if boardType == "个人榜":
         SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
     elif boardType == "站室榜":
@@ -1228,47 +1231,75 @@ def displayUserRanking():
     with itemArea.container(border=True):
         st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", color=(155, 17, 30))
     if boardType == "站室榜" and int(rows[0][2]) > 0:
-        data = []
-        for row in rows:
-            SQL = f"SELECT lat, lng, Station from stations where Station = '{row[0]}'"
-            tmpTable = mdb_sel(cur, SQL)
-            for i in range(row[2]):
-                data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
-        chart_data = pd.DataFrame(data, columns=["lat", "lng"],)
-        st.pydeck_chart(
-            pdk.Deck(
-                map_style="road",
-                initial_view_state=pdk.ViewState(
-                    #latitude=39.12,
-                    #longitude=117.34,
-                    latitude=data[0][0],
-                    longitude=data[0][1],
-                    zoom=10,
-                    pitch=50,
-                ),
-                layers=[
-                    pdk.Layer(
-                        "HexagonLayer",
-                        data=chart_data,
-                        get_position="[lng, lat]",
-                        radius=200,
-                        elevation_scale=4,
-                        elevation_range=[0, 3000],
-                        pickable=True,
-                        extruded=True,
-                        coverage=1,
+        if heatmap == "Pydeck":
+            data = []
+            for row in rows:
+                SQL = f"SELECT lat, lng, Station from stations where Station = '{row[0]}'"
+                tmpTable = mdb_sel(cur, SQL)
+                for i in range(row[2]):
+                    data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
+            chart_data = pd.DataFrame(data, columns=["lat", "lng"],)
+            st.pydeck_chart(
+                pdk.Deck(
+                    map_style="road",
+                    initial_view_state=pdk.ViewState(
+                        #latitude=39.12,
+                        #longitude=117.34,
+                        latitude=data[0][0],
+                        longitude=data[0][1],
+                        zoom=10,
+                        pitch=50,
                     ),
-                    pdk.Layer(
-                        "ScatterplotLayer",
-                        data=chart_data,
-                        get_position="[lng, lat]",
-                        get_color="[37, 150, 209, 160]",
-                        get_radius=200,
-                        coverage=1,
-                    ),
-                ],
+                    layers=[
+                        pdk.Layer(
+                            "HexagonLayer",
+                            data=chart_data,
+                            get_position="[lng, lat]",
+                            radius=200,
+                            elevation_scale=4,
+                            elevation_range=[0, 3000],
+                            pickable=True,
+                            extruded=True,
+                            coverage=1,
+                        ),
+                        pdk.Layer(
+                            "ScatterplotLayer",
+                            data=chart_data,
+                            get_position="[lng, lat]",
+                            get_color="[37, 150, 209, 160]",
+                            get_radius=200,
+                            coverage=1,
+                        ),
+                    ],
+                )
             )
-        )
+        elif heatmap == "Folium":
+            SQL = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN order by Ranking DESC"
+            rows = mdb_sel(cur, SQL)
+            SQL = f"SELECT lat, lng, Station from stations where Station == '{rows[0][0]}'"
+            row = mdb_sel(cur, SQL)[0]
+            lat = round(row[0] / 100, 2)
+            lng = round(row[1] / 100, 2)
+            m = None
+            if maptype == "OpenStreetMap":
+                m = folium.Map(location=[lat, lng], zoom_start=11, TileLayer="OpenStreetMap", control_scale=True)
+            elif maptype == "高德":
+                m = folium.Map(
+                    location=[lat, lng],
+                    tiles="https://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7",
+                    attr='高德-常规图',
+                    zoom_start=11,
+                    control_scale=True,
+                    )
+            for row in rows:
+                SQL = f"SELECT lat, lng from stations where Station = '{row[0]}'"
+                row2 = mdb_sel(cur, SQL)[0]
+                lat = round(row2[0] / 100, 2)
+                lng = round(row2[1] / 100, 2)
+                folium.Marker([lat, lng], popup=f"{row[0]} 刷题{row[1]}道").add_to(m)
+                heatData = [[lat, lng, row[1]]]
+                HeatMap(heatData).add_to(m)
+            st_folium(m, use_container_width=True, height=430)
     st.subheader(boardInfo)
 
 
@@ -2744,6 +2775,8 @@ def queryExamResultUsers():
             st.warning("请设置查询类型")
 
 
+global appName, emoji
+
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
 cur.execute("PRAGMA cipher = 'aes256cbc'")
@@ -2753,6 +2786,8 @@ cur.execute("PRAGMA journal_mode = WAL")
 st.logo("./Images/etest-logo.png", icon_image="./Images/exam2.png")
 
 appName = "专业技能考试系统 — 离线版"
+emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
+
 selected = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -2834,7 +2869,6 @@ if st.session_state.logged_in:
     updatePyFileinfo()
     if selected == "主页":
         displayBigTime()
-        emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
         #st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
         st.write("")
         st.markdown(f"<font face='微软雅黑' color=purple size=20>**{appName}**</font>", unsafe_allow_html=True)
