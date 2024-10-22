@@ -386,7 +386,7 @@ function padLeftZero(str) {
 
 .clock {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 20px;
 }
 
 .clock em {

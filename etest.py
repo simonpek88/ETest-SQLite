@@ -2407,12 +2407,12 @@ def displayTime():
 
 @st.fragment
 def displayBigTime():
-    components.html(open("./Clock-Big.txt", "r", encoding="utf-8").read())
+    components.html(open("./Clock-Big.txt", "r", encoding="utf-8").read(), height=140)
 
 
 @st.fragment
 def displaySmallTime():
-    components.html(open("./Clock-Small.txt", "r", encoding="utf-8").read())
+    components.html(open("./Clock-Small.txt", "r", encoding="utf-8").read(), height=34)
 
 
 @st.dialog("交卷")
@@ -2825,7 +2825,7 @@ cur.execute("PRAGMA cipher = 'aes256cbc'")
 cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
-st.logo("./Images/etest-logo.png", icon_image="./Images/exam2.png")
+st.logo("./Images/etest-logo.png", icon_image="./Images/exam2.png", size="small")
 
 appName = "专业技能考试系统 — 离线版"
 emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
@@ -2839,6 +2839,7 @@ if st.session_state.logged_in:
     updatePyFileinfo(st.session_state.debug)
     if st.session_state.examType == "exam":
         with st.sidebar:
+            displaySmallTime()
             selected = sac.menu([
                 sac.MenuItem('主页', icon='house'),
                 sac.MenuItem('功能', icon='grid-3x3-gap', children=[
@@ -2888,6 +2889,7 @@ if st.session_state.logged_in:
                 ], open_index=1, open_all=False)
         elif st.session_state.userType == "user":
             with st.sidebar:
+                displaySmallTime()
                 selected = sac.menu([
                     sac.MenuItem('主页', icon='house'),
                     sac.MenuItem('功能', icon='grid-3x3-gap', children=[
