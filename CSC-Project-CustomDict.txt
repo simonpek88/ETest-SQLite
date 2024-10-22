@@ -30,6 +30,7 @@ JXQW
 keyup
 listinsheet
 maptype
+markertype
 maxcol
 maxid
 mcol

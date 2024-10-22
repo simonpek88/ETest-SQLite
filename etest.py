@@ -1211,7 +1211,9 @@ def displayUserRanking():
     col1, col2, col3 = st.columns(3)
     boardType = col1.radio("榜单", options=["个人榜", "站室榜"], index=0, horizontal=True)
     heatmap = col2.radio("热力图", options=["Folium", "Pydeck"], index=0, horizontal=True)
-    maptype = col3.radio("地图", options=["OpenStreetMap", "高德"], index=0, horizontal=True)
+    #maptype = col3.radio("地图", options=["OpenStreetMap", "高德"], index=0, horizontal=True)
+    markertype = col3.radio("标记", options=["默认", "公司Logo"], index=1, horizontal=True)
+    maptype = "OpenStreetMap"
     if boardType == "个人榜":
         SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
     elif boardType == "站室榜":
@@ -1305,7 +1307,10 @@ def displayUserRanking():
                     icon_anchor=(20, 40),
                     popup_anchor=(0, -40),
                 )
-                folium.Marker([lat, lng], icon=icon, popup=popup).add_to(m)
+                if markertype == "默认":
+                    folium.Marker([lat, lng], popup=popup).add_to(m)
+                elif markertype == "公司Logo":
+                    folium.Marker([lat, lng], icon=icon, popup=popup).add_to(m)
                 heatData = [[lat, lng, row[1]]]
                 HeatMap(heatData).add_to(m)
             minimap = MiniMap(
