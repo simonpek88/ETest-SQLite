@@ -6,6 +6,7 @@ import time
 
 import apsw
 import folium
+import folium.features
 import openpyxl
 import pandas as pd
 import pydeck as pdk
@@ -17,7 +18,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
-from folium.plugins import HeatMap
+from folium.plugins import HeatMap, MiniMap
 from PIL import Image, ImageDraw, ImageFont
 from st_keyup import st_keyup
 from streamlit_extras.badges import badge
@@ -1296,9 +1297,24 @@ def displayUserRanking():
                 row2 = mdb_sel(cur, SQL)[0]
                 lat = round(row2[0] / 100, 2)
                 lng = round(row2[1] / 100, 2)
-                folium.Marker([lat, lng], popup=f"{row[0]} 刷题{row[1]}道").add_to(m)
+                iframe = folium.IFrame(f"{row[0]} 刷题{row[1]}道")
+                popup = folium.Popup(iframe, min_width=120, max_width=300)
+                icon = folium.features.CustomIcon(
+                    "./Images/logos/cnaf-logo.png",
+                    icon_size=(40, 40),
+                    icon_anchor=(20, 40),
+                    popup_anchor=(0, -40),
+                )
+                folium.Marker([lat, lng], icon=icon, popup=popup).add_to(m)
                 heatData = [[lat, lng, row[1]]]
                 HeatMap(heatData).add_to(m)
+            minimap = MiniMap(
+                toggle_display=True,
+                width=120,
+                height=120,
+                minimized=True,
+                )
+            m.add_child(minimap)
             st_folium(m, use_container_width=True, height=430)
     st.subheader(boardInfo)
 
