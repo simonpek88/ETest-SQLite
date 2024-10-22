@@ -6,7 +6,6 @@ import time
 
 import apsw
 import folium
-import folium.features
 import openpyxl
 import pandas as pd
 import pydeck as pdk
@@ -28,9 +27,9 @@ from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook
 
 from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
-                      mdb_del, mdb_ins, mdb_modi, mdb_sel, qianfan_AI,
-                      qianfan_AI_GenerQues, updateActionUser, updatePyFileinfo, getUserEDKeys,
-                      xunfei_xh_AI, xunfei_xh_AI_fib)
+                      getUserEDKeys, mdb_del, mdb_ins, mdb_modi, mdb_sel,
+                      qianfan_AI, qianfan_AI_GenerQues, updateActionUser,
+                      updatePyFileinfo, xunfei_xh_AI, xunfei_xh_AI_fib)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
