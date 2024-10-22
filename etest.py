@@ -2890,7 +2890,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
-                ], open_index=1, open_all=False)
+                ], open_index=[1], open_all=False)
         elif st.session_state.userType == "user":
             with st.sidebar:
                 displaySmallTime()
@@ -2912,7 +2912,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
-                ], open_all=True)
+                ], open_index=[1, 2, 3, 4, 5, 6, 7, 8, 9], open_all=False)
     st.sidebar.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
     st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
     updatePyFileinfo()
