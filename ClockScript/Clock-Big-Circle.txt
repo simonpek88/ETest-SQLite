@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <title>CodePen - CanvasClock</title>
-  <link rel="stylesheet" href="./css/circle-style.css">
+  <link rel="stylesheet" href="../css/circle-style.css">
 
 </head>
 <body>
@@ -13,7 +13,6 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // set the start point of the hour, minute and second hand to top
     const threePIByTwo = (3 * Math.PI) / 2;
 
     console.log(threePIByTwo);

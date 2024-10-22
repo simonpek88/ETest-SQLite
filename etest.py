@@ -2406,17 +2406,17 @@ def displayTime():
 
 @st.fragment
 def displayBigTime():
-    components.html(open("./Clock-Big.txt", "r", encoding="utf-8").read(), height=140)
+    components.html(open("./ClockScript/Clock-Big.txt", "r", encoding="utf-8").read(), height=140)
 
 
 @st.fragment
 def displaySmallTime():
-    components.html(open("./Clock-Small.txt", "r", encoding="utf-8").read(), height=34)
+    components.html(open("./ClockScript/Clock-Small.txt", "r", encoding="utf-8").read(), height=34)
 
 
 @st.fragment
 def displayBigTimeCircle():
-    components.html(open("./Clock-Big-Circle.txt", "r", encoding="utf-8").read(), height=260)
+    components.html(open("./ClockScript/Clock-Big-Circle.txt", "r", encoding="utf-8").read(), height=260)
 
 
 @st.dialog("交卷")
