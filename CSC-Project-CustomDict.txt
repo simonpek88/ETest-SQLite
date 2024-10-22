@@ -37,6 +37,7 @@ mcol
 mktime
 moption
 morepractise
+Neue
 openpyxl
 oxml
 pickable
@@ -49,6 +50,7 @@ questo
 questype
 Resultto
 retroclockbox
+rgba
 rowid
 scol
 selectbox
