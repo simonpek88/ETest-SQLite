@@ -2414,6 +2414,11 @@ def displaySmallTime():
     components.html(open("./Clock-Small.txt", "r", encoding="utf-8").read(), height=34)
 
 
+@st.fragment
+def displayBigTimeCircle():
+    components.html(open("./Clock-Big-Circle.txt", "r", encoding="utf-8").read(), height=260)
+
+
 @st.dialog("交卷")
 def submit_dialog(prompt):
     st.write(f":red[**{prompt}**]")
@@ -2912,15 +2917,18 @@ if st.session_state.logged_in:
     st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
     updatePyFileinfo()
     if selected == "主页":
-        displayBigTime()
-        #st.markdown("<font face='微软雅黑' color=blue size=20><center>**专业技能考试系统 — 离线版**</center></font>", unsafe_allow_html=True)
-        st.write("")
-        st.markdown(f"<font face='微软雅黑' color=purple size=20>**{appName}**</font>", unsafe_allow_html=True)
+        #displayBigTime()
+        displayBigTimeCircle()
+        st.markdown(f"<font face='微软雅黑' color=purple size=8><center>**{appName}**</center></font>", unsafe_allow_html=True)
         st.write("")
         verinfo, verLM, likeCM = getVerInfo()
-        st.subheader(f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
-        st.subheader(f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
-        st.subheader(f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]")
+        #st.subheader(f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
+        #st.subheader(f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
+        #st.subheader(f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]")
+
+        st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
+        st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
+        st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
     elif selected == "生成题库" or selected == "选择考试":
         if st.session_state.examType == "training":
             #st.write("### :red[生成练习题库]")

@@ -1,5 +1,5 @@
 apsw-sqlite3mc==3.46.1.0
-folium==1.10.0
+folium==0.17.0
 numpy==2.1.1
 openai==1.50.2
 openpyxl==3.1.5
@@ -13,6 +13,7 @@ redis==5.1.0
 streamlit==1.39.0
 streamlit-antd-components==0.3.2
 streamlit-extras==0.4.7
+streamlit_folium==0.23.1
 streamlit-toggle-switch==1.0.2
 streamlit-vis-timeline==0.3.0
 streamlit-keyup==0.2.4
