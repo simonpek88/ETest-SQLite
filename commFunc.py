@@ -71,6 +71,18 @@ def getEncryptKeys(keyname):
     return decrypt_data
 
 
+def getUserEDKeys(userStr, edType):
+    strED = ""
+    SQL = "SELECT aikey from aikeys where keyname = 'key_text'"
+    key = mdb_sel(cur, SQL)[0][0]
+    if edType == "enc":
+        strED = encrypt(userStr, key).decode("utf-8")
+    elif edType == "dec":
+        strED = decrypt(userStr, key).decode("utf-8")
+
+    return strED
+
+
 def getKeys(keyname):
     SQL = f"SELECT aikey from aikeys where keyname = '{keyname}'"
     ai_key = mdb_sel(cur, SQL)[0][0]

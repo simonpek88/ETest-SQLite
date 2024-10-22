@@ -68,12 +68,6 @@
             color: #ddd;
         }
 
-        .ampm {
-            font-size: 2em;
-            margin-left: 10px;
-            color: #ddd;
-        }
-
         .flip {
             animation: flip 0.6s ease-in-out forwards;
         }

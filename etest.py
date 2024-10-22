@@ -29,7 +29,7 @@ from xlsxwriter.workbook import Workbook
 
 from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
                       mdb_del, mdb_ins, mdb_modi, mdb_sel, qianfan_AI,
-                      qianfan_AI_GenerQues, updateActionUser, updatePyFileinfo,
+                      qianfan_AI_GenerQues, updateActionUser, updatePyFileinfo, getUserEDKeys,
                       xunfei_xh_AI, xunfei_xh_AI_fib)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
@@ -72,11 +72,18 @@ def changePassword():
         confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="new-password")
         buttonSubmit = st.button("确认修改")
     if oldPassword:
-        SQL = "SELECT ID from users where userName = " + str(st.session_state.userName) + " and userPassword = '" + oldPassword + "'"
+        SQL = f"SELECT userPassword from users where userName = {st.session_state.userName}"
+        pwTable = mdb_sel(cur, SQL)
+        if pwTable:
+            decUserPW = getUserEDKeys(pwTable[0][0], "dec")
+            if decUserPW == oldPassword:
+                oldPassword = pwTable[0][0]
+        SQL = f"SELECT ID from users where userName = {st.session_state.userName} and userPassword = '{oldPassword}'"
         if mdb_sel(cur, SQL):
             if newPassword and confirmPassword and newPassword != "":
                 if newPassword == confirmPassword:
                     if buttonSubmit:
+                        newPassword = getUserEDKeys(newPassword, "enc")
                         SQL = f"UPDATE users set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
                         mdb_modi(conn, cur, SQL)
                         st.toast("密码修改成功, 请重新登录")
@@ -159,7 +166,13 @@ def login():
         buttonLogin = st.button("登录")
     if buttonLogin:
         if userName != "" and userPassword != "":
-            SQL = "SELECT userName, userCName, userType, StationCN from users where userName = " + str(userName) + " and userPassword = '" + userPassword + "'"
+            SQL = f"SELECT userPassword from users where userName = {userName}"
+            pwTable = mdb_sel(cur, SQL)
+            if pwTable:
+                decUserPW = getUserEDKeys(pwTable[0][0], "dec")
+                if decUserPW == userPassword:
+                    userPassword = pwTable[0][0]
+            SQL = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}'"
             result = mdb_sel(cur, SQL)
             if result:
                 st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
@@ -187,7 +200,7 @@ def login():
                     st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
                 st.rerun()
             else:
-                st.warning("登录失败, 请检查用户名和密码")
+                st.error("登录失败, 请检查用户名和密码")
         else:
             st.warning("请输入用户编码和密码")
 
@@ -931,7 +944,8 @@ def inputWord():
                     print(f"{line}")
                 temp2 = temp2 + line[2:] + ";"
             elif line.find("正确答案：") != -1:
-                print(line)
+                if st.session_state.debug:
+                    print(line)
                 temp = line[line.find("正确答案：") + 5:]
                 for each in temp:
                     qAnswer = qAnswer + str(ord(each) - 65) + ";"
@@ -1078,7 +1092,8 @@ def AIGenerQues():
                                                         if qAnswer.find("(") != -1:
                                                             qAnswer = qAnswer[:qAnswer.find("(")].strip()
                                                         temp = ""
-                                                        print(f"未处理前的多选题标准答案:{qAnswer}")
+                                                        if st.session_state.debug:
+                                                            print(f"未处理前的多选题标准答案:{qAnswer}")
                                                         for each4 in qAnswer:
                                                             if ord(each4.upper()) - 65 > 7 or ord(each4.upper()) - 65 < 0:
                                                                 flagSuccess = False
@@ -2395,6 +2410,11 @@ def displayBigTime():
     components.html(open("./Clock.txt", "r", encoding="utf-8").read())
 
 
+@st.fragment
+def displaySmallTime():
+    components.html(open("./Clock2.txt", "r", encoding="utf-8").read())
+
+
 @st.dialog("交卷")
 def submit_dialog(prompt):
     st.write(f":red[**{prompt}**]")
@@ -2521,6 +2541,7 @@ def addUser():
                     st.write(station)
                     SQL = "SELECT ID from users where userName = " + str(un)
                     if not mdb_sel(cur, SQL):
+                        userPassword1 = getUserEDKeys(userPassword1, "enc")
                         SQL = f"INSERT INTO users(userName, userCName, userType, StationCN, userPassword) VALUES({un}, '{userCName}', '{ut}', '{station}', '{userPassword1}')"
                         mdb_ins(conn, cur, SQL)
                         flagSuccess = True
@@ -2836,6 +2857,7 @@ if st.session_state.logged_in:
     elif st.session_state.examType == "training":
         if st.session_state.userType == "admin":
             with st.sidebar:
+                #displaySmallTime()
                 selected = sac.menu([
                     sac.MenuItem('主页', icon='house'),
                     sac.MenuItem('功能', icon='grid-3x3-gap', children=[
