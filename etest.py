@@ -2857,6 +2857,7 @@ if st.session_state.logged_in:
     elif st.session_state.examType == "training":
         if st.session_state.userType == "admin":
             with st.sidebar:
+                displaySmallTime()
                 selected = sac.menu([
                     sac.MenuItem('主页', icon='house'),
                     sac.MenuItem('功能', icon='grid-3x3-gap', children=[
