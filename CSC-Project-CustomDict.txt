@@ -62,6 +62,8 @@ streamlit
 studyinfo
 unpad
 verinfo
+visitcount
+visitcounter
 xdsoft
 xfxh
 xunfei

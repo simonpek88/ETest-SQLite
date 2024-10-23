@@ -188,6 +188,8 @@ def login():
                 st.session_state.loginTime = int(time.time())
                 SQL = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
                 mdb_modi(conn, cur, SQL)
+                SQL = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
+                mdb_modi(conn, cur, SQL)
                 ClearTables()
                 #cur.execute("VACUUM")
                 if examType == "练习":
@@ -2424,6 +2426,12 @@ def displayBigTimeCircle():
     components.html(open("./ClockScript/Clock-Big-Circle.txt", "r", encoding="utf-8").read(), height=260)
 
 
+@st.fragment
+def displayVisitCounter():
+    #components.html(open("./ClockScript/VisitCounter.txt", "r", encoding="utf-8").read(), height=100)
+    pass
+
+
 @st.dialog("交卷")
 def submit_dialog(prompt):
     st.write(f":red[**{prompt}**]")
@@ -2925,7 +2933,6 @@ if st.session_state.logged_in:
         #displayBigTime()
         displayBigTimeCircle()
         st.markdown(f"<font face='微软雅黑' color=purple size=8><center>**{appName}**</center></font>", unsafe_allow_html=True)
-        st.write("")
         verinfo, verLM, likeCM = getVerInfo()
         #st.subheader(f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
         #st.subheader(f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
@@ -2934,6 +2941,9 @@ if st.session_state.logged_in:
         st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
         st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
         st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
+        SQL = "SELECT pyLM from verinfo where pyFile = 'visitcounter'"
+        visitcount = mdb_sel(cur, SQL)[0][0]
+        st.markdown(f"<font size=3><center>**欢迎光临, 您是第 {visitcount} 位访客**</center></font>", unsafe_allow_html=True)
     elif selected == "生成题库" or selected == "选择考试":
         if st.session_state.examType == "training":
             #st.write("### :red[生成练习题库]")
