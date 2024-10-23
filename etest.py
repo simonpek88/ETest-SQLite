@@ -1941,7 +1941,7 @@ def calcScore():
         flagAIScore = False
         if row[0].replace(" ", "").lower() == row[2].replace(" ", "").lower():
             userScore += quesScore
-            SQL = f"UPDATE users set userRanking = userRanking + 1 where ID = {st.session_state.userName}"
+            SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
             mdb_modi(conn, cur, SQL)
             SQL = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
             if mdb_sel(cur, SQL):
@@ -1969,7 +1969,7 @@ def calcScore():
                                 print(f"debug: [{row[3]}] [Q:{row[0]} / A:{row[2]}] / A.I.判断: [{fibAI}]")
                             if fibAI == "正确":
                                 userScore += quesScore
-                                SQL = f"UPDATE users set userRanking = userRanking + 1 where ID = {st.session_state.userName}"
+                                SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
                                 mdb_modi(conn, cur, SQL)
                                 flagAIScore = True
                             else:
@@ -2094,7 +2094,7 @@ def exam(row):
         updateStudyInfo(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
     acol1, acol2 = st.columns(2)
-    if st.session_state.debug and st.session_state.userType == "admin" and st.session_state.examType != "exam":
+    if st.session_state.userType == "admin" and st.session_state.examType != "exam":
         buttonConfirm = acol1.button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
