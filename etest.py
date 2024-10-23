@@ -2435,7 +2435,7 @@ def displayVisitCounter():
     components.html(countScript, height=100)
 
 
-#@st.fragment
+@st.fragment
 def displayAppInfo():
     infoStr = open("./ClockScript/glowintext.txt", "r", encoding="utf-8").read()
     infoStr = infoStr.replace("软件名称", appName)
