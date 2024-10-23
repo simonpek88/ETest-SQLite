@@ -2321,13 +2321,18 @@ def displayTimeCountdown():
             function updateCountdown() {
             var now = new Date();
             var timeLeft = targetDate - now;
-            var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            hours = hours<10? '0'+hours : hours;
-            var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            minutes = minutes<10? '0'+minutes : minutes;
-            var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-            seconds = seconds<10? '0'+seconds : seconds;
-            document.getElementById("countdown").innerHTML = hours + ":" + minutes + ":" + seconds;
+            if (timeLeft < 0) {
+                document.getElementById("countdown").innerHTML = "考试已结束";
+                }
+                else {
+                var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                hours = hours<10? '0'+hours : hours;
+                var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                minutes = minutes<10? '0'+minutes : minutes;
+                var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                seconds = seconds<10? '0'+seconds : seconds;
+                document.getElementById("countdown").innerHTML = hours + ":" + minutes + ":" + seconds;
+            }
             setTimeout(updateCountdown, 1000);
             }
             updateCountdown();
