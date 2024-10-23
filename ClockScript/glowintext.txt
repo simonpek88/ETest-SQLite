@@ -1,0 +1,43 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="./css/glowintext-style.css">
+<style>
+    h1 {
+    font-size: 40px;
+    color: rgb(201, 38, 201);
+    text-align: center;
+    }
+    h2 {
+    font-size: 22px;
+    color: black;
+    text-align: center;
+    }
+    h3 {
+    font-size: 18px;
+    color: black;
+    text-align: center;
+    }
+</style>
+</head>
+<body>
+<h1 class="glowIn">软件名称</h1>
+<h2 class="glowIn">软件版本</h2>
+<h2 class="glowIn">更新时间</h2>
+<h3 class="glowIn">用户评价</h3>
+<script>
+    "use strict";
+    let glowInTexts = document.querySelectorAll(".glowIn");
+    glowInTexts.forEach(glowInText => {
+        let letters = glowInText.textContent.split("");
+        glowInText.textContent = "";
+        letters.forEach((letter, i) => {
+            let span = document.createElement("span");
+            span.textContent = letter;
+            span.style.animationDelay = `${i * 0.08}s`;
+            glowInText.append(span);
+        });
+    });
+</script>
+</body>
+</html>

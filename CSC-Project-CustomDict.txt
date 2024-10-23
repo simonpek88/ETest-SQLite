@@ -28,6 +28,7 @@ Fileinfo
 flipcountdown
 fontsize
 gener
+glowintext
 hhiiss
 JXQW
 keyup

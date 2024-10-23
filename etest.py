@@ -2435,6 +2435,17 @@ def displayVisitCounter():
     components.html(countScript, height=100)
 
 
+#@st.fragment
+def displayAppInfo():
+    infoStr = open("./ClockScript/glowintext.txt", "r", encoding="utf-8").read()
+    infoStr = infoStr.replace("软件名称", appName)
+    verinfo, verLM, likeCM = getVerInfo()
+    infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
+    infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
+    infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
+    #components.html(infoStr)
+
+
 @st.dialog("交卷")
 def submit_dialog(prompt):
     st.write(f":red[**{prompt}**]")
@@ -2944,6 +2955,9 @@ if st.session_state.logged_in:
         st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
         st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
         st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
+
+        #displayAppInfo()
+
         displayVisitCounter()
     elif selected == "生成题库" or selected == "选择考试":
         if st.session_state.examType == "training":
