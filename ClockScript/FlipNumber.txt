@@ -1,0 +1,92 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .turnBox {
+            position: relative;
+            background: #fff;
+            text-align:center;
+        }
+        .turnBox .prefix {
+            font-size: 14px;
+            color: black;
+        }
+        .turnBox .suffix {
+            font-size: 14px;
+            color: black;
+        }
+        .turnBox .number{
+            padding: 0 2px;
+            font-size: 14px;
+            font-weight: 600;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        class TurnNumber {
+            constructor(turnObj) {
+                this.number = turnObj.number;
+                this.title = turnObj.title;
+                this.prefix = turnObj.prefix;
+                this.suffix = turnObj.suffix;
+                if(this.checkNum(this.number)){//is a number
+                    this.turnfunc(this.number,this.title,this.prefix,this.suffix);
+                }else {//is not a number
+                    console.log('is not a number');
+                }
+            }
+            turnfunc(number,title,prefix,suffix) {
+                var html_turnBox = ''||undefined,
+                    html_number = ''||undefined,
+                    html_prefix = ''||undefined,
+                    html_suffix = ''||undefined;
+                    html_number = '<span class="number">0</span>';
+                    html_prefix = '<span class="prefix">'+prefix+'</span>';
+                    html_suffix = '<span class="suffix">'+suffix+'</span>';
+
+                    html_turnBox = '<div class="turnBox">';
+                        html_turnBox +=html_prefix;
+                        html_turnBox +=html_number;
+                        html_turnBox +=html_suffix;
+                    html_turnBox += '</div>';
+                document.body.innerHTML = html_turnBox;
+                var count = 0,
+                    initial = 0,
+                    step = number / 30;
+                var timer = setInterval(function(){
+                    count +=step;
+                    if(count>=number){
+                        clearInterval(timer);
+                        count = number;
+                    }
+                    if(count==initial)return;
+                    initial = parseInt(count);
+                    document.getElementsByClassName('number')[0].innerHTML = initial;
+                },30);
+            }
+            checkNum(number) {
+            　　var re = /^[0-9]+.?[0-9]*/;//whether is a number
+            　　if (!re.test(number)) {
+                    return false;
+            　　}else {
+                    if(typeof number === 'number'){
+                        return true;
+                    }else {
+                        return false;
+                    }
+                }
+            }
+        }
+        var turnnumber = new TurnNumber({
+            number:visitcount,
+            prefix:'欢迎光临, 您是第 ',
+            suffix:' 位访客'
+        });
+    </script>
+</body>
+</html>

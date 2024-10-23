@@ -60,6 +60,8 @@ scol
 selectbox
 streamlit
 studyinfo
+turnfunc
+turnnumber
 unpad
 verinfo
 visitcount
