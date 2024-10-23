@@ -2861,7 +2861,7 @@ cur.execute("PRAGMA cipher = 'aes256cbc'")
 cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
-st.logo("./Images/etest-logo.png", icon_image="./Images/exam2.png", size="small")
+st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
 appName = "专业技能考试系统 — 离线版"
 emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
@@ -2872,10 +2872,9 @@ if "logged_in" not in st.session_state:
     login()
 
 if st.session_state.logged_in:
-    updatePyFileinfo(st.session_state.debug)
-    if st.session_state.examType == "exam":
-        with st.sidebar:
-            displaySmallTime()
+    with st.sidebar:
+        displaySmallTime()
+        if st.session_state.examType == "exam":
             selected = sac.menu([
                 sac.MenuItem('主页', icon='house'),
                 sac.MenuItem('功能', icon='grid-3x3-gap', children=[
@@ -2891,10 +2890,8 @@ if st.session_state.logged_in:
                     sac.MenuItem('关于...', icon='link-45deg', disabled=True),
                 ], disabled=True),
             ], open_all=True)
-    elif st.session_state.examType == "training":
-        if st.session_state.userType == "admin":
-            with st.sidebar:
-                displaySmallTime()
+        elif st.session_state.examType == "training":
+            if st.session_state.userType == "admin":
                 selected = sac.menu([
                     sac.MenuItem('主页', icon='house'),
                     sac.MenuItem('功能', icon='grid-3x3-gap', children=[
@@ -2923,9 +2920,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1], open_all=False)
-        elif st.session_state.userType == "user":
-            with st.sidebar:
-                displaySmallTime()
+            elif st.session_state.userType == "user":
                 selected = sac.menu([
                     sac.MenuItem('主页', icon='house'),
                     sac.MenuItem('功能', icon='grid-3x3-gap', children=[
@@ -2945,8 +2940,8 @@ if st.session_state.logged_in:
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1, 2, 3, 4, 5, 6, 7, 8, 9], open_all=False)
-    st.sidebar.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
-    st.sidebar.caption("📢:red[**不要刷新页面, 否则会登出**\n 请使用[**登出**]功能退出页面, 否则会影响下次登录]")
+        st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
+        st.caption("📢:red[**不要刷新页面, 否则会登出**\n 请使用[**登出**]功能退出页面, 否则会影响下次登录]")
     updatePyFileinfo()
     if selected == "主页":
         #displayBigTime()

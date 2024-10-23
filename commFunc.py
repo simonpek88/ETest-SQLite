@@ -408,7 +408,7 @@ def updateActionUser(activeUser, actionUser, loginTime):
     mdb_modi(conn, cur, SQL)
 
 
-def updatePyFileinfo(flagDebug=False):
+def updatePyFileinfo():
     for root, dirs, files in os.walk("./"):
         for file in files:
             if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
