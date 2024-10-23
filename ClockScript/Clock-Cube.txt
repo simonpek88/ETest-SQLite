@@ -1,0 +1,45 @@
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - Cube Clock</title>
+  <link rel="stylesheet" href="./css/cube-style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<figure>
+  <div class="face top"><p id="s"></p></div>
+  <div class="face front"><p id="m"></p></div>
+  <div class="face left"><p id="h"></p></div>
+</figure>
+<!-- partial -->
+  <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script>
+        function date_time(id)
+    {
+            date = new Date;
+            h = date.getHours();
+            if(h<10)
+            {
+                    h = "0"+h;
+            }
+            m = date.getMinutes();
+            if(m<10)
+            {
+                    m = "0"+m;
+            }
+            s = date.getSeconds();
+            if(s<10)
+            {
+                    s = "0"+s;
+            }
+            document.getElementById("s").innerHTML = ''+s;
+            document.getElementById("m").innerHTML = ''+m;
+            document.getElementById("h").innerHTML = ''+h;
+            setTimeout('date_time("'+"s"+'");','1000');
+            return true;
+    }
+    window.onload = date_time('s');
+  </script>
+</body>
+</html>
