@@ -165,13 +165,15 @@ def login():
         buttonLogin = st.button("登录")
     if buttonLogin:
         if userName != "" and userPassword != "":
+            flagPW = False
             SQL = f"SELECT userPassword from users where userName = {userName}"
             pwTable = mdb_sel(cur, SQL)
             if pwTable:
                 decUserPW = getUserEDKeys(pwTable[0][0], "dec")
                 if decUserPW == userPassword:
                     userPassword = pwTable[0][0]
-            SQL = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}'"
+                    flagPW = True
+            SQL = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
             result = mdb_sel(cur, SQL)
             if result:
                 st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
@@ -201,7 +203,10 @@ def login():
                     st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
                 st.rerun()
             else:
-                st.error("登录失败, 请检查用户名和密码")
+                if flagPW:
+                    st.error("登录失败, 用户已经在别处登录, 请联系管理员解决")
+                else:
+                    st.error("登录失败, 请检查用户名和密码, 若忘记密码请联系管理员重置")
         else:
             st.warning("请输入用户编码和密码")
 
@@ -2941,7 +2946,7 @@ if st.session_state.logged_in:
                     ]),
                 ], open_index=[1, 2, 3, 4, 5, 6, 7, 8, 9], open_all=False)
     st.sidebar.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
-    st.sidebar.caption("📢:red[不要刷新页面, 否则会登出]")
+    st.sidebar.caption("📢:red[**不要刷新页面, 否则会登出**\n 请使用[**登出**]功能退出页面, 否则会影响下次登录]")
     updatePyFileinfo()
     if selected == "主页":
         #displayBigTime()

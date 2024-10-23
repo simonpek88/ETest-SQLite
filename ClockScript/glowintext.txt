@@ -34,7 +34,7 @@
         letters.forEach((letter, i) => {
             let span = document.createElement("span");
             span.textContent = letter;
-            span.style.animationDelay = `${i * 0.08}s`;
+            span.style.animationDelay = `${i * 0.07}s`;
             glowInText.append(span);
         });
     });
