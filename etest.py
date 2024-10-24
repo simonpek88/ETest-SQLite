@@ -1591,20 +1591,28 @@ def studyinfoDetail():
 
 def userStatus():
     st.subheader(":violet[在线用户状态]", divider="rainbow")
-    bc = sac.segmented(
-        items=[
-            sac.SegmentedItem(label="在线用户状态", icon="people"),
-            sac.SegmentedItem(label="重置所有用户状态", icon="person-slash"),
-        ], align="start", color="red"
-    )
-    if bc == "在线用户状态":
-        actionUserStatus()
-    elif bc == "重置所有用户状态":
-        buttonReset = st.button("重置所有用户状态", type="primary")
-        if buttonReset:
-            st.button("确认重置", type="secondary", on_click=resetActiveUser)
-    if bc is not None:
-        updateActionUser(st.session_state.userName, bc, st.session_state.loginTime)
+    if st.session_state.userPwRecheck:
+        bc = sac.segmented(
+            items=[
+                sac.SegmentedItem(label="在线用户状态", icon="people"),
+                sac.SegmentedItem(label="重置所有用户状态", icon="person-slash"),
+            ], align="start", color="red"
+        )
+        if bc == "在线用户状态":
+            actionUserStatus()
+        elif bc == "重置所有用户状态":
+            buttonReset = st.button("重置所有用户状态", type="primary")
+            if buttonReset:
+                st.button("确认重置", type="secondary", on_click=resetActiveUser)
+        if bc is not None:
+            updateActionUser(st.session_state.userName, bc, st.session_state.loginTime)
+    else:
+        vUserPW = st.text_input("请输入密码", max_chars=8, placeholder="请输入管理员密码, 以验证身份", type="password", autocomplete="off")
+        if vUserPW:
+            if verifyUserPW(st.session_state.userName, vUserPW)[0]:
+                st.rerun()
+            else:
+                st.error("密码错误, 请重新输入")
 
 
 def actionUserStatus():
@@ -3014,7 +3022,7 @@ if st.session_state.logged_in:
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
         st.caption(":red[**请使用登出退出页面, 否则会影响下次登录**]")
     updatePyFileinfo()
-    if selected != "密码重置":
+    if selected != "密码重置" and selected != "用户状态":
         st.session_state.userPwRecheck = False
     if selected == "主页":
         #displayBigTime()
