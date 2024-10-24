@@ -71,12 +71,9 @@ def changePassword():
         confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="new-password")
         buttonSubmit = st.button("确认修改")
     if oldPassword:
-        SQL = f"SELECT userPassword from users where userName = {st.session_state.userName}"
-        pwTable = mdb_sel(cur, SQL)
-        if pwTable:
-            decUserPW = getUserEDKeys(pwTable[0][0], "dec")
-            if decUserPW == oldPassword:
-                oldPassword = pwTable[0][0]
+        verifyUPW = verifyUserPW(st.session_state.userName, oldPassword)
+        if verifyUPW[0]:
+            oldPassword = verifyUPW[1]
         SQL = f"SELECT ID from users where userName = {st.session_state.userName} and userPassword = '{oldPassword}'"
         if mdb_sel(cur, SQL):
             if newPassword and confirmPassword and newPassword != "":
@@ -165,14 +162,9 @@ def login():
         buttonLogin = st.button("登录")
     if buttonLogin:
         if userName != "" and userPassword != "":
-            flagPW = False
-            SQL = f"SELECT userPassword from users where userName = {userName}"
-            pwTable = mdb_sel(cur, SQL)
-            if pwTable:
-                decUserPW = getUserEDKeys(pwTable[0][0], "dec")
-                if decUserPW == userPassword:
-                    userPassword = pwTable[0][0]
-                    flagPW = True
+            verifyUPW = verifyUserPW(userName, userPassword)
+            if verifyUPW[0]:
+                userPassword = verifyUPW[1]
             SQL = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
             result = mdb_sel(cur, SQL)
             if result:
@@ -204,7 +196,7 @@ def login():
                     st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
                 st.rerun()
             else:
-                if flagPW:
+                if verifyUPW[0]:
                     st.error("登录失败, 用户已经在别处登录, 请联系管理员解决")
                 else:
                     st.error("登录失败, 请检查用户名和密码, 若忘记密码请联系管理员重置")
