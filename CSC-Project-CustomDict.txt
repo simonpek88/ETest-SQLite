@@ -18,6 +18,7 @@ dbfunc
 dbinput
 dboutput
 dbsetup
+dcol
 deepseek
 dyna
 etest

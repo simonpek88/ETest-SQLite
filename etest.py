@@ -436,7 +436,7 @@ def ClearTables():
     mdb_modi(conn, cur, SQL)
     for each in ["questions", "commquestions", "morepractise"]:
         mdb_modi(conn, cur, SQL=f"update {each} set Question = REPLACE(Question,'\n', '')")
-    st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
+    #st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
 
 
 def create_element(name):
@@ -1783,20 +1783,10 @@ def training():
                 flagProc = False
                 failInfo = failInfo + f"{tmp}/"
     if flagProc:
-        StationCN = st.session_state.StationCN
-        userName = st.session_state.userName
-        for each in ["questions", "commquestions"]:
-            for each2 in [['（', '('], ['）', ')']]:
-                SQL = f"UPDATE {each} set Question = replace(Question, '{each2[0]}', '{each2[1]}') where qType = '填空题' and Question like '%{each2[0]}%'"
-                mdb_modi(conn, cur, SQL)
-            for each2 in ['( )', '(  )', '(   )', '(    )']:
-                SQL = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
-                mdb_modi(conn, cur, SQL)
         generPack, examIDPack, chapterPack, genResult = [], [], [], []
         generQues = st.empty()
         with generQues.container():
             if st.session_state.examType == "exam":
-                #date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 date = int(time.time())
                 SQL = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and validDate >= {date} order by validDate"
                 rows = mdb_sel(cur, SQL)
@@ -1808,12 +1798,16 @@ def training():
                     if generButtonQues:
                         st.session_state.examName = examName
                         st.spinner("正在生成题库...")
-                        SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + StationCN + "'"
+                        reviseQues()
+                        SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + st.session_state.StationCN + "'"
                         rows = mdb_sel(cur, SQL)
                         for row in rows:
                             generPack.append(row[0])
-                        genResult = GenerExam(generPack, StationCN, userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
+                        genResult = GenerExam(generPack, st.session_state.StationCN, st.session_state.userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
             elif st.session_state.examType == "training":
+                tCol1, tCol2 = st.columns(2)
+                generButtonQues = tCol1.button("生成题库")
+                tCol2.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
                 for each in ["公共题库", "错题集", "关注题集"]:
                     SQL = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
                     row = mdb_sel(cur, SQL)[0]
@@ -1822,16 +1816,13 @@ def training():
                     else:
                         generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=False))
                     st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
-                SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
+                SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + st.session_state.StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
                 rows = mdb_sel(cur, SQL)
                 for row in rows:
                     generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
                     st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
-                st.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
-                generButtonQues = st.button("生成题库")
                 if generButtonQues:
                     st.session_state.examName = "练习题库"
-                    st.spinner("正在生成题库...")
                     for index, value in enumerate(generPack):
                         if value:
                             if index == 0:
@@ -1843,9 +1834,11 @@ def training():
                             else:
                                 chapterPack.append(rows[index - 3][0])
                     if chapterPack:
-                        genResult = GenerExam(chapterPack, StationCN, userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
+                        st.spinner("正在生成题库...")
+                        reviseQues()
+                        genResult = GenerExam(chapterPack, st.session_state.StationCN, st.session_state.userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, st.session_state.GenerNewOnly)
                     else:
-                        st.warning("题库生成试题失败, 请检查题库设置")
+                        st.warning("请至少选择一个章节")
         if genResult:
             if genResult[0]:
                 generQues.empty()
@@ -1873,6 +1866,16 @@ def training():
                 st.warning("题库生成试题不满足要求, 请检查考试参数设置或个别题型试题候选数量不够或联系管理员")
     else:
         st.error(f":red[⚠️] **{st.session_state.StationCN}试卷生成失败, :red[{failInfo[:-1]}] 试题数量不足, 请检查题库设置或增加以上题型候选试题**")
+
+
+def reviseQues():
+    for each in ["questions", "commquestions"]:
+        for each2 in [['（', '('], ['）', ')']]:
+            SQL = f"UPDATE {each} set Question = replace(Question, '{each2[0]}', '{each2[1]}') where qType = '填空题' and Question like '%{each2[0]}%'"
+            mdb_modi(conn, cur, SQL)
+        for each2 in ['( )', '(  )', '(   )', '(    )']:
+            SQL = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
+            mdb_modi(conn, cur, SQL)
 
 
 @st.fragment
@@ -2914,6 +2917,7 @@ if st.session_state.logged_in:
                     ]),
                     sac.MenuItem('账户', icon='person-gear', children=[
                         sac.MenuItem('修改密码', icon='key'),
+                        sac.MenuItem('密码重置', icon='bootstrap-reboot'),
                         sac.MenuItem('登出', icon='box-arrow-right'),
                     ]),
                     sac.MenuItem('关于', icon='layout-wtf', children=[
@@ -2940,7 +2944,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
-                ], open_index=[1, 2, 3, 4, 5, 6, 7, 8, 9], open_all=False)
+                ], open_index=[1, 2, 3, 4, 5, 6], open_all=False)
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
         st.caption(":red[**请使用登出退出页面, 否则会影响下次登录**]")
