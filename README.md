@@ -40,8 +40,8 @@
 ├── DB
 │   ├── ETest_enc.db # 加密后的数据库文件
 ├── .streamlit # Streamlit配置文件(修改前请查阅相关文档)
-├── etest # 入口文件及主程序 All in one
-├── commFunc # 公共函数
+├── etest.py # 入口文件及主程序 All in one
+├── commFunc.py # 公共函数
 ├── ClockScript # 时钟脚本
 ├── css # css样式文件
 ├── js # js脚本文件

@@ -2943,7 +2943,7 @@ if st.session_state.logged_in:
                 ], open_index=[1, 2, 3, 4, 5, 6, 7, 8, 9], open_all=False)
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
-        st.caption(":red[**请使用登出功能退出页面, 否则会影响下次登录**]")
+        st.caption(":red[**请使用登出退出页面, 否则会影响下次登录**]")
     updatePyFileinfo()
     if selected == "主页":
         #displayBigTime()
