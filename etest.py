@@ -179,6 +179,7 @@ def login():
                 st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
                 login.empty()
                 st.session_state.logged_in = True
+                st.session_state.userPwRecheck = False
                 st.session_state.userName = result[0][0]
                 st.session_state.userCName = result[0][1].replace(" ", "")
                 st.session_state.userType = result[0][2]
@@ -2857,6 +2858,78 @@ def queryExamResultUsers():
             st.warning("请设置查询类型")
 
 
+def verifyUserPW(vUserName, vUserPW):
+    st.session_state.userPwRecheck = False
+    vUserEncPW = ""
+    SQL = f"SELECT userPassword from users where userName = {vUserName}"
+    pwTable = mdb_sel(cur, SQL)
+    if pwTable:
+        vUserEncPW = pwTable[0][0]
+        vUserDecPW = getUserEDKeys(vUserEncPW, "dec")
+        if vUserPW == vUserDecPW:
+            st.session_state.userPwRecheck = True
+            return True, vUserEncPW
+        else:
+            return False, vUserEncPW
+    else:
+        return False, vUserEncPW
+
+
+def resetPassword():
+    st.write("### :orange[密码重置及更改账户类型]")
+    if st.session_state.userPwRecheck:
+        st.write(":red[**重置用户信息**]")
+        rCol1, rCol2, rCol3 = st.columns(3)
+        rUserName = rCol1.number_input("用户编码", value=0)
+        if rUserName != 0:
+            SQL = f"SELECT userCName, userType from users where userName = {rUserName}"
+            rows = mdb_sel(cur, SQL)
+            if rows:
+                rCol2.write(f"用户姓名: **{rows[0][0]}**")
+                with rCol3:
+                    rUserType = False
+                    if rows[0][1] == "admin":
+                        rUserType = sac.switch(label="管理员", value=True, on_label="On", align='center', size='md')
+                    elif rows[0][1] == "user":
+                        rUserType = sac.switch(label="管理员", value=False, on_label="On", align='center', size='md')
+                st.write("重置类型")
+                rOption1 = st.checkbox("密码", value=False)
+                rOption2 = st.checkbox("账户类型", value=False)
+                btnResetUserPW = st.button("重置", type="primary")
+                if btnResetUserPW and (rOption1 or rOption2):
+                    st.button("确认", type="secondary", on_click=actionResetUserPW, args=(rUserName, rOption1, rOption2, rUserType,))
+                    st.session_state.userPwRecheck = False
+                elif not rOption1 and not rOption2:
+                    st.warning("请选择重置类型")
+            else:
+                st.error("用户不存在")
+    else:
+        vUserPW = st.text_input("请输入密码", max_chars=8, placeholder="请输入管理员密码, 以验证身份", type="password", autocomplete="off")
+        if vUserPW:
+            if verifyUserPW(st.session_state.userName, vUserPW)[0]:
+                st.rerun()
+            else:
+                st.error("密码错误, 请重新输入")
+
+
+def actionResetUserPW(rUserName, rOption1, rOption2, rUserType):
+    rInfo = ""
+    if rOption1:
+        resetPW = getUserEDKeys("1234", "enc")
+        SQL = f"UPDATE users SET userPassword = '{resetPW}' where userName = {rUserName}"
+        mdb_modi(conn, cur, SQL)
+        rInfo += "密码已重置为: 1234 / "
+    if rOption2:
+        if rUserType:
+            SQL = f"UPDATE users SET userType = 'admin' where userName = {rUserName}"
+            rInfo += "账户类型已更改为: 管理员 / "
+        else:
+            SQL = f"UPDATE users SET userType = 'user' where userName = {rUserName}"
+            rInfo += "账户类型已更改为: 用户 / "
+        mdb_modi(conn, cur, SQL)
+    st.success(f"**{rInfo[:-3]}**")
+
+
 global appName, emoji
 
 conn = apsw.Connection("./DB/ETest_enc.db")
@@ -2949,6 +3022,8 @@ if st.session_state.logged_in:
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
         st.caption(":red[**请使用登出退出页面, 否则会影响下次登录**]")
     updatePyFileinfo()
+    if selected != "密码重置":
+        st.session_state.userPwRecheck = False
     if selected == "主页":
         #displayBigTime()
         displayBigTimeCircle()
@@ -3237,6 +3312,8 @@ if st.session_state.logged_in:
         userRanking()
     elif selected == "修改密码":
         changePassword()
+    elif selected == "密码重置":
+        resetPassword()
     elif selected == "登出":
         logout()
     elif selected == "Readme":
