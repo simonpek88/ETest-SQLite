@@ -1234,7 +1234,7 @@ def displayUserRanking():
     heatmap = col2.radio("热力图", options=["Folium", "Pydeck"], index=0, horizontal=True)
     #maptype = col3.radio("地图", options=["OpenStreetMap", "高德"], index=0, horizontal=True)
     markertype = col3.radio("标记", options=["默认", "公司Logo"], index=1, horizontal=True)
-    maptype = "OpenStreetMap"
+    maptype = "高德"
     if boardType == "个人榜":
         SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
     elif boardType == "站室榜":
@@ -1298,6 +1298,7 @@ def displayUserRanking():
                 )
             )
         elif heatmap == "Folium":
+            heatData = []
             SQL = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN order by Ranking DESC"
             rows = mdb_sel(cur, SQL)
             SQL = f"SELECT lat, lng, Station from stations where Station == '{rows[0][0]}'"
@@ -1332,15 +1333,15 @@ def displayUserRanking():
                     folium.Marker([lat, lng], popup=popup).add_to(m)
                 elif markertype == "公司Logo":
                     folium.Marker([lat, lng], icon=icon, popup=popup).add_to(m)
-                heatData = [[lat, lng, row[1]]]
-                HeatMap(heatData).add_to(m)
+                heatData.append([lat, lng, int(row[1])])
+            HeatMap(heatData).add_to(m)
             minimap = MiniMap(
                 toggle_display=True,
                 width=120,
                 height=120,
                 minimized=True,
                 )
-            m.add_child(minimap)
+            #m.add_child(minimap)
             st_folium(m, use_container_width=True, height=430)
     st.subheader(boardInfo)
 
@@ -2941,7 +2942,8 @@ if st.session_state.logged_in:
                     ]),
                 ], open_index=[1, 2, 3, 4, 5, 6, 7, 8, 9], open_all=False)
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
-        st.caption("📢:red[**不要刷新页面, 否则会登出**\n 请使用[**登出**]功能退出页面, 否则会影响下次登录]")
+        st.caption("📢:red[**不要刷新页面, 否则会登出**]")
+        st.caption(":red[**请使用登出功能退出页面, 否则会影响下次登录**]")
     updatePyFileinfo()
     if selected == "主页":
         #displayBigTime()
@@ -3029,15 +3031,16 @@ if st.session_state.logged_in:
                         submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
                     iCol1, iCol2 = st.columns(2)
                     completedPack, cpStr, cpCount = [], "", 0
-                    SQL = f"SELECT ID, userAnswer, qType from {st.session_state.examFinalTable} order by ID"
+                    SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer = '' order by ID"
                     rows3 = mdb_sel(cur, SQL)
                     for row3 in rows3:
-                        if row3[1] == "":
-                            completedPack.append(f"第{row3[0]}题 [{row3[2]}] 未作答")
-                            cpStr = cpStr + str(row3[0]) + "/"
-                        else:
-                            completedPack.append(f"第{row3[0]}题 [{row3[2]}] 已作答")
-                            cpCount += 1
+                        completedPack.append(f"第{row3[0]}题 [{row3[1]}] 未作答")
+                        cpStr = cpStr + str(row3[0]) + "/"
+                    SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer <> '' order by ID"
+                    rows3 = mdb_sel(cur, SQL)
+                    for row3 in rows3:
+                        completedPack.append(f"第{row3[0]}题 [{row3[1]}] 已作答")
+                    cpCount = len(rows3)
                     if cpCount == quesCount:
                         iCol1.caption(":orange[作答提示: 全部题目已作答]")
                     elif quesCount - cpCount > 40:
@@ -3046,7 +3049,7 @@ if st.session_state.logged_in:
                         iCol1.caption(f":blue[作答提示:] :red[{cpStr[:-1]}] :blue[题还未作答, 可以在👉右测下拉列表中跳转]")
                     else:
                         iCol1.caption(":red[你还未开始答题]")
-                    iCol2.selectbox(":green[答题卡]", completedPack, index=None, on_change=quesGoto, key="chosenID")
+                    iCol2.selectbox(":green[答题卡] :red[[未答题前置排序]]", completedPack, index=None, on_change=quesGoto, key="chosenID")
                     st.divider()
                     if (preButton or nextButton or submitButton or st.session_state.goto) and not st.session_state.confirmSubmit:
                         SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"
