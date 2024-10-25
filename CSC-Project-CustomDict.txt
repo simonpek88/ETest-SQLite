@@ -32,6 +32,7 @@ gener
 glowintext
 hhiiss
 JXQW
+keyactionlog
 keyup
 listinsheet
 maptype

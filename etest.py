@@ -36,6 +36,14 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
 
 
 @st.fragment
+def updateKeyAction(keyAction):
+    SQL = f"SELECT ID from keyactionlog where userName = {st.session_state.userName} and userCName = '{st.session_state.userCName}' and userAction = '{keyAction}' and actionDate = {int(time.time())}"
+    if not mdb_sel(cur, SQL):
+        SQL = f"INSERT INTO keyactionlog(userName, userCName, StationCN, userAction, actionDate) VALUES({st.session_state.userName}, '{st.session_state.userCName}', '{st.session_state.StationCN}', '{keyAction}', {int(time.time())})"
+        mdb_ins(conn, cur, SQL)
+
+
+@st.fragment
 def getUserCName(sUserName, sType="Digit"):
     SQL = ""
     if sType.capitalize() == "Digit":
@@ -82,6 +90,7 @@ def changePassword():
                         newPassword = getUserEDKeys(newPassword, "enc")
                         SQL = f"UPDATE users set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
                         mdb_modi(conn, cur, SQL)
+                        updateKeyAction("用户密码修改")
                         st.toast("密码修改成功, 请重新登录")
                         logout()
                 else:
@@ -410,6 +419,7 @@ def examResulttoExcel():
                     st.success(f":green[[{searchExamName}]] :gray[考试成绩成功导出至程序目录下] :orange[{outputFile[2:]}]")
                     if buttonDL:
                         st.toast("文件已下载至你的默认目录")
+                        updateKeyAction("导出考试成绩")
                 else:
                     st.warning(f":red[[{searchExamName}]] 考试成绩导出失败")
 
@@ -762,6 +772,7 @@ def dbinputSubmit(tarTable, orgTable):
         mdb_ins(conn, cur, SQL)
         ClearTables()
         st.success(f":green[{tmpTable[:-2]}.xlsx] 向 :red[{tarTable}] :gray[导入成功]")
+        updateKeyAction(f"Excel文件导入试题至{tarTable}")
 
 
 def dbinput():
@@ -866,12 +877,14 @@ def actionDelUserUploadFiles():
                 os.remove(f"./InputQues/{key.replace('delUserFiles_', '')}.xlsx")
             del st.session_state[key]
     st.success("所选文件已经删除")
+    updateKeyAction("删除用户上传文件")
 
 
 def resetActiveUser():
     SQL = f"UPDATE users set activeUser = 0 where userName <> {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
     st.success("已重置所有用户状态")
+    updateKeyAction("重置所有用户状态")
 
 
 def inputWord():
@@ -954,10 +967,11 @@ def inputWord():
             continue
     ClearTables()
     st.success(f"共生成{generQuesCount}道试题")
+    updateKeyAction("导入试题")
 
 
 def resetTableID():
-    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "examresult", "questionaff", "studyinfo", "users", "setup_默认", f"setup_{st.session_state.StationCN}"]:
+    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "examresult", "questionaff", "studyinfo", "users", "keyactionlog", "setup_默认", f"setup_{st.session_state.StationCN}"]:
         SQL = f"SELECT ID from {tablename} order by ID"
         rows = mdb_sel(cur, SQL)
         for i, row in enumerate(rows):
@@ -968,6 +982,7 @@ def resetTableID():
                 mdb_modi(conn, cur, SQL)
         #st.toast(f"重置 {tablename} 表ID完毕")
     st.success("题库ID重置成功")
+    updateKeyAction("重置题库ID")
 
 
 def AIGenerQues():
@@ -1159,6 +1174,10 @@ def AIGenerQues():
                     st.success(tempInfo[:-2])
                     st.subheader("具体如下:", divider="green")
                     st.markdown(displayQues)
+                    if table == "公共题库":
+                        updateKeyAction(f"A.I.生成试题{generQuesCount}道至{table}题库")
+                    elif table == "站室题库":
+                        updateKeyAction(f"A.I.生成试题{generQuesCount}道至{table}题库{chapter}章节")
                 else:
                     st.info("A.I.未生成到任何试题, 请检查参考资料是否正确或是生成的试题已经在题库中")
             else:
@@ -1179,6 +1198,7 @@ def ClearMPAction(bcArea):
     mdb_del(conn, cur, SQL="DELETE from morepractise")
     bcArea.empty()
     st.success("错题集已重置")
+    updateKeyAction("清空错题集所有记录")
 
 
 def studyinfo():
@@ -1543,6 +1563,7 @@ def studyResetAction():
     SQL = f"DELETE from studyinfo where userName = {st.session_state.userName}"
     mdb_del(conn, cur, SQL)
     st.success("学习记录已重置")
+    updateKeyAction("重置学习记录")
 
 
 def studyinfoDetail():
@@ -1895,6 +1916,7 @@ def updateCRExam():
             SQL = f"UPDATE questionaff SET examChapterRatio = {st.session_state[key]} WHERE ID = {upID}"
             mdb_modi(conn, cur, SQL)
     st.success("章节权重更新成功")
+    updateKeyAction("考试章节权重更新")
 
 
 @st.fragment
@@ -2043,6 +2065,7 @@ def delQuestion(delQuesRow):
     for delTable in delTablePack:
         SQL = f"DELETE from {delTable} where Question = '{delQuesRow[1]}' and qType = '{delQuesRow[4]}'"
         mdb_del(conn, cur, SQL)
+    updateKeyAction(f"删除试题: {delQuesRow[1]}")
 
 
 @st.fragment
@@ -2503,6 +2526,7 @@ def addExamIDD():
         SQL = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
         if mdb_sel(cur, SQL):
             st.success(f"考试场次: [{examName}] 有效期: [{examDateStr} 23:59:59] 添加成功")
+            updateKeyAction(f"新建考试场次{examName}")
             itemArea.empty()
         else:
             st.warning(f"考试场次 [{examName}] 添加失败")
@@ -2551,6 +2575,7 @@ def addStation():
                     SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{each}', '{sn}', 10, 10)"
                     mdb_ins(conn, cur, SQL)
             st.success(f"[{sn}] 站室添加成功")
+            updateKeyAction(f"新建站室{sn}")
             itemArea.empty()
         else:
             st.warning(f"[{sn}] 添加站室失败")
@@ -2602,6 +2627,7 @@ def addUser():
         SQL = "SELECT ID from users where userName = " + str(un) + " and StationCN = '" + station + "' and userCName = '" + userCName + "'"
         if mdb_sel(cur, SQL):
             st.success(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加成功")
+            updateKeyAction(f"新建用户: {userName} 姓名: {userCName} 类型: {ut} 站室: {station}")
             itemArea.empty()
         else:
             st.warning(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加失败")
@@ -2626,6 +2652,7 @@ def updateDAParam(updateParamType):
             SQL = f"UPDATE setup_{st.session_state.StationCN} SET param = {int(st.session_state[key])} WHERE ID = {upID}"
             mdb_modi(conn, cur, SQL)
     st.success(f"{updateParamType} 参数更新成功")
+    updateKeyAction("考试参数更新")
 
 
 def updateSwitchOption(quesType):
@@ -2648,6 +2675,7 @@ def setupReset():
     SQL = f"UPDATE questionaff set chapterRatio = 5, examChapterRatio = 5 where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
     mdb_modi(conn, cur, SQL)
     st.success("所有设置已重置")
+    updateKeyAction("重置所有设置")
 
 
 def updateAIModel():
@@ -2919,13 +2947,16 @@ def actionResetUserPW(rUserName, rOption1, rOption2, rUserType):
         SQL = f"UPDATE users SET userPassword = '{resetPW}' where userName = {rUserName}"
         mdb_modi(conn, cur, SQL)
         rInfo += "密码已重置为: 1234 / "
+        updateKeyAction("密码重置")
     if rOption2:
         if rUserType:
             SQL = f"UPDATE users SET userType = 'admin' where userName = {rUserName}"
             rInfo += "账户类型已更改为: 管理员 / "
+            updateKeyAction("更改账户类型为管理员")
         else:
             SQL = f"UPDATE users SET userType = 'user' where userName = {rUserName}"
             rInfo += "账户类型已更改为: 用户 / "
+            updateKeyAction("更改账户类型为用户")
         mdb_modi(conn, cur, SQL)
     st.success(f"**{rInfo[:-3]}**")
 
