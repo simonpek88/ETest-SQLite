@@ -2961,6 +2961,23 @@ def actionResetUserPW(rUserName, rOption1, rOption2, rUserType):
     st.success(f"**{rInfo[:-3]}**")
 
 
+def displayKeyAction():
+    st.subheader(":red[操作日志]", divider="violet")
+    if st.session_state.userPwRecheck:
+        SQL = "SELECT userName, userCName, StationCN, userAction, datetime(actionDate, 'unixepoch', 'localtime') from keyactionlog order by actionDate DESC"
+        rows = mdb_sel(cur, SQL)
+        if rows:
+            df = pd.DataFrame(rows, columns=["用户编码", "用户姓名", "所属站室", "操作内容", "操作时间"])
+            st.write(df)
+    else:
+        vUserPW = st.text_input("请输入密码", max_chars=8, placeholder="请输入管理员密码, 以验证身份", type="password", autocomplete="off")
+        if vUserPW:
+            if verifyUserPW(st.session_state.userName, vUserPW)[0]:
+                st.rerun()
+            else:
+                st.error("密码错误, 请重新输入")
+
+
 global appName, emoji
 
 conn = apsw.Connection("./DB/ETest_enc.db")
@@ -3011,13 +3028,14 @@ if st.session_state.logged_in:
                         sac.MenuItem('题库功能', icon='database-gear'),
                         sac.MenuItem('参数设置', icon='gear'),
                     ]),
-                    sac.MenuItem('查询', icon='search', children=[
-                        sac.MenuItem('信息查询', icon='info-lg'),
-                        sac.MenuItem('用户状态', icon='people'),
-                    ]),
                     sac.MenuItem('信息', icon='info-circle', children=[
                         sac.MenuItem('学习信息', icon='book'),
                         sac.MenuItem('证书及榜单', icon='bookmark-star'),
+                    ]),
+                    sac.MenuItem('查询', icon='search', children=[
+                        sac.MenuItem('信息查询', icon='info-lg'),
+                        sac.MenuItem('用户状态', icon='people'),
+                        sac.MenuItem('操作日志', icon='incognito'),
                     ]),
                     sac.MenuItem('账户', icon='person-gear', children=[
                         sac.MenuItem('修改密码', icon='key'),
@@ -3053,7 +3071,7 @@ if st.session_state.logged_in:
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
         st.caption(":red[**请使用登出退出页面, 否则会影响下次登录**]")
     updatePyFileinfo()
-    if selected != "密码重置" and selected != "用户状态":
+    if selected != "密码重置" and selected != "用户状态" and selected != "操作日志":
         st.session_state.userPwRecheck = False
     if selected == "主页":
         #displayBigTime()
@@ -3337,6 +3355,8 @@ if st.session_state.logged_in:
             updateActionUser(st.session_state.userName, f"查询{selectFunc}", st.session_state.loginTime)
     elif selected == "用户状态":
         userStatus()
+    elif selected == "操作日志":
+        displayKeyAction()
     elif selected == "学习信息":
         studyinfo()
     elif selected == "证书及榜单":
