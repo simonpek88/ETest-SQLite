@@ -14,8 +14,8 @@
 
 ## Install
 
-1. 下载并安装Python(3.8以上版本)
-2. 下载并安装SQLite3驱动
+1. 下载并安装[Python](https://www.python.org/)(3.8及以上版本)
+2. 下载并安装[SQLite3驱动](https://www.sqlite.org/index.html)
 3. 克隆仓库到本地或者解压提供的源代码包
 4. 配置环境变量, 将Python的安装路径添加到环境变量中
 5. 安装依赖
@@ -29,36 +29,26 @@
       - python-docx # Word文档操作
       - openpyxl/XlsxWriter # Excel文档操作
     - 或使用提供的requirements.txt文件安装依赖
-      - **`pip install -r requirements.txt`**
+      - `pip install -r requirements.txt`
 6. 运行程序
     - a. 打开命令行工具cmd或Cmder
     - b. 进入程序目录
-    - c. 运行 **`streamlit run etest.py`**
+    - c. 运行
+      - `streamlit run etest.py`
 
 ## Construction
 
-```
-├── DB
-│   ├── ETest_enc.db # 加密后的数据库文件
-├── .streamlit # Streamlit配置文件, 默认端口8501(修改前请查阅相关文档)
-├── etest.py # 入口文件及主程序 All in one
-├── commFunc.py # 公共函数
-├── ClockScript # 时钟脚本
-├── css # css样式文件
-├── js # js脚本文件
-├── Images # 图片文件(Logo, 图标及证书模板等)
-├── ExamResult/outputQues/QuesDoc/QuesRefer # 导出或导入文件相应目录(勿动)
-├── html # 调试用HTML文件
-├── Fonts # 字体文件
-├── __pycache__ # 缓存文件(在线勿删, 离线可删除)
-├── .gitignore # git忽略文件
-├── README.md # 项目说明文件(本文件, Markdown格式)
-├── requirements.txt # 自动安装依赖文件
-├── CSC-Project-CustomDict.txt # CSpell自定义字典文件
-└── LICENSE # License
-```
-
-[streamlit配置文档](https://docs.streamlit.io/develop/api-reference/configuration/config.toml)
+- DB/ETest_enc.db # 加密后的数据库文件
+- .streamlit # Streamlit配置文件, 默认端口8501([修改前请查阅相关文档](https://docs.streamlit.io/develop/api-reference/configuration/config.toml))
+- etest.py # 入口文件及主程序 All in one
+- commFunc.py # 公共函数
+- ClockScript # 时钟脚本
+- css # css样式文件
+- js # js脚本文件
+- README.md # 项目说明文件(本文件, Markdown格式)
+- requirements.txt # 自动安装依赖文件
+- CSC-Project-CustomDict.txt # CSpell自定义字典文件
+- 其他各种导出导入文件目录
 
 ## Functions
 

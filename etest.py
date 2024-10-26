@@ -1654,7 +1654,7 @@ def actionUserStatus():
         sTime = int(activeTime % 60)
         if sTime < 10:
             sTime = "0" + str(sTime)
-        df.loc[index, "活动时间"] = f"{hTime}:{mTime}:{sTime}"
+        df.loc[index, "活动时间"] = f"{hTime}小时{mTime}分{sTime}秒"
         activeTime = int(df.loc[index, "累计活动时间"])
         hTime = int(activeTime / 3600)
         mTime = int((activeTime % 3600) / 60)
@@ -1663,7 +1663,7 @@ def actionUserStatus():
         sTime = int(activeTime % 60)
         if sTime < 10:
             sTime = "0" + str(sTime)
-        df.loc[index, "累计活动时间"] = f"{hTime}:{mTime}:{sTime}"
+        df.loc[index, "累计活动时间"] = f"{hTime}小时{mTime}分{sTime}秒"
     st.dataframe(df, use_container_width=True)
 
 
