@@ -1791,9 +1791,8 @@ def aboutReadme():
 
 def training():
     flagProc, failInfo = True, ""
-    indivUserQuesType = [["单选题", 30], ["多选题", 10], ["判断题", 10], ["填空题", 0]]
-    quesType = []
     if st.session_state.examType == "exam":
+        quesType = []
         SQL = f"SELECT paramName from setup_{st.session_state.StationCN} where paramType = 'questype' and param = 1 order by ID"
         rows = mdb_sel(cur, SQL)
         for row in rows:
@@ -1809,14 +1808,15 @@ def training():
                 flagProc = False
                 failInfo = failInfo + f"{tmp}/"
     elif st.session_state.examType == "training":
+        quesType = [["单选题", 30], ["多选题", 10], ["判断题", 10], ["填空题", 0]]
         SQL = f"SELECT mcq, mmcq, tfq, fibq from indivquescount where userName = {st.session_state.userName}"
         rows = mdb_sel(cur, SQL)
         if rows:
             row = rows[0]
             for i in range(4):
-                indivUserQuesType[i][1] = row[i]
+                quesType[i][1] = row[i]
         else:
-            SQL = f"INSERT INTO indivquescount (userName, mcq, mmcq, tfq, fibq) VALUES({st.session_state.userName}, {indivUserQuesType[0][1]}, {indivUserQuesType[1][1]}, {indivUserQuesType[2][1]}, {indivUserQuesType[3][1]})"
+            SQL = f"INSERT INTO indivquescount (userName, mcq, mmcq, tfq, fibq) VALUES({st.session_state.userName}, {quesType[0][1]}, {quesType[1][1]}, {quesType[2][1]}, {quesType[3][1]})"
             mdb_ins(conn, cur, SQL)
     if flagProc:
         generPack, examIDPack, chapterPack, genResult = [], [], [], []
@@ -1838,15 +1838,15 @@ def training():
                         SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + st.session_state.StationCN + "'"
                         rows = mdb_sel(cur, SQL)
                         for row in rows:
-                            generPack.append(row[0])
-                        genResult = GenerExam(generPack, st.session_state.StationCN, st.session_state.userName, examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
+                            chapterPack.append(row[0])
+                        genResult = GenerExam(chapterPack, st.session_state.StationCN, st.session_state.userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
             elif st.session_state.examType == "training":
                 tCol1, tCol2 = st.columns(2)
                 generButtonQues = tCol1.button("生成题库")
                 tCol2.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
                 indivCols = st.columns(4)
                 for i in range(4):
-                    indivUserQuesType[i][1] = indivCols[i].number_input(indivUserQuesType[i][0], min_value=0, max_value=100, value=indivUserQuesType[i][1], step=1, help="最大100")
+                    quesType[i][1] = indivCols[i].number_input(quesType[i][0], min_value=0, max_value=100, value=quesType[i][1], step=1, help="最大100")
                 for each in ["公共题库", "错题集", "关注题集"]:
                     SQL = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
                     row = mdb_sel(cur, SQL)[0]
@@ -1862,10 +1862,8 @@ def training():
                     st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
                 if generButtonQues:
                     st.session_state.examName = "练习题库"
-                    SQL = f"UPDATE indivquescount set mcq = {indivUserQuesType[0][1]}, mmcq = {indivUserQuesType[1][1]}, tfq = {indivUserQuesType[2][1]}, fibq = {indivUserQuesType[3][1]} where userName = {st.session_state.userName}"
+                    SQL = f"UPDATE indivquescount set mcq = {quesType[0][1]}, mmcq = {quesType[1][1]}, tfq = {quesType[2][1]}, fibq = {quesType[3][1]} where userName = {st.session_state.userName}"
                     mdb_modi(conn, cur, SQL)
-                    for i in range(4):
-                        quesType.append([indivUserQuesType[i][0], indivUserQuesType[i][1]])
                     for index, value in enumerate(generPack):
                         if value:
                             if index == 0:
@@ -3126,7 +3124,7 @@ if st.session_state.logged_in:
         st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
         st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
         #st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
-        st.markdown(f"<font size=4><center>**更新内容: {updateType['New']} 练习模式为每个用户增加单独的题型设置**</center></font>", unsafe_allow_html=True)
+        st.markdown(f"<font size=4><center>**更新内容: {updateType['New']}/{updateType['Optimize']} 练习模式为每个用户增加单独的题型设置并优化代码**</center></font>", unsafe_allow_html=True)
 
         #displayAppInfo()
 
