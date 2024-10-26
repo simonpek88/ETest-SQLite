@@ -1841,25 +1841,50 @@ def training():
                             chapterPack.append(row[0])
                         genResult = GenerExam(chapterPack, st.session_state.StationCN, st.session_state.userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
             elif st.session_state.examType == "training":
-                tCol1, tCol2 = st.columns(2)
+                tCol1, tCol2, tCol3 = st.columns(3)
                 generButtonQues = tCol1.button("生成题库")
                 tCol2.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
+                SQL = "SELECT pyLM from verinfo where pyFile = 'chapterChosenType'"
+                chapterChosenType = mdb_sel(cur, SQL)[0][0]
+                if chapterChosenType == -1:
+                    chapterChosenType = None
+                uCCT = tCol3.radio(" ", ["全选", "全不选"], index=chapterChosenType, horizontal=True, label_visibility="collapsed")
+                if uCCT is not None:
+                    SQL = ""
+                    if uCCT == "全选":
+                        SQL = "UPDATE verinfo set pyLM = 0 where pyFile = 'chapterChosenType'"
+                    elif uCCT == "全不选":
+                        SQL = "UPDATE verinfo set pyLM = 1 where pyFile = 'chapterChosenType'"
+                    mdb_modi(conn, cur, SQL)
                 indivCols = st.columns(4)
                 for i in range(4):
-                    quesType[i][1] = indivCols[i].number_input(quesType[i][0], min_value=0, max_value=100, value=quesType[i][1], step=1, help="最大100")
+                    quesType[i][1] = indivCols[i].number_input(quesType[i][0], min_value=0, max_value=100, value=quesType[i][1], step=1)
+                ddCol1, ddCol2 = st.columns(2)
+                ddCol1.write("**章节**")
+                ddCol2.write("**权重**")
                 for each in ["公共题库", "错题集", "关注题集"]:
+                    ddCol1, ddCol2 = st.columns(2)
                     SQL = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
                     row = mdb_sel(cur, SQL)[0]
-                    if each == "公共题库":
-                        generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
-                    else:
-                        generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=False))
-                    st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
+                    if uCCT is None:
+                        if each == "公共题库":
+                            generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=True))
+                        else:
+                            generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=False))
+                    elif uCCT == "全选":
+                        generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=True))
+                    elif uCCT == "全不选":
+                        generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=False))
+                    ddCol2.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining, label_visibility="collapsed")
                 SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + st.session_state.StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
                 rows = mdb_sel(cur, SQL)
                 for row in rows:
-                    generPack.append(st.checkbox(f"**:blue[{row[0]}]**", value=True))
-                    st.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining)
+                    ddCol1, ddCol2 = st.columns(2)
+                    if uCCT is None or uCCT == "全选":
+                        generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=True))
+                    elif uCCT == "全不选":
+                        generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=False))
+                    ddCol2.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining, label_visibility="collapsed")
                 if generButtonQues:
                     st.session_state.examName = "练习题库"
                     SQL = f"UPDATE indivquescount set mcq = {quesType[0][1]}, mmcq = {quesType[1][1]}, tfq = {quesType[2][1]}, fibq = {quesType[3][1]} where userName = {st.session_state.userName}"
@@ -3139,6 +3164,8 @@ if st.session_state.logged_in:
             st.markdown("### <font face='微软雅黑' color=red><center>选择考试</center></font>", unsafe_allow_html=True)
         if not st.session_state.examChosen or not st.session_state.calcScore:
             st.session_state.tooltipColor = "#ed872d"
+            SQL = "UPDATE verinfo set pyLM = -1 where pyFile = 'chapterChosenType'"
+            mdb_modi(conn, cur, SQL)
             training()
         else:
             st.error("你不能重复选择考试场次")
