@@ -25,12 +25,15 @@ etest
 examidd
 examresult
 favques
+fibq
 Fileinfo
 flipcountdown
 fontsize
 gener
 glowintext
 hhiiss
+indiv
+indivquescount
 JXQW
 keyactionlog
 keyup
@@ -41,6 +44,7 @@ maxcol
 maxid
 mcol
 mktime
+mmcq
 moption
 morepractise
 Neue
