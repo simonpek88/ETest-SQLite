@@ -3004,7 +3004,7 @@ st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="mediu
 
 appName = "专业技能考试系统 — 离线版"
 emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
-
+updateType = {"New": "📜", "Optimize": "🍀", "Fix": "🐞"}
 selected = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -3098,7 +3098,8 @@ if st.session_state.logged_in:
 
         st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
         st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
-        st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
+        st.markdown(f"<font size=4><center>**更新内容: {updateType['Optimize']} 错题集实时更新**</center></font>", unsafe_allow_html=True)
 
         #displayAppInfo()
 
