@@ -94,11 +94,11 @@ def changePassword():
                         st.toast("密码修改成功, 请重新登录")
                         logout()
                 else:
-                    st.warning("两次输入的密码不一致")
+                    st.error("两次输入的密码不一致")
             else:
                 st.warning("请检查新密码")
         else:
-            st.warning("原密码不正确")
+            st.error("原密码不正确")
     else:
         st.warning("原密码不能为空")
     updateActionUser(st.session_state.userName, "修改密码", st.session_state.loginTime)
@@ -167,7 +167,7 @@ def login():
                 if userName and filtered == "":
                     promptArea.empty()
         userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
-        examType = st.selectbox("请选择功能类型", ("练习", "考试"), index=0, help="各站管理员如需更改设置及查询请选择练习模式, 考试模式只能考试及修改密码")
+        examType = st.selectbox("请选择模式类型", ("练习", "考试"), index=0, help="各站管理员如需修改设置及查询请选择练习模式, 考试模式仅限考试")
         buttonLogin = st.button("登录")
     if buttonLogin:
         if userName != "" and userPassword != "":
@@ -421,7 +421,7 @@ def examResulttoExcel():
                         st.toast("文件已下载至你的默认目录")
                         updateKeyAction("导出考试成绩")
                 else:
-                    st.warning(f":red[[{searchExamName}]] 考试成绩导出失败")
+                    st.error(f":red[[{searchExamName}]] 考试成绩导出失败")
 
 
 def ClearTables():
@@ -496,7 +496,7 @@ def questoWord():
             if step is not None:
                 st.image(f"./Images/help/OutputFile{step}.png", caption=f"操作步骤{step + 1}")
         else:
-            st.warning("请先生成题库")
+            st.info("请先生成题库")
             quesTable = ""
     if stationCN != "全站" and quesTable == "站室题库":
         SQL = f"SELECT chapterName from questionaff where StationCN = '{stationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by ID"
@@ -673,7 +673,7 @@ def questoWord():
                     if buttonDL:
                         st.toast("文件已下载至你的默认目录")
             else:
-                st.warning(f":red[[{quesTable}]] 题库导出失败")
+                st.error(f":red[[{quesTable}]] 题库导出失败")
 
 
 def dboutput():
@@ -790,9 +790,9 @@ def dbinput():
                 if orgTable:
                     st.button("导入", on_click=dbinputSubmit, args=(targetTable, orgTable))
                 else:
-                    st.warning("请选择要导入的文件")
+                    st.info("请选择要导入的文件")
             else:
-                st.warning("没有可导入的本站文件")
+                st.info("没有可导入的本站文件")
         elif inputType == "上传文件":
             uploaded_file = st.file_uploader("**请选择Excel文件**", type=["xlsx"])
             if uploaded_file is not None:
@@ -867,7 +867,7 @@ def delUserUploadFiles():
         if buttonDel:
             st.button("确认删除", type="secondary", on_click=actionDelUserUploadFiles)
     else:
-        st.warning("没有用户上传文件")
+        st.info("没有用户上传文件")
 
 
 def actionDelUserUploadFiles():
@@ -980,6 +980,9 @@ def resetTableID():
             if tablename == "questions" or tablename == "commquestions":
                 SQL = f"UPDATE studyinfo set cid = {i + 1} where cid = {row[0]} and questable = '{tablename}'"
                 mdb_modi(conn, cur, SQL)
+        if len(rows) > 0:
+            SQL = f"UPDATE sqlite_sequence SET seq = {len(rows)} where name = '{tablename}'"
+            mdb_modi(conn, cur, SQL)
         #st.toast(f"重置 {tablename} 表ID完毕")
     st.success("题库ID重置成功")
     updateKeyAction("重置题库ID")
@@ -1249,7 +1252,7 @@ def displayUserRanking():
     markertype = col3.radio("标记", options=["默认", "公司Logo"], index=1, horizontal=True)
     maptype = "高德"
     if boardType == "个人榜":
-        SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC limit 0, 5"
+        SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC, ID limit 0, 5"
     elif boardType == "站室榜":
         SQL = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN order by Count DESC"
     else:
@@ -1885,7 +1888,7 @@ def training():
                     updateActionUser(st.session_state.userName, "生成练习试题", st.session_state.loginTime)
             else:
                 st.session_state.examChosen = False
-                st.warning("题库生成试题不满足要求, 请检查考试参数设置或个别题型试题候选数量不够或联系管理员")
+                st.error("题库生成试题不满足要求, 请检查考试参数设置, 或个别题型试题候选数量不够, 或请联系管理员")
     else:
         st.error(f":red[⚠️] **{st.session_state.StationCN}试卷生成失败, :red[{failInfo[:-1]}] 试题数量不足, 请检查题库设置或增加以上题型候选试题**")
 
@@ -1928,6 +1931,10 @@ def updateAnswer(userQuesID):
     if judTable[1] == judTable[3]:
         SQL = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
         mdb_modi(conn, cur, SQL)
+        SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
+        mdb_modi(conn, cur, SQL)
+        if st.session_state.debug:
+            st.session_state.tooltipColor = "#ed872d"
     else:
         SQL = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
         if mdb_sel(cur, SQL):
@@ -1936,6 +1943,8 @@ def updateAnswer(userQuesID):
         else:
             SQL = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}')"
             mdb_ins(conn, cur, SQL)
+        if st.session_state.debug:
+            st.session_state.tooltipColor = "#8581d9"
     mdb_del(conn, cur, SQL="DELETE from morepractise where WrongTime < 1")
 
 
@@ -1997,7 +2006,7 @@ def calcScore():
                     userAP = row[2].split(";")
                     quesAP = row[0].split(";")
                     if fibQues.count("()") == len(userAP):
-                        st.toast("正在使用:red[讯飞星火大模型]对答案进行分析, 请稍等...")
+                        #st.toast("正在使用 :red[讯飞星火大模型] 对答案进行分析, 请稍等...")
                         for index, value in enumerate(userAP):
                             b1 = fibQues.find("()")
                             c1 = fibQues2.find("()")
@@ -2016,7 +2025,7 @@ def calcScore():
                             else:
                                 flagAIScore = False
                     else:
-                        st.warning("⚠️ 试题或是答案数量不匹配, 请检查")
+                        st.error("⚠️ 试题或是答案数量不匹配, 请检查")
             if not flagAIScore:
                 SQL = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
                 if not mdb_sel(cur, SQL):
@@ -2226,7 +2235,7 @@ def exam(row):
         else:
             if AIModelName != "":
                 with col1:
-                    buttonAnalysis = st.button(f"A.I.答案解析 使用:green[[{AIModelName.replace('大模型', '')}]]")
+                    buttonAnalysis = st.button(f"A.I.答案解析模型 :green[{AIModelName.replace('大模型', '')}]")
                 with col2:
                     buttonDelAnalysis = st.button("删除本题答案解析")
                 if AIModelName == "文心千帆大模型":
@@ -2238,7 +2247,7 @@ def exam(row):
                 if buttonAnalysis:
                     AIAnswerInfo = st.empty()
                     with AIAnswerInfo.container():
-                        st.info(f"正在使用:red[[{AIModelName.replace('大模型', '')}]]获取答案解析, 内容不能保证正确, 仅供参考! 请稍等...")
+                        st.info(f"正在使用 :red[{AIModelName.replace('大模型', '')}] 获取答案解析, 内容不能保证正确, 仅供参考! 请稍等...")
                     if AIModelName == "文心千帆大模型":
                         AIAnswer = qianfan_AI(row[1], AIModel, option, row[4])
                     elif AIModelName == "讯飞星火大模型":
@@ -2288,7 +2297,7 @@ def manualFIB(rowID):
                 fibQues = f"{fibQues[:b1]}({each}){fibQues[b1 + 2:]}"
         fibAI = xunfei_xh_AI_fib(fibQues)
     else:
-        st.warning("⚠️ 试题或是答案数量不匹配, 请检查")
+        st.error("⚠️ 试题或是答案数量不匹配, 请检查")
 
     return fibAI
 
@@ -2420,7 +2429,7 @@ def displayTimeCountdown():
         info2.metric(label="已答题", value=acAnswer1)
         info3.metric(label="未答题", value=acAnswer2)
         info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
-        style_metric_cards(border_left_color="#ed872d")
+        style_metric_cards(border_left_color=st.session_state.tooltipColor)
 
 
 @st.fragment
@@ -2532,7 +2541,7 @@ def addExamIDD():
                     flagSuccess = True
                     itemArea.empty()
                 else:
-                    st.warning(f"[{examName}] 考试场次已存在")
+                    st.error(f"[{examName}] 考试场次已存在")
         else:
             if not examName:
                 st.warning("请输入考试名称")
@@ -2543,7 +2552,7 @@ def addExamIDD():
             updateKeyAction(f"新建考试场次{examName}")
             itemArea.empty()
         else:
-            st.warning(f"考试场次 [{examName}] 添加失败")
+            st.error(f"考试场次 [{examName}] 添加失败")
 
 
 @st.fragment
@@ -2563,7 +2572,7 @@ def addStation():
                     flagSuccess = True
                     itemArea.empty()
                 else:
-                    st.warning(f"[{sn}] 已存在")
+                    st.error(f"[{sn}] 已存在")
         else:
             if not sn:
                 st.warning("请输入站室名称")
@@ -2592,7 +2601,7 @@ def addStation():
             updateKeyAction(f"新建站室{sn}")
             itemArea.empty()
         else:
-            st.warning(f"[{sn}] 添加站室失败")
+            st.error(f"[{sn}] 添加站室失败")
 
 
 @st.fragment
@@ -2627,9 +2636,9 @@ def addUser():
                         flagSuccess = True
                         itemArea.empty()
                     else:
-                        st.warning(f"ID: [{userName}] 姓名: [{userCName}] 用户已存在或用户编码重复")
+                        st.error(f"ID: [{userName}] 姓名: [{userCName}] 用户已存在或用户编码重复")
                 else:
-                    st.warning("两次输入密码不一致")
+                    st.error("两次输入密码不一致")
         else:
             if not userCName:
                 st.warning("请输入用户姓名")
@@ -2644,7 +2653,7 @@ def addUser():
             updateKeyAction(f"新建用户: {userName} 姓名: {userCName} 类型: {ut} 站室: {station}")
             itemArea.empty()
         else:
-            st.warning(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加失败")
+            st.error(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加失败")
 
 
 def getStationCNALL(flagALL=False):
@@ -2794,7 +2803,7 @@ def queryExamAnswer(tablename):
                     if row[4] != "":
                         st.markdown(f"答案解析: :green[{row[4]}]")
             else:
-                st.warning("暂无数据")
+                st.info("暂无数据")
     else:
         st.warning("请设置查询类型")
 
@@ -2845,7 +2854,7 @@ def queryExamResult():
                         tab1.subheader("考试结果: :red[未通过] 😝")
                         tab1.subheader("", divider="red")
             else:
-                st.warning("暂无数据")
+                st.info("暂无数据")
         else:
             st.warning("请设置查询类型")
 
@@ -2895,7 +2904,7 @@ def queryExamResultUsers():
                         tab1.subheader("未参加考试", divider="red")
                         tab1.markdown(f"考生ID:  :red[{row[0]}] 考生姓名: :red[{row[1]}] 站室: :red[{row[2]}]")
             else:
-                st.warning("暂无数据")
+                st.info("暂无数据")
         else:
             st.warning("请设置查询类型")
 
@@ -3083,7 +3092,7 @@ if st.session_state.logged_in:
                 ], open_index=[1, 2, 3, 4, 5, 6], open_all=False)
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
-        st.caption(":red[**请使用登出退出页面, 否则会影响下次登录**]")
+        st.caption("**请使用 :red[[登出]] 功能退出页面, 否则会影响下次登录**")
     updatePyFileinfo()
     if selected != "密码重置" and selected != "用户状态" and selected != "操作日志":
         st.session_state.userPwRecheck = False
@@ -3113,9 +3122,10 @@ if st.session_state.logged_in:
             #st.markdown("<font face='微软雅黑' color=red size=20><center>**选择考试**</center></font>", unsafe_allow_html=True)
             st.markdown("### <font face='微软雅黑' color=red><center>选择考试</center></font>", unsafe_allow_html=True)
         if not st.session_state.examChosen or not st.session_state.calcScore:
+            st.session_state.tooltipColor = "#ed872d"
             training()
         else:
-            st.warning("你不能重复选择考试场次")
+            st.error("你不能重复选择考试场次")
     elif selected == "题库练习" or selected == "开始考试":
         if st.session_state.examType == "exam":
             updateActionUser(st.session_state.userName, "考试", st.session_state.loginTime)
@@ -3133,91 +3143,87 @@ if st.session_state.logged_in:
                         del st.session_state[key]
                 displayTimeCountdown()
                 qcol1, qcol2, qcol3, qcol4 = st.columns(4)
-                examCon = st.empty()
-                with examCon.container():
-                    SQL = "SELECT * from " + st.session_state.examFinalTable + " order by ID"
-                    rows = mdb_sel(cur, SQL)
-                    quesCount = len(rows)
-                    preButton, nextButton, submitButton = False, False, False
-                    #st.write(f"Cur:{st.session_state.curQues} Comp:{st.session_state.flagCompleted}")
-                    if st.session_state.flagCompleted:
-                        if st.session_state.curQues == 1:
-                            preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
-                        else:
-                            preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
-                        if st.session_state.curQues == quesCount:
-                            nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
-                        else:
-                            nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
-                        submitButton = qcol1.button("交卷", icon=":material/publish:")
-                    elif st.session_state.confirmSubmit:
+                SQL = "SELECT * from " + st.session_state.examFinalTable + " order by ID"
+                rows = mdb_sel(cur, SQL)
+                quesCount = len(rows)
+                preButton, nextButton, submitButton = False, False, False
+                #st.write(f"Cur:{st.session_state.curQues} Comp:{st.session_state.flagCompleted}")
+                if st.session_state.flagCompleted:
+                    if st.session_state.curQues == 1:
                         preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
-                        nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
-                        submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
-                    elif st.session_state.curQues == 0:
-                        preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
-                        nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
-                        submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
-                        exam(rows[0])
-                    elif st.session_state.curQues == 1:
-                        preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
-                        nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
-                        submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
-                    elif st.session_state.curQues == quesCount:
-                        preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
-                        nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
-                        submitButton = qcol1.button("交卷", icon=":material/publish:")
-                        st.session_state.flagCompleted = True
-                    elif st.session_state.curQues > 1 and st.session_state.curQues < quesCount:
-                        preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
-                        nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
-                        submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
-                    iCol1, iCol2 = st.columns(2)
-                    completedPack, cpStr, cpCount = [], "", 0
-                    SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer = '' order by ID"
-                    rows3 = mdb_sel(cur, SQL)
-                    for row3 in rows3:
-                        completedPack.append(f"第{row3[0]}题 [{row3[1]}] 未作答")
-                        cpStr = cpStr + str(row3[0]) + "/"
-                    SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer <> '' order by ID"
-                    rows3 = mdb_sel(cur, SQL)
-                    for row3 in rows3:
-                        completedPack.append(f"第{row3[0]}题 [{row3[1]}] 已作答")
-                    cpCount = len(rows3)
-                    if cpCount == quesCount:
-                        iCol1.caption(":orange[作答提示: 全部题目已作答]")
-                    elif quesCount - cpCount > 40:
-                        iCol1.caption(f":blue[作答提示:] :red[你还有{quesCount - cpCount}道题未作答, 请尽快完成]")
-                    elif quesCount - cpCount > 0:
-                        iCol1.caption(f":blue[作答提示:] :red[{cpStr[:-1]}] :blue[题还未作答, 可以在👉右测下拉列表中跳转]")
                     else:
-                        iCol1.caption(":red[你还未开始答题]")
-                    iCol2.selectbox(":green[答题卡] :red[[未答题前置排序]]", completedPack, index=None, on_change=quesGoto, key="chosenID")
-                    st.divider()
-                    if (preButton or nextButton or submitButton or st.session_state.goto) and not st.session_state.confirmSubmit:
-                        SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"
-                        row = mdb_sel(cur, SQL)[0]
-                        if preButton or nextButton or st.session_state.goto:
-                            if st.session_state.goto:
-                                st.session_state.goto = False
-                                st.write("#### :blue[跳转到指定题号: ]")
-                            exam(row)
-                        if submitButton:
-                            emptyAnswer = "你没有作答的题为:第["
-                            SQL = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer == '' order by ID"
-                            rows2 = mdb_sel(cur, SQL)
-                            for row2 in rows2:
-                                emptyAnswer = emptyAnswer + str(row2[0]) + ", "
-                            if emptyAnswer.endswith(", "):
-                                emptyAnswer = emptyAnswer[:-2] + "]题, 请检查或直接交卷!"
-                            else:
-                                emptyAnswer = "你的所有题目均已作答, 确认交卷吗?"
-                            submit_dialog(emptyAnswer)
-                        preButton, nextButton, submitButton = False, False, False
-                if st.session_state.confirmSubmit:
-                    examCon.empty()
+                        preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
+                    if st.session_state.curQues == quesCount:
+                        nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
+                    else:
+                        nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
+                    submitButton = qcol1.button("交卷", icon=":material/publish:")
+                elif st.session_state.confirmSubmit:
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
+                    submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
+                elif st.session_state.curQues == 0:
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
+                    submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
+                    exam(rows[0])
+                elif st.session_state.curQues == 1:
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", disabled=True)
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
+                    submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
+                elif st.session_state.curQues == quesCount:
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
+                    submitButton = qcol1.button("交卷", icon=":material/publish:")
+                    st.session_state.flagCompleted = True
+                elif st.session_state.curQues > 1 and st.session_state.curQues < quesCount:
+                    preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
+                    nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
+                    submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
+                iCol1, iCol2 = st.columns(2)
+                completedPack, cpStr, cpCount = [], "", 0
+                SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer = '' order by ID"
+                rows3 = mdb_sel(cur, SQL)
+                for row3 in rows3:
+                    completedPack.append(f"第{row3[0]}题 [{row3[1]}] 未作答")
+                    cpStr = cpStr + str(row3[0]) + "/"
+                SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer <> '' order by ID"
+                rows3 = mdb_sel(cur, SQL)
+                for row3 in rows3:
+                    completedPack.append(f"第{row3[0]}题 [{row3[1]}] 已作答")
+                cpCount = len(rows3)
+                if cpCount == quesCount:
+                    iCol1.caption(":orange[作答提示: 全部题目已作答]")
+                elif quesCount - cpCount > 40:
+                    iCol1.caption(f":blue[作答提示:] :red[你还有{quesCount - cpCount}道题未作答, 请尽快完成]")
+                elif quesCount - cpCount > 0:
+                    iCol1.caption(f":blue[作答提示:] :red[{cpStr[:-1]}] :blue[题还未作答, 可以在👉右测下拉列表中跳转]")
+                else:
+                    iCol1.caption(":red[你还未开始答题]")
+                iCol2.selectbox(":green[答题卡] :red[[未答题前置排序]]", completedPack, index=None, on_change=quesGoto, key="chosenID")
+                st.divider()
+                if (preButton or nextButton or submitButton or st.session_state.goto) and not st.session_state.confirmSubmit:
+                    SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"
+                    row = mdb_sel(cur, SQL)[0]
+                    if preButton or nextButton or st.session_state.goto:
+                        if st.session_state.goto:
+                            st.session_state.goto = False
+                            st.write("#### :blue[跳转到指定题号: ]")
+                        exam(row)
+                    if submitButton:
+                        emptyAnswer = "你没有作答的题为:第["
+                        SQL = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer == '' order by ID"
+                        rows2 = mdb_sel(cur, SQL)
+                        for row2 in rows2:
+                            emptyAnswer = emptyAnswer + str(row2[0]) + ", "
+                        if emptyAnswer.endswith(", "):
+                            emptyAnswer = emptyAnswer[:-2] + "]题, 请检查或直接交卷!"
+                        else:
+                            emptyAnswer = "你的所有题目均已作答, 确认交卷吗?"
+                        submit_dialog(emptyAnswer)
+                    preButton, nextButton, submitButton = False, False, False
             elif st.session_state.examType == "exam":
-                st.info("你已达到本场考试的最大限制, 无法再次进行, 如有疑问请向管理员咨询", icon="ℹ️")
+                st.info("你本场考试已达到次数限制, 无法再次进行, 如有疑问请联系管理员", icon="ℹ️")
         else:
             if st.session_state.examType == "training":
                 st.info("请先生成新的题库", icon="ℹ️")
@@ -3303,7 +3309,7 @@ if st.session_state.logged_in:
                     st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
                 st.button("章节权重更新", on_click=updateCRExam)
             else:
-                st.warning("该站室没有可设置章节")
+                st.info("该站室没有可设置章节")
         with st.expander("# :green[题型设置]"):
             SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'questype' order by ID"
             rows = mdb_sel(cur, SQL)
@@ -3365,7 +3371,7 @@ if st.session_state.logged_in:
                 if tempTable:
                     queryExamAnswer(tablename)
                 else:
-                    st.warning("暂无数据")
+                    st.info("暂无数据")
         if selectFunc is not None:
             updateActionUser(st.session_state.userName, f"查询{selectFunc}", st.session_state.loginTime)
     elif selected == "用户状态":
