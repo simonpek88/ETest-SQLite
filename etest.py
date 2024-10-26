@@ -195,6 +195,8 @@ def login():
                 SQL = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
                 mdb_modi(conn, cur, SQL)
                 ClearTables()
+                if st.session_state.debug:
+                    print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
                 #cur.execute("VACUUM")
                 if examType == "练习":
                     st.session_state.examType = "training"
@@ -218,6 +220,8 @@ def logout():
     SQL = f"UPDATE users set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
     cur.execute("VACUUM")
+    if st.session_state.debug:
+        print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
 
     for key in st.session_state.keys():
         del st.session_state[key]
