@@ -31,15 +31,16 @@
     - 或使用提供的requirements.txt文件安装依赖
       - **`pip install -r requirements.txt`**
 6. 运行程序
-    - a. 进入程序目录
-    - b. 运行 **`streamlit run etest.py`**
+    - a. 打开命令行工具cmd或Cmder
+    - b. 进入程序目录
+    - c. 运行 **`streamlit run etest.py`**
 
 ## Construction
 
 ```
 ├── DB
 │   ├── ETest_enc.db # 加密后的数据库文件
-├── .streamlit # Streamlit配置文件(修改前请查阅相关文档)
+├── .streamlit # Streamlit配置文件, 默认端口8501(修改前请查阅相关文档)
 ├── etest.py # 入口文件及主程序 All in one
 ├── commFunc.py # 公共函数
 ├── ClockScript # 时钟脚本
