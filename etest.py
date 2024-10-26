@@ -1923,6 +1923,20 @@ def updateCRExam():
 def updateAnswer(userQuesID):
     SQL = f"UPDATE {st.session_state.examFinalTable} set userAnswer = '{st.session_state.answer}', userName = {st.session_state.userName} where ID = {userQuesID}"
     mdb_modi(conn, cur, SQL)
+    SQL = f"SELECT Question, qAnswer, qType, userAnswer, userName, qOption, qAnalysis, SourceType from {st.session_state.examFinalTable} where ID = {userQuesID}"
+    judTable = mdb_sel(cur, SQL)[0]
+    if judTable[1] == judTable[3]:
+        SQL = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
+        mdb_modi(conn, cur, SQL)
+    else:
+        SQL = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
+        if mdb_sel(cur, SQL):
+            SQL = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{judTable[3]}' where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
+            mdb_modi(conn, cur, SQL)
+        else:
+            SQL = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}')"
+            mdb_ins(conn, cur, SQL)
+    mdb_del(conn, cur, SQL="DELETE from morepractise where WrongTime < 1")
 
 
 @st.dialog("考试成绩")
