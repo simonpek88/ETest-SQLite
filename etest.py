@@ -2532,7 +2532,6 @@ def displayBigTimeCircle():
 
 @st.fragment
 def displayVisitCounter():
-    #components.html(open("./ClockScript/VisitCounter.txt", "r", encoding="utf-8").read(), height=100)
     SQL = "SELECT pyLM from verinfo where pyFile = 'visitcounter'"
     visitcount = mdb_sel(cur, SQL)[0][0]
     countScript = (open("./ClockScript/FlipNumber.txt", "r", encoding="utf-8").read()).replace("visitcount", str(visitcount))
