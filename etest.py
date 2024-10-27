@@ -2988,9 +2988,9 @@ def resetPassword():
                 with rCol3:
                     rUserType = False
                     if rows[0][1] == "admin":
-                        rUserType = sac.switch(label="管理员", value=True, on_label="On", align='center', size='md')
+                        rUserType = sac.switch(label="管理员", value=True, on_label="On", align='start', size='md')
                     elif rows[0][1] == "user":
-                        rUserType = sac.switch(label="管理员", value=False, on_label="On", align='center', size='md')
+                        rUserType = sac.switch(label="管理员", value=False, on_label="On", align='start', size='md')
                 st.write("重置类型")
                 rOption1 = st.checkbox("密码", value=False)
                 rOption2 = st.checkbox("账户类型", value=False)
