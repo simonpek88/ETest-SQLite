@@ -1,43 +1,94 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="./css/glowintext-style.css">
-<style>
-    h1 {
-    font-size: 40px;
-    color: rgb(201, 38, 201);
-    text-align: center;
-    }
-    h2 {
-    font-size: 22px;
-    color: black;
-    text-align: center;
-    }
-    h3 {
-    font-size: 18px;
-    color: black;
-    text-align: center;
-    }
-</style>
+    <style>
+        h1 {
+            font-size: 36px;
+            color: rgb(180, 38, 135);
+            text-align: center;
+        }
+        h2 {
+            font-size: 20px;
+            color: black;
+            text-align: center;
+        }
+        h3 {
+            font-size: 16px;
+            color: black;
+            text-align: center;
+        }
+        body {
+        display: flex;
+        flex-direction: column;
+        height: 60vh;
+        justify-content: center;
+        align-items: center;
+        background-color: #fff;
+        }
+
+        h1, h2, h3 {
+        margin: 0em 1em 1em 0em;
+        }
+
+        .glowIn {
+        color: rgb(30, 25, 25);
+        }
+        .glowInTitle {
+        color: rgb(180, 38, 135);
+        }
+        .glowIn span {
+        animation: glow-in 0.8s both;
+        }
+        .glowInTitle span {
+        animation: glow-in 1.2s both;
+        }
+
+        @keyframes glow-in {
+            from {
+                opacity: 0;
+            }
+            65% {
+                opacity: 1;
+                text-shadow: 0 0 15px white;
+            }
+            75% {
+                opacity: 1;
+            }
+            to {
+                opacity: 0.8;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1 class="glowIn">软件名称</h1>
-<h2 class="glowIn">软件版本</h2>
-<h2 class="glowIn">更新时间</h2>
-<h3 class="glowIn">用户评价</h3>
-<script>
-    "use strict";
-    let glowInTexts = document.querySelectorAll(".glowIn");
-    glowInTexts.forEach(glowInText => {
-        let letters = glowInText.textContent.split("");
-        glowInText.textContent = "";
-        letters.forEach((letter, i) => {
-            let span = document.createElement("span");
-            span.textContent = letter;
-            span.style.animationDelay = `${i * 0.07}s`;
-            glowInText.append(span);
+    <h1 class="glowInTitle">软件名称</h1>
+    <h2 class="glowIn">软件版本</h2>
+    <h2 class="glowIn">更新时间</h2>
+    <h3 class="glowIn">更新内容</h3>
+    <script>
+        "use strict";
+        let glowInTexts1 = document.querySelectorAll(".glowInTitle");
+        let glowInTexts2 = document.querySelectorAll(".glowIn");
+        glowInTexts1.forEach(glowInText1 => {
+            let letters = glowInText1.textContent.split("");
+            glowInText1.textContent = "";
+            letters.forEach((letter, i) => {
+                let span = document.createElement("span");
+                span.textContent = letter;
+                span.style.animationDelay = `${i * 0.07}s`;
+                glowInText1.append(span);
+            });
         });
-    });
-</script>
+        glowInTexts2.forEach(glowInText2 => {
+            let letters = glowInText2.textContent.split("");
+            glowInText2.textContent = "";
+            letters.forEach((letter, i) => {
+                let span = document.createElement("span");
+                span.textContent = letter;
+                span.style.animationDelay = `${i * 0.07}s`;
+                glowInText2.append(span);
+            });
+        });
+    </script>
 </body>
 </html>

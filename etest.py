@@ -2536,7 +2536,7 @@ def displayVisitCounter():
     SQL = "SELECT pyLM from verinfo where pyFile = 'visitcounter'"
     visitcount = mdb_sel(cur, SQL)[0][0]
     countScript = (open("./ClockScript/FlipNumber.txt", "r", encoding="utf-8").read()).replace("visitcount", str(visitcount))
-    components.html(countScript, height=100)
+    components.html(countScript, height=40)
 
 
 @st.fragment
@@ -2546,8 +2546,9 @@ def displayAppInfo():
     verinfo, verLM, likeCM = getVerInfo()
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
-    infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
-    #components.html(infoStr)
+    #infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['New']} 练习模式为每个用户增加单独的题型设置并简化操作")
+    components.html(infoStr, height=300)
 
 
 @st.dialog("交卷")
@@ -3049,7 +3050,7 @@ def displayKeyAction():
                 st.error("密码错误, 请重新输入")
 
 
-global appName, emoji
+global appName, emoji, updateType
 
 conn = apsw.Connection("./DB/ETest_enc.db")
 cur = conn.cursor()
@@ -3147,20 +3148,20 @@ if st.session_state.logged_in:
     if selected == "主页":
         #displayBigTime()
         displayBigTimeCircle()
-        st.markdown(f"<font face='微软雅黑' color=purple size=8><center>**{appName}**</center></font>", unsafe_allow_html=True)
-        verinfo, verLM, likeCM = getVerInfo()
+        #st.markdown(f"<font face='微软雅黑' color=purple size=8><center>**{appName}**</center></font>", unsafe_allow_html=True)
+        #verinfo, verLM, likeCM = getVerInfo()
         #st.subheader(f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
         #st.subheader(f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
         #st.subheader(f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]")
 
-        st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
-        st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
         #st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
-        st.markdown(f"<font size=4><center>**更新内容: {updateType['New']}/{updateType['Optimize']} 练习模式为每个用户增加单独的题型设置并简化操作**</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"<font size=4><center>**更新内容: {updateType['New']}/{updateType['Optimize']} 练习模式为每个用户增加单独的题型设置并简化操作**</center></font>", unsafe_allow_html=True)
 
-        #displayAppInfo()
-
+        displayAppInfo()
         displayVisitCounter()
+
     elif selected == "生成题库" or selected == "选择考试":
         if st.session_state.examType == "training":
             #st.write("### :red[生成练习题库]")

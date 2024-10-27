@@ -17,8 +17,6 @@
 
     console.log(threePIByTwo);
 
-    let amOrPm = 'AM';
-
     const canvasBg = '#fff';
 
     const hourActiveColor = '#39D98A',
@@ -51,12 +49,6 @@
         let sec = date.getSeconds();
         let ms = date.getMilliseconds();
 
-        if(hr > 12)
-        {
-            amOrPm = 'PM';
-            hr -= 12;
-        }
-
         let radH = 0.000008333 * ( ( hr * 60 * 60 * 1000 ) + ( min * 60 * 1000 ) + ( sec * 1000 ) + ms );
         let radM = 0.0001 * ( ( min * 60 * 1000 ) + ( sec * 1000 ) + ms );
         let radS = 0.006 * ( ( sec * 1000 ) + ms );
@@ -74,7 +66,7 @@
         drawCircle(centerX, centerY, 88, threePIByTwo, rad(radS) + threePIByTwo, false, secondActiveColor, 'stroke', 30);
 
         drawCircle(centerX, centerY, 32, 0, 360, false, timerBg, 'fill', '50');
-        drawText(`${hr.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")} ${amOrPm}`, canvas.width / 2 - 55, canvas.height / 2 + 15, '#ffffff', '24px');
+        drawText(`${hr.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")} `, canvas.width / 2 - 34, canvas.height / 2 + 10, '#ffffff', '26px');
 
         window.requestAnimationFrame(draw);
     }
