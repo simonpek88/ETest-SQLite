@@ -71,7 +71,7 @@ def delOutdatedTable():
 
 
 def changePassword():
-    st.write("### :red[修改密码]")
+    st.write("### :red[密码修改]")
     changePW = st.empty()
     with changePW.container(border=True):
         oldPassword = st.text_input("请输入原密码", max_chars=8, type="password", autocomplete="off")
@@ -101,7 +101,7 @@ def changePassword():
             st.error("原密码不正确")
     else:
         st.warning("原密码不能为空")
-    updateActionUser(st.session_state.userName, "修改密码", st.session_state.loginTime)
+    updateActionUser(st.session_state.userName, "密码修改", st.session_state.loginTime)
 
 
 @st.cache_data
@@ -374,6 +374,7 @@ def resultExcel():
 
 
 def examResulttoExcel():
+    st.subheader("考试成绩导出", divider="blue")
     searchOption = []
     SQL = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
     rows = mdb_sel(cur, SQL)
@@ -1618,7 +1619,7 @@ def studyinfoDetail():
 
 
 def userStatus():
-    st.subheader(":violet[在线用户状态]", divider="rainbow")
+    st.subheader(":violet[在线用户状态]", divider="green")
     if st.session_state.userPwRecheck:
         bc = sac.segmented(
             items=[
@@ -1706,6 +1707,7 @@ def actionQuesModify(row):
 
 
 def quesModify():
+    st.subheader(":green[试题修改]", divider="blue")
     col1, col2 = st.columns(2)
     chosenTable = col1.selectbox(":red[选择题库]", ["站室题库", "公共题库"], index=None)
     quesID = col2.number_input(":blue[题目ID]", min_value=0, step=1)
@@ -2973,7 +2975,7 @@ def verifyUserPW(vUserName, vUserPW):
 
 
 def resetPassword():
-    st.write("### :orange[密码重置及更改账户类型]")
+    st.subheader(":orange[密码重置及更改账户类型]", divider="red")
     if st.session_state.userPwRecheck:
         st.write(":red[**重置用户信息**]")
         rCol1, rCol2, rCol3 = st.columns(3)
@@ -3031,7 +3033,7 @@ def actionResetUserPW(rUserName, rOption1, rOption2, rUserType):
 
 
 def displayKeyAction():
-    st.subheader(":red[操作日志]", divider="violet")
+    st.subheader(":violet[操作日志]", divider="red")
     if st.session_state.userPwRecheck:
         SQL = "SELECT userName, userCName, StationCN, userAction, datetime(actionDate, 'unixepoch', 'localtime') from keyactionlog order by actionDate DESC"
         rows = mdb_sel(cur, SQL)
@@ -3076,7 +3078,7 @@ if st.session_state.logged_in:
                     sac.MenuItem('开始考试', icon='pencil-square'),
                 ]),
                 sac.MenuItem('账户', icon='person-gear', children=[
-                    sac.MenuItem('修改密码', icon='key', disabled=True),
+                    sac.MenuItem('密码修改', icon='key', disabled=True),
                     sac.MenuItem('登出', icon='box-arrow-right'),
                 ]),
                 sac.MenuItem('关于', icon='layout-wtf', children=[
@@ -3107,7 +3109,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('操作日志', icon='incognito'),
                     ]),
                     sac.MenuItem('账户', icon='person-gear', children=[
-                        sac.MenuItem('修改密码', icon='key'),
+                        sac.MenuItem('密码修改', icon='key'),
                         sac.MenuItem('密码重置', icon='bootstrap-reboot'),
                         sac.MenuItem('登出', icon='box-arrow-right'),
                     ]),
@@ -3128,7 +3130,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('证书及榜单', icon='bookmark-star'),
                     ]),
                     sac.MenuItem('账户', icon='person-gear', children=[
-                        sac.MenuItem('修改密码', icon='key'),
+                        sac.MenuItem('密码修改', icon='key'),
                         sac.MenuItem('登出', icon='box-arrow-right'),
                     ]),
                     sac.MenuItem('关于', icon='layout-wtf', children=[
@@ -3154,7 +3156,7 @@ if st.session_state.logged_in:
         st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
         st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
         #st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
-        st.markdown(f"<font size=4><center>**更新内容: {updateType['New']}/{updateType['Optimize']} 练习模式为每个用户增加单独的题型设置并简化操作和优化代码**</center></font>", unsafe_allow_html=True)
+        st.markdown(f"<font size=4><center>**更新内容: {updateType['New']}/{updateType['Optimize']} 练习模式为每个用户增加单独的题型设置并简化操作**</center></font>", unsafe_allow_html=True)
 
         #displayAppInfo()
 
@@ -3163,7 +3165,7 @@ if st.session_state.logged_in:
         if st.session_state.examType == "training":
             #st.write("### :red[生成练习题库]")
             #st.markdown("<font face='微软雅黑' color=blue size=20><center>**生成练习题库**</center></font>", unsafe_allow_html=True)
-            st.markdown("### <font face='微软雅黑' color=blue><center>生成练习题库</center></font>", unsafe_allow_html=True)
+            st.markdown("### <font face='微软雅黑' color=teal><center>生成练习题库</center></font>", unsafe_allow_html=True)
         elif st.session_state.examType == "exam":
             #st.markdown("<font face='微软雅黑' color=red size=20><center>**选择考试**</center></font>", unsafe_allow_html=True)
             st.markdown("### <font face='微软雅黑' color=red><center>选择考试</center></font>", unsafe_allow_html=True)
@@ -3278,7 +3280,7 @@ if st.session_state.logged_in:
             elif st.session_state.examType == "exam":
                 st.info("请先选择考试场次并点击开始考试", icon="ℹ️")
     elif selected == "数据录入":
-        st.write("### :orange[基础数据录入]")
+        st.subheader(":orange[基础数据录入]", divider="violet")
         #selectFunc = st.selectbox("请选择数据表", ["章节信息", "站室专用题库", "公共题库", "考试场次", "站室", "用户"], index=None, help="请选择数据表")
         selectFunc = st.selectbox("请选择数据表", ["考试场次", "站室", "用户"], index=None, help="请选择数据表")
         stationCName = getStationCNALL()
@@ -3303,7 +3305,7 @@ if st.session_state.logged_in:
     elif selected == "题库功能":
         dbfunc()
     elif selected == "参数设置":
-        st.write("### :green[系统参数设置]")
+        st.subheader(":green[系统参数设置]")
         updateActionUser(st.session_state.userName, "设置系统参数", st.session_state.loginTime)
         with st.expander("# :blue[考试参数设置]"):
             col1, col2, col3, col4 = st.columns(4)
@@ -3401,7 +3403,7 @@ if st.session_state.logged_in:
             buttonConfirm = st.button("确认重置", type="secondary", on_click=setupReset)
             updateActionUser(st.session_state.userName, "重置所有设置", st.session_state.loginTime)
     elif selected == "信息查询":
-        st.write("### :violet[信息查询]")
+        st.subheader(":violet[信息查询]", divider="orange")
         selectFunc = st.selectbox("查询项目", ["考试信息", "未参加考试人员", "答题解析"], index=None)
         if selectFunc == "考试信息":
             queryExamResult()
@@ -3430,7 +3432,7 @@ if st.session_state.logged_in:
         studyinfo()
     elif selected == "证书及榜单":
         userRanking()
-    elif selected == "修改密码":
+    elif selected == "密码修改":
         changePassword()
     elif selected == "密码重置":
         resetPassword()
