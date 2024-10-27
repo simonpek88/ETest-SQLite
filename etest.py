@@ -187,6 +187,7 @@ def login():
                 st.session_state.StationCN = result[0][3]
                 st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
                 st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
+                st.session_state.clockType = bool(getParam("时钟样式", st.session_state.StationCN))
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
                 st.session_state.loginTime = int(time.time())
@@ -1981,8 +1982,7 @@ def updateAnswer(userQuesID):
         mdb_modi(conn, cur, SQL)
         SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
         mdb_modi(conn, cur, SQL)
-        if st.session_state.debug:
-            st.session_state.tooltipColor = "#ed872d"
+        st.session_state.tooltipColor = "#ed872d"
     else:
         SQL = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
         if mdb_sel(cur, SQL):
@@ -1991,8 +1991,7 @@ def updateAnswer(userQuesID):
         else:
             SQL = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}')"
             mdb_ins(conn, cur, SQL)
-        if st.session_state.debug:
-            st.session_state.tooltipColor = "#8581d9"
+        st.session_state.tooltipColor = "#8581d9"
     mdb_del(conn, cur, SQL="DELETE from morepractise where WrongTime < 1")
 
 
@@ -2526,6 +2525,11 @@ def displaySmallTime():
 
 
 @st.fragment
+def displaySmallClock():
+    components.html(open("./ClockScript/Clock-Number.txt", "r", encoding="utf-8").read(), height=30)
+
+
+@st.fragment
 def displayBigTimeCircle():
     components.html(open("./ClockScript/Clock-Big-Circle.txt", "r", encoding="utf-8").read(), height=260)
 
@@ -2734,6 +2738,8 @@ def updateSwitchOption(quesType):
     mdb_modi(conn, cur, SQL)
     if quesType == "测试模式":
         st.session_state.debug = bool(st.session_state[quesType])
+    if quesType == "时钟样式":
+        st.session_state.clockType = bool(st.session_state[quesType])
     #st.success(f"{quesType} 设置更新成功")
 
 
@@ -3069,7 +3075,10 @@ if "logged_in" not in st.session_state:
 
 if st.session_state.logged_in:
     with st.sidebar:
-        displaySmallTime()
+        if st.session_state.clockType:
+            displaySmallTime()
+        else:
+            displaySmallClock()
         if st.session_state.examType == "exam":
             selected = sac.menu([
                 sac.MenuItem('主页', icon='house'),
@@ -3388,6 +3397,9 @@ if st.session_state.logged_in:
             for row in rows:
                 if row[0] == "显示考试时间" or row[0] == "A.I.答案解析更新至题库" or row[0] == "测试模式":
                     sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
+                    updateSwitchOption(row[0])
+                elif row[0] == "时钟样式":
+                    sac.switch(label=row[0], value=row[1], key=row[0], on_label="翻牌", off_label="数字", align='start', size='md')
                     updateSwitchOption(row[0])
             AIModel, AIModelIndex = [], 0
             SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
