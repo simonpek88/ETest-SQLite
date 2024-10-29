@@ -11,7 +11,7 @@ outputQues/
 Images/Certificate/
 Fonts/
 html/
-Upload/
+venv/
 InputQues/*_用户上传_*.xlsx
 DB/*.db-shm
 DB/*.db-wal
