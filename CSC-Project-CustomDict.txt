@@ -9,7 +9,9 @@ apsw
 backface
 breakline
 clearex
+clocktype
 commquestions
+createtextfile
 crsetup
 dasetup
 datainlist
