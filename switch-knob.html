@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Switch Knob</title>
+  <style>
+    html, body {
+        width: 0%;
+        height: 0%;
+    }
+
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        color: #333;
+        font-size: 11px;
+        background: #fefefe;
+        background: -moz-linear-gradient(top, #fefefe 0%, #dbe5e7 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #fefefe), color-stop(100%, #dbe5e7));
+        background: -webkit-linear-gradient(top, #fefefe 0%, #dbe5e7 100%);
+        background: -o-linear-gradient(top, #fefefe 0%, #dbe5e7 100%);
+        background-attachment: fixed;
+    }
+
+    .container {
+        width: 115px;
+        width: 115px;
+        margin: 20px auto 0;
+    }
+
+    .container .origin {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 111;
+        width: 2px;
+        height: 2px;
+        margin: -1px 0 0 -1px;
+        background-color: #f50;
+    }
+
+    .de {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        position: relative;
+        width: 115px;
+        height: 115px;
+        border-radius: 100%;
+        box-shadow: 0 0 12px rgba(0, 0, 0, .1);
+        background-color: transparent;
+    }
+
+    .de .den, .de .dene, .de .denem, .de .deneme, .de .light, .de .dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+    }
+
+    .den {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        margin: -55px 0 0 -55px;
+        border-radius: 100%;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, .6), 0 1px 10px rgba(255, 255, 255, 1);
+
+        background: #888888;
+        background: -moz-radial-gradient(center, ellipse cover, #888888 0%, #333333 100%);
+        background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #888888), color-stop(100%, #333333));
+        background: -webkit-radial-gradient(center, ellipse cover, #888888 0%, #333333 100%);
+        background: -o-radial-gradient(center, ellipse cover, #888888 0%, #333333 100%);
+    }
+
+    .dene {
+        z-index: 4;
+        width: 70px;
+        height: 70px;
+        margin: -35px 0 0 -35px;
+        border-radius: 100%;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .4), 0 2px 6px rgba(0, 0, 0, .85);
+
+        background: #f2f6f5;
+        background: -moz-linear-gradient(top, #f2f6f5 0%, #cbd5d6 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #f2f6f5), color-stop(100%, #cbd5d6));
+        background: -webkit-linear-gradient(top, #f2f6f5 0%, #cbd5d6 100%);
+        background: -o-linear-gradient(top, #f2f6f5 0%, #cbd5d6 100%);
+    }
+
+    .denem {
+        width: 60px;
+        height: 60px;
+        margin: -30px 0 0 -30px;
+        border-radius: 100%;
+
+        background: #cbd5d6;
+        background: -moz-linear-gradient(top, #cbd5d6 0%, #f2f6f5 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #cbd5d6), color-stop(100%, #f2f6f5));
+        background: -webkit-linear-gradient(top, #cbd5d6 0%, #f2f6f5 100%);
+        background: -o-linear-gradient(top, #cbd5d6 0%, #f2f6f5 100%);
+    }
+
+    .deneme {
+        width: 50px;
+        height: 50px;
+        margin: -25px 0 0 -25px;
+        border-radius: 100%;
+        box-shadow: inset 0 1px 2px rgba(255, 255, 255, .6), 0 4px 10px rgba(0, 0, 0, .9);
+
+        background: #eef7f6;
+        background: -moz-linear-gradient(top, #eef7f6 0%, #8d989a 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #eef7f6), color-stop(100%, #8d989a));
+        background: -webkit-linear-gradient(top, #eef7f6 0%, #8d989a 100%);
+        background: -o-linear-gradient(top, #eef7f6 0%, #8d989a 100%);
+    }
+
+    .den .switch {
+        z-index: 3;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .den .switch label {
+        z-index: 2;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 50%;
+        height: 35px;
+        margin-top: -18px;
+        -moz-transform-origin: 0% 50%;
+        -webkit-transform-origin: 0% 50%;
+        -o-transform-origin: 0% 50%;
+        -ms-transform-origin: 0% 50%;
+        transform-origin: 0% 50%;
+    }
+
+    .den .switch label:after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 1px;
+        width: 100%;
+        height: 15px;
+        -moz-transform: rotate(-30deg);
+        -webkit-transform: rotate(-30deg);
+        -o-transform: rotate(-30deg);
+        -ms-transform: rotate(-30deg);
+        transform: rotate(-30deg);
+    }
+
+    .den .switch label:before {
+        content: "";
+        position: absolute;
+        bottom: 3px;
+        left: 1px;
+        width: 100%;
+        height: 15px;
+        -moz-transform: rotate(30deg);
+        -webkit-transform: rotate(30deg);
+        -o-transform: rotate(30deg);
+        -ms-transform: rotate(30deg);
+        transform: rotate(30deg);
+    }
+
+    .den .switch label span {
+        z-index: 2;
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 20px;
+        height: 100%;
+        font-weight: bold;
+        font-size: 11px;
+        line-height: 35px;
+        text-align: center;
+        color: #eee;
+        text-shadow: 0 1px 0 #444;
+    }
+
+    .den .switch label:nth-child(1) {
+        -moz-transform: rotate(-90deg);
+        -webkit-transform: rotate(-90deg);
+        -o-transform: rotate(-90deg);
+        -ms-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+    }
+
+    .den .switch label:nth-child(1) span {
+        right: 2px;
+        font-size: 11px;
+        -moz-transform: rotate(90deg);
+        -webkit-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    .den .switch label:nth-child(2) {
+        -moz-transform: rotate(-30deg);
+        -webkit-transform: rotate(-30deg);
+        -o-transform: rotate(-30deg);
+        -ms-transform: rotate(-30deg);
+        transform: rotate(-30deg);
+    }
+
+    .den .switch label:nth-child(2) span {
+        -moz-transform: rotate(30deg);
+        -webkit-transform: rotate(30deg);
+        -o-transform: rotate(30deg);
+        -ms-transform: rotate(30deg);
+        transform: rotate(30deg);
+    }
+
+    .den .switch label:nth-child(3) {
+        -moz-transform: rotate(30deg);
+        -webkit-transform: rotate(30deg);
+        -o-transform: rotate(30deg);
+        -ms-transform: rotate(30deg);
+        transform: rotate(30deg);
+    }
+
+    .den .switch label:nth-child(3) span {
+        -moz-transform: rotate(-30deg);
+        -webkit-transform: rotate(-30deg);
+        -o-transform: rotate(-30deg);
+        -ms-transform: rotate(-30deg);
+        transform: rotate(-30deg);
+    }
+
+    .den .switch label:nth-child(4) {
+        -moz-transform: rotate(90deg);
+        -webkit-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    .den .switch label:nth-child(4) span {
+        -moz-transform: rotate(-90deg);
+        -webkit-transform: rotate(-90deg);
+        -o-transform: rotate(-90deg);
+        -ms-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+    }
+
+    .den .switch label:nth-child(5) {
+        -moz-transform: rotate(150deg);
+        -webkit-transform: rotate(150deg);
+        -o-transform: rotate(150deg);
+        -ms-transform: rotate(150deg);
+        transform: rotate(150deg);
+    }
+
+    .den .switch label:nth-child(5) span {
+        -moz-transform: rotate(-150deg);
+        -webkit-transform: rotate(-150deg);
+        -o-transform: rotate(-150deg);
+        -ms-transform: rotate(-150deg);
+        transform: rotate(-150deg);
+    }
+
+    .den .switch label:nth-child(6) {
+        -moz-transform: rotate(210deg);
+        -webkit-transform: rotate(210deg);
+        -o-transform: rotate(210deg);
+        -ms-transform: rotate(210deg);
+        transform: rotate(210deg);
+    }
+
+    .den .switch label:nth-child(6) span {
+        -moz-transform: rotate(-210deg);
+        -webkit-transform: rotate(-210deg);
+        -o-transform: rotate(-210deg);
+        -ms-transform: rotate(-210deg);
+        transform: rotate(-210deg);
+    }
+
+    .den .switch input {
+        position: absolute;
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    /* SWITCH LIGHT */
+
+    .den .light {
+        z-index: 1;
+        width: 50%;
+        height: 50px;
+        margin-top: -25px;
+        -moz-transform-origin: 0% 50%;
+        -webkit-transform-origin: 0% 50%;
+        -o-transform-origin: 0% 50%;
+        -ms-transform-origin: 0% 50%;
+        transform-origin: 0% 50%;
+        -moz-transform: rotate(-90deg);
+        -webkit-transform: rotate(-90deg);
+        -o-transform: rotate(-90deg);
+        -ms-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+        -webkit-transition: all .5s;
+        -moz-transition: all .5s;
+        -o-transition: all .5s;
+        -ms-transition: all .5s;
+        transition: all .5s;
+    }
+
+    .den .light span {
+        opacity: .4;
+        position: absolute;
+        top: 0;
+        left: 7px;
+        width: 50px;
+        height: 50px;
+        background: -moz-radial-gradient(center, ellipse cover, rgba(184, 163, 204, 1) 0%, rgba(159, 197, 224, 0.42) 42%, rgba(111, 113, 179, 0) 72%, rgba(67, 34, 137, 0) 100%);
+        background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(184, 163, 204, 1)), color-stop(42%, rgba(159, 197, 224, 0.42)), color-stop(72%, rgba(111, 113, 179, 0)), color-stop(100%, rgba(67, 34, 137, 0)));
+        background: -webkit-radial-gradient(center, ellipse cover, rgba(184, 163, 204, 1) 0%, rgba(159, 197, 224, 0.42) 42%, rgba(111, 113, 179, 0) 72%, rgba(67, 34, 137, 0) 100%);
+        background: -o-radial-gradient(center, ellipse cover, rgba(184, 163, 204, 1) 0%, rgba(159, 197, 224, 0.42) 42%, rgba(111, 113, 179, 0) 72%, rgba(67, 34, 137, 0) 100%);
+    }
+
+    /* SWITCH LIGHT POSITION */
+
+    .den #switch_off:checked ~ .light {
+        -moz-transform: rotate(-90deg);
+        -webkit-transform: rotate(-90deg);
+        -o-transform: rotate(-90deg);
+        -ms-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+    }
+
+    .den #switch_1:checked ~ .light {
+        -moz-transform: rotate(-30deg);
+        -webkit-transform: rotate(-30deg);
+        -o-transform: rotate(-30deg);
+        -ms-transform: rotate(-30deg);
+        transform: rotate(-30deg);
+    }
+
+    .den #switch_2:checked ~ .light {
+        -moz-transform: rotate(30deg);
+        -webkit-transform: rotate(30deg);
+        -o-transform: rotate(30deg);
+        -ms-transform: rotate(30deg);
+        transform: rotate(30deg);
+    }
+
+    .den #switch_3:checked ~ .light {
+        -moz-transform: rotate(90deg);
+        -webkit-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    .den #switch_4:checked ~ .light {
+        -moz-transform: rotate(150deg);
+        -webkit-transform: rotate(150deg);
+        -o-transform: rotate(150deg);
+        -ms-transform: rotate(150deg);
+        transform: rotate(150deg);
+    }
+
+    .den #switch_5:checked ~ .light {
+        -moz-transform: rotate(210deg);
+        -webkit-transform: rotate(210deg);
+        -o-transform: rotate(210deg);
+        -ms-transform: rotate(210deg);
+        transform: rotate(210deg);
+    }
+
+    /* SWITCH LIGHT */
+
+    .den .dot {
+        z-index: 6;
+        width: 50%;
+        height: 6px;
+        margin-top: -3px;
+        -moz-transform-origin: 0% 50%;
+        -webkit-transform-origin: 0% 50%;
+        -o-transform-origin: 0% 50%;
+        -ms-transform-origin: 0% 50%;
+        transform-origin: 0% 50%;
+        -webkit-transition: all .5s;
+        -moz-transition: all .5s;
+        -o-transition: all .5s;
+        transition: all .5s;
+    }
+
+    .den .dot span {
+        position: absolute;
+        top: 0;
+        left: 15px;
+        width: 6px;
+        height: 6px;
+        border-radius: 70%;
+        background: #31c939;
+        background: -moz-linear-gradient(top, #31c939 0%, #269e4a 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #31c939), color-stop(100%, #269e4a));
+        background: -webkit-linear-gradient(top, #31c939 0%, #269e4a 100%);
+        background: -o-linear-gradient(top, #31c939 0%, #269e4a 100%);
+    }
+
+    /* SWITCH LIGHT POSITION */
+
+    .den #switch_0:checked ~ .dot {
+        -moz-transform: rotate(-90deg);
+        -webkit-transform: rotate(-90deg);
+        -o-transform: rotate(-90deg);
+        -ms-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+    }
+
+    .den #switch_0:checked ~ .dot span {
+        -moz-transform: rotate(90deg);
+        -webkit-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    .den #switch_1:checked ~ .dot {
+        -moz-transform: rotate(-30deg);
+        -webkit-transform: rotate(-30deg);
+        -o-transform: rotate(-30deg);
+        -ms-transform: rotate(-30deg);
+        transform: rotate(-30deg);
+    }
+
+    .den #switch_1:checked ~ .dot span {
+        opacity: .9;
+        -moz-transform: rotate(30deg);
+        -webkit-transform: rotate(30deg);
+        -o-transform: rotate(30deg);
+        -ms-transform: rotate(30deg);
+        transform: rotate(30deg);
+    }
+
+    .den #switch_2:checked ~ .dot {
+        -moz-transform: rotate(30deg);
+        -webkit-transform: rotate(30deg);
+        -o-transform: rotate(30deg);
+        -ms-transform: rotate(30deg);
+        transform: rotate(30deg);
+    }
+
+    .den #switch_2:checked ~ .dot span {
+        opacity: .5;
+        -moz-transform: rotate(-30deg);
+        -webkit-transform: rotate(-30deg);
+        -o-transform: rotate(-30deg);
+        -ms-transform: rotate(-30deg);
+        transform: rotate(-30deg);
+    }
+
+    .den #switch_3:checked ~ .dot {
+        -moz-transform: rotate(90deg);
+        -webkit-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    .den #switch_3:checked ~ .dot span {
+        opacity: .4;
+        -moz-transform: rotate(-90deg);
+        -webkit-transform: rotate(-90deg);
+        -o-transform: rotate(-90deg);
+        -ms-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+    }
+
+    .den #switch_4:checked ~ .dot {
+        -moz-transform: rotate(150deg);
+        -webkit-transform: rotate(150deg);
+        -o-transform: rotate(150deg);
+        -ms-transform: rotate(150deg);
+        transform: rotate(150deg);
+    }
+
+    .den #switch_4:checked ~ .dot span {
+        opacity: .5;
+        -moz-transform: rotate(-150deg);
+        -webkit-transform: rotate(-150deg);
+        -o-transform: rotate(-150deg);
+        -ms-transform: rotate(-150deg);
+        transform: rotate(-150deg);
+    }
+
+    .den #switch_5:checked ~ .dot {
+        -moz-transform: rotate(210deg);
+        -webkit-transform: rotate(210deg);
+        -o-transform: rotate(210deg);
+        -ms-transform: rotate(210deg);
+        transform: rotate(210deg);
+    }
+
+    .den #switch_5:checked ~ .dot span {
+        opacity: .9;
+        -moz-transform: rotate(-210deg);
+        -webkit-transform: rotate(-210deg);
+        -o-transform: rotate(-210deg);
+        -ms-transform: rotate(-210deg);
+        transform: rotate(-210deg);
+    }
+
+    /* LINE */
+
+    .den hr.line {
+        z-index: 1;
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        height: 0;
+        margin-top: -1px;
+        border-width: 1px 0;
+        border-style: solid;
+        border-top-color: #3c3d3f;
+        border-bottom-color: #666769;
+    }
+
+    .den hr.line:nth-child(1) {
+        -moz-transform: rotate(-60deg);
+        -webkit-transform: rotate(-60deg);
+        -o-transform: rotate(-60deg);
+        -ms-transform: rotate(-60deg);
+        transform: rotate(-60deg);
+    }
+
+    .den hr.line:nth-child(2) {
+        -moz-transform: rotate(60deg);
+        -webkit-transform: rotate(60deg);
+        -o-transform: rotate(60deg);
+        -ms-transform: rotate(60deg);
+        transform: rotate(60deg);
+    }
+  </style>
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="container">
+
+    <!-- OUTER SHADOW -->
+    <div class="de">
+
+        <!-- TEXT -->
+        <div class="den">
+
+            <!-- LINE -->
+            <hr class="line">
+            <hr class="line">
+            <hr class="line">
+
+            <!-- SWITCH -->
+            <div class="switch">
+
+                <!-- TEXT -->
+                <label for="switch_0"><span>OFF</span></label>
+                <label for="switch_1"><span>1</span></label>
+                <label for="switch_2"><span>2</span></label>
+                <label for="switch_3"><span>3</span></label>
+                <label for="switch_4"><span>4</span></label>
+                <label for="switch_5"><span>5</span></label>
+
+                <!-- INPUT -->
+                <input id="switch_0" name="switch" type="radio">
+                <input id="switch_1" name="switch" type="radio">
+                <input id="switch_2" name="switch" type="radio">
+                <input id="switch_3" name="switch" type="radio">
+                <input id="switch_4" name="switch" type="radio">
+                <input id="switch_5" name="switch" type="radio">
+
+                <!-- LIGHT -->
+                <div class="light"><span></span></div>
+
+                <!-- DOT -->
+                <div class="dot"><span></span></div>
+
+                <!-- CENTER -->
+                <div class="dene">
+                    <div class="denem">
+                        <div class="deneme">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- partial -->
+<script>
+    var clocktype = window.localStorage.getItem("ClockType")
+    if (clocktype == null) {
+        clocktype = 1;
+        window.localStorage.setItem("ClockType", clocktype);
+    }
+    console.log("ClockType: ", clocktype);
+    var radios = document.getElementsByName("switch");
+    for (var i = 0; i < radios.length; i++) {
+        if (i == Number(clocktype)) {
+            radios[i].checked = true;
+            console.log(i, radios[i].id, radios[i].checked);
+            break;
+        }
+    }
+    document.querySelectorAll('input[type=radio]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        let clocktypeSet = document.querySelector('input[name="switch"]:checked').id;
+        clocktypeSet = clocktypeSet.replace("switch_", "");
+        console.log("Switch里的内容是: ", clocktypeSet);
+        window.localStorage.setItem("ClockType", clocktypeSet);
+        });
+    });
+</script>
+</body>
+</html>
