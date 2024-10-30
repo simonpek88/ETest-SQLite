@@ -751,6 +751,8 @@ def dbinputSubmit(tarTable, orgTable):
                 if singleQues[0] is not None:
                     cur.execute(SQL, singleQues)
             listinsheet.close()
+            if each.find("_用户上传_") != -1:
+                os.remove(f"./InputQues/{each}.xlsx")
             tmpTable = tmpTable + each + ", "
         SQL = f"UPDATE {tablename} set qOption = '' where qOption is Null"
         mdb_modi(conn, cur, SQL)
