@@ -427,6 +427,8 @@ def updatePyFileinfo():
 
 
 dbFile = "./DB/ETest.db"
+#dbFile = "./DB/ETest_enc.db"
+
 conn = apsw.Connection(dbFile)
 cur = conn.cursor()
 if dbFile.endswith("_enc.db"):
