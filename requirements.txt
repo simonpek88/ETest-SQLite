@@ -12,8 +12,9 @@ qianfan==0.4.9.1
 redis==5.1.0
 streamlit==1.39.0
 streamlit-antd-components==0.3.2
-streamlit-extras==0.4.7
-streamlit_folium==0.23.1
+streamlit-extras==0.5.0
+streamlit-folium==0.23.1
+streamlit-local-storage==0.0.24
 streamlit-toggle-switch==1.0.2
 streamlit-vis-timeline==0.3.0
 streamlit-keyup==0.2.4

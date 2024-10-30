@@ -25,6 +25,7 @@ from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_folium import st_folium
 from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook
+from streamlit_local_storage import LocalStorage
 
 from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
                       getUserEDKeys, mdb_del, mdb_ins, mdb_modi, mdb_sel,
@@ -2554,6 +2555,10 @@ def displayAppInfo():
     components.html(infoStr, height=300)
 
 
+def displayKnob():
+    components.html(open("./switch-knob.html", "r", encoding="utf-8").read(), height=140)
+
+
 @st.dialog("交卷")
 def submit_dialog(prompt):
     st.write(f":red[**{prompt}**]")
@@ -3057,10 +3062,12 @@ def displayKeyAction():
 
 global appName, emoji, updateType
 
-conn = apsw.Connection("./DB/ETest_enc.db")
+dbFile = "./DB/ETest.db"
+conn = apsw.Connection(dbFile)
 cur = conn.cursor()
-cur.execute("PRAGMA cipher = 'aes256cbc'")
-cur.execute("PRAGMA key = '7745'")
+if dbFile.endswith("_enc.db"):
+    cur.execute("PRAGMA cipher = 'aes256cbc'")
+    cur.execute("PRAGMA key = '7745'")
 cur.execute("PRAGMA journal_mode = WAL")
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
@@ -3401,6 +3408,15 @@ if st.session_state.logged_in:
                 elif row[0] == "时钟样式":
                     sac.switch(label=row[0], value=row[1], key=row[0], on_label="翻牌", off_label="数字", align='start', size='md')
                     updateSwitchOption(row[0])
+            tCol1, tCol2 = st.columns(2)
+            with tCol1:
+                st.write("时钟样式")
+                displayKnob()
+            localS = LocalStorage()
+            ClockType = localS.getItem("ClockType")
+            with tCol2:
+                st.write(ClockType)
+                st.write(localS.getAll())
             AIModel, AIModelIndex = [], 0
             SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
             rows = mdb_sel(cur, SQL)
