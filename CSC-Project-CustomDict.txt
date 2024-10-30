@@ -20,6 +20,7 @@ dbfunc
 dbinput
 dboutput
 dbsetup
+DBSTAT
 dcol
 deepseek
 dyna
@@ -68,6 +69,7 @@ rgba
 rowid
 scol
 selectbox
+STMTVTAB
 streamlit
 studyinfo
 turnfunc
@@ -76,6 +78,7 @@ unpad
 verinfo
 visitcount
 visitcounter
+VTAB
 xdsoft
 xfxh
 xunfei
