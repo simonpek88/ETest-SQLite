@@ -4,13 +4,9 @@ __pycache__/
 *$py.class
 
 # user defined ignore files
-ExamResult/
-QuesDoc/
-OYC/
-outputQues/
 Images/Certificate/
-Fonts/
 html/
+OYC/
 InputQues/*_用户上传_*.xlsx
 DB/*.db-shm
 DB/*.db-wal
