@@ -602,6 +602,7 @@
     for (var i = 0; i < radios.length; i++) {
         if (i == Number(clocktype)) {
             radios[i].checked = true;
+            window.localStorage.setItem("ClockType", i);
             console.log(i, radios[i].id, radios[i].checked);
             break;
         }
