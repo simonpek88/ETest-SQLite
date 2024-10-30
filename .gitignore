@@ -5,6 +5,8 @@ __pycache__/
 
 # user defined ignore files
 Images/Certificate/
+ExamResult/*.*
+outputQues/*.*
 html/
 OYC/
 CacheData/
