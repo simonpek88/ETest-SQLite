@@ -199,8 +199,8 @@ def login():
                 mdb_modi(conn, cur, SQL)
                 ClearTables()
                 if st.session_state.debug:
-                    print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
-                #cur.execute("VACUUM")
+                    #print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
+                    pass
                 if examType == "练习":
                     st.session_state.examType = "training"
                     st.session_state.examName = "练习题库"
@@ -224,7 +224,8 @@ def logout():
     mdb_modi(conn, cur, SQL)
     cur.execute("VACUUM")
     if st.session_state.debug:
-        print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
+        #print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
+        pass
 
     for key in st.session_state.keys():
         del st.session_state[key]
