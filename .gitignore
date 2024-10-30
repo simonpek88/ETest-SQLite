@@ -18,7 +18,6 @@ DB/Keys.pdf
 vsc-extensions.txt
 
 # secret configurations
-.streamlit/
 .venv/
 .idea/
 # C extensions
