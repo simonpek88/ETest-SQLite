@@ -1,5 +1,6 @@
 # coding UTF-8
 import datetime
+import json
 import os
 import re
 import time
@@ -23,9 +24,9 @@ from st_keyup import st_keyup
 from streamlit_extras.badges import badge
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_folium import st_folium
+from streamlit_javascript import st_javascript
 from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook
-from streamlit_local_storage import LocalStorage
 
 from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
                       getUserEDKeys, mdb_del, mdb_ins, mdb_modi, mdb_sel,
@@ -1983,7 +1984,7 @@ def updateAnswer(userQuesID):
         mdb_modi(conn, cur, SQL)
         SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
         mdb_modi(conn, cur, SQL)
-        st.session_state.tooltipColor = "#ed872d"
+        #st.session_state.tooltipColor = "#ed872d"
     else:
         SQL = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
         if mdb_sel(cur, SQL):
@@ -1992,7 +1993,7 @@ def updateAnswer(userQuesID):
         else:
             SQL = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}')"
             mdb_ins(conn, cur, SQL)
-        st.session_state.tooltipColor = "#8581d9"
+        #st.session_state.tooltipColor = "#8581d9"
     mdb_del(conn, cur, SQL="DELETE from morepractise where WrongTime < 1")
 
 
@@ -2517,35 +2518,35 @@ def displayTime():
 
 @st.fragment
 def displayBigTime():
-    components.html(open("./ClockScript/Clock-Big.txt", "r", encoding="utf-8").read(), height=140)
+    components.html(open("./MyComponentsScript/Clock-Big.txt", "r", encoding="utf-8").read(), height=140)
 
 
 @st.fragment
 def displaySmallTime():
-    components.html(open("./ClockScript/Clock-Small.txt", "r", encoding="utf-8").read(), height=34)
+    components.html(open("./MyComponentsScript/Clock-Small.txt", "r", encoding="utf-8").read(), height=34)
 
 
 @st.fragment
 def displaySmallClock():
-    components.html(open("./ClockScript/Clock-Number.txt", "r", encoding="utf-8").read(), height=30)
+    components.html(open("./MyComponentsScript/Clock-Number.txt", "r", encoding="utf-8").read(), height=30)
 
 
 @st.fragment
 def displayBigTimeCircle():
-    components.html(open("./ClockScript/Clock-Big-Circle.txt", "r", encoding="utf-8").read(), height=260)
+    components.html(open("./MyComponentsScript/Clock-Big-Circle.txt", "r", encoding="utf-8").read(), height=260)
 
 
 @st.fragment
 def displayVisitCounter():
     SQL = "SELECT pyLM from verinfo where pyFile = 'visitcounter'"
     visitcount = mdb_sel(cur, SQL)[0][0]
-    countScript = (open("./ClockScript/FlipNumber.txt", "r", encoding="utf-8").read()).replace("visitcount", str(visitcount))
+    countScript = (open("./MyComponentsScript/FlipNumber.txt", "r", encoding="utf-8").read()).replace("visitcount", str(visitcount))
     components.html(countScript, height=40)
 
 
 @st.fragment
 def displayAppInfo():
-    infoStr = open("./ClockScript/glowintext.txt", "r", encoding="utf-8").read()
+    infoStr = open("./MyComponentsScript/glowintext.txt", "r", encoding="utf-8").read()
     infoStr = infoStr.replace("软件名称", appName)
     verinfo, verLM, likeCM = getVerInfo()
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
@@ -2553,10 +2554,6 @@ def displayAppInfo():
     #infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
     infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['New']} 练习模式为每个用户增加单独的题型设置并简化操作")
     components.html(infoStr, height=300)
-
-
-def displayKnob():
-    components.html(open("./switch-knob.html", "r", encoding="utf-8").read(), height=140)
 
 
 @st.dialog("交卷")
@@ -3060,9 +3057,22 @@ def displayKeyAction():
                 st.error("密码错误, 请重新输入")
 
 
+def ls_get(key):
+
+    return st_javascript(f"localStorage.getItem('{key}');")
+
+
+def ls_set(key, value):
+    value = json.dumps(value, ensure_ascii=False)
+
+    return st_javascript(f"localStorage.setItem('{key}', JSON.stringify('{value}');")
+
+
 global appName, emoji, updateType
 
 dbFile = "./DB/ETest.db"
+#dbFile = "./DB/ETest_enc.db"
+
 conn = apsw.Connection(dbFile)
 cur = conn.cursor()
 if dbFile.endswith("_enc.db"):
@@ -3408,16 +3418,6 @@ if st.session_state.logged_in:
                 elif row[0] == "时钟样式":
                     sac.switch(label=row[0], value=row[1], key=row[0], on_label="翻牌", off_label="数字", align='start', size='md')
                     updateSwitchOption(row[0])
-            tCol1, tCol2 = st.columns(2)
-            with tCol1:
-                st.write("时钟样式")
-                displayKnob()
-            localS = LocalStorage()
-            #localS.setItem("ClockType", 1)
-            ClockType = localS.getItem("ClockType")
-            with tCol2:
-                st.write(ClockType)
-                st.write(localS.getAll())
             AIModel, AIModelIndex = [], 0
             SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
             rows = mdb_sel(cur, SQL)
