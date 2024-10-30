@@ -3413,6 +3413,7 @@ if st.session_state.logged_in:
                 st.write("时钟样式")
                 displayKnob()
             localS = LocalStorage()
+            #localS.setItem("ClockType", 1)
             ClockType = localS.getItem("ClockType")
             with tCol2:
                 st.write(ClockType)
