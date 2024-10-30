@@ -7,6 +7,7 @@ __pycache__/
 Images/Certificate/
 html/
 OYC/
+CacheData/
 InputQues/*_用户上传_*.xlsx
 DB/*.db-shm
 DB/*.db-wal
