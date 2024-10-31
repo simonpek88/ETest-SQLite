@@ -249,12 +249,9 @@ def aboutInfo():
         st.caption("SQLite")
         st.image("./Images/logos/sqlite.png")
     with logo4:
-        st.caption("APSW")
-        st.image("./Images/logos/apsw.png")
-    with logo5:
         st.caption("Pandas")
         st.image("./Images/logos/pandas.png")
-    with logo6:
+    with logo5:
         st.caption("Ant Design")
         st.image("./Images/logos/antd.png")
     with logo7:
@@ -297,14 +294,12 @@ def display_pypi():
     with pypi1:
         badge(type="pypi", name="streamlit")
     with pypi2:
-        badge(type="pypi", name="apsw")
-    with pypi3:
         badge(type="pypi", name="pandas")
-    with pypi4:
+    with pypi3:
         badge(type="pypi", name="streamlit_antd_components")
+    with pypi4:
+        badge(type="pypi", name="folium")
     with pypi5:
-        badge(type="pypi", name="spark_ai_python")
-    with pypi6:
         badge(type="pypi", name="qianfan")
     #badge(type="github", name="simonpek88/ETest-SQLite ")
 
