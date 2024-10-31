@@ -1337,7 +1337,7 @@ def displayUserRanking():
                 m = folium.Map(
                     location=[lat, lng],
                     tiles="https://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7",
-                    attr='高德-道路图',
+                    attr='高德-路网图',
                     zoom_start=11,
                     control_scale=True,
                     )
