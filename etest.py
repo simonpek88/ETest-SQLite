@@ -45,6 +45,7 @@ def updateKeyAction(keyAction):
         mdb_ins(conn, cur, SQL)
 
 
+# noinspection PyShadowingNames
 @st.fragment
 def getUserCName(sUserName, sType="Digit"):
     SQL = ""
@@ -72,6 +73,7 @@ def delOutdatedTable():
         mdb_del(conn, cur, SQL=f"DROP TABLE IF EXISTS {st.session_state.examFinalTable}")
 
 
+# noinspection PyShadowingNames
 def changePassword():
     st.write("### :red[密码修改]")
     changePW = st.empty()
@@ -106,6 +108,7 @@ def changePassword():
     updateActionUser(st.session_state.userName, "密码修改", st.session_state.loginTime)
 
 
+# noinspection PyShadowingNames
 @st.cache_data
 def get_userName(searchUserName=""):
     searchUserNameInfo = ""
@@ -277,7 +280,7 @@ def aboutInfo():
     sac.divider(align="center", color="blue")
     stars = sac.rate(label='Please give me a star if you like it!', align='start')
     if stars > 0:
-        st.write(f"I feel {emoji[stars - 1][1]} {emoji[stars - 1][0]}")
+        st.write(f"I feel {emoji[int(stars) - 1][1]} {emoji[int(stars) - 1][0]}")
     SQL = f"UPDATE verinfo set pyMC = pyMC + 1 where pyFile = 'thumbs-up-stars' and pyLM = {stars}"
     mdb_modi(conn, cur, SQL)
     updateActionUser(st.session_state.userName, "浏览[关于]信息", st.session_state.loginTime)
@@ -404,7 +407,6 @@ def examResulttoExcel():
                     os.remove(outputFile)
                 workbook = Workbook(outputFile)
                 worksheet = workbook.add_worksheet(f"{searchExamName}考试成绩")
-                k = 1
                 title = ["ID", "编码", "姓名", "成绩", "考试时间", "考试结果"]
                 for index, value in enumerate(title):
                     worksheet.write(0, index, value)
@@ -447,7 +449,7 @@ def ClearTables():
     SQL = "UPDATE users set userCName = replace(userCName, ' ', '') where userCName like '% %'"
     mdb_modi(conn, cur, SQL)
     for each in ["questions", "commquestions", "morepractise"]:
-        mdb_modi(conn, cur, SQL=f"update {each} set Question = REPLACE(Question,'\n', '')")
+        mdb_modi(conn, cur, SQL=f"update {each} set Question = REPLACE(Question,'\n', '') where Question like '%\n%'")
     #st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
 
 
@@ -459,6 +461,7 @@ def create_attribute(element, name, value):
     element.set(qn(name), value)
 
 
+# noinspection PyProtectedMember
 def add_page_number(run):
     fldChar1 = create_element('w:fldChar')
     create_attribute(fldChar1, 'w:fldCharType', 'begin')
@@ -475,6 +478,7 @@ def add_page_number(run):
     run._r.append(fldChar2)
 
 
+# noinspection PyProtectedMember,PyTypeChecker
 def questoWord():
     allType, stationCName, chapterNamePack, outChapterName = [], [], [], []
     st.subheader("题库导出", divider="blue")
@@ -728,6 +732,7 @@ def delExamTable():
         st.info("暂无试卷")
 
 
+# noinspection PyUnboundLocalVariable
 def dbinputSubmit(tarTable, orgTable):
     tmpTable, SQL, maxcol = "", "", 0
     if tarTable == "站室题库":
@@ -898,6 +903,7 @@ def resetActiveUser():
     updateKeyAction("重置所有用户状态")
 
 
+# noinspection PyUnboundLocalVariable
 def inputWord():
     #doc = Document("./QuesRefer/特种设备安全管理员考试题库精选全文.docx")
     #doc = Document("./QuesRefer/(新版)特种设备安全管理人员(特种作业)考试题库.docx")
@@ -999,6 +1005,7 @@ def resetTableID():
     updateKeyAction("重置题库ID")
 
 
+# noinspection PyShadowingNames,PyUnboundLocalVariable
 def AIGenerQues():
     quesPack, chars, chapterPack, dynaQuesType, generQuesCount = [], ["A", "B", "C", "D", "E", "F", "G", "H"], [], ["单选题", "多选题", "判断题", "填空题"], 0
     AIModelNamePack, quesTypePack, generQuesCountPack, gqc = [], [], [], 0
@@ -1209,7 +1216,7 @@ def ClearMP():
 
 
 def ClearMPAction(bcArea):
-    mdb_del(conn, cur, SQL="DELETE from morepractise")
+    mdb_del(conn, cur, SQL="DELETE from morepractise where ID > 0")
     bcArea.empty()
     st.success("错题集已重置")
     updateKeyAction("清空错题集所有记录")
@@ -1254,6 +1261,7 @@ def userRanking():
         updateActionUser(st.session_state.userName, f"证书及榜单-{study}", st.session_state.loginTime)
 
 
+# noinspection PyShadowingNames
 def displayUserRanking():
     xData, yData, boardInfo = [], [], ""
     col1, col2, col3 = st.columns(3)
@@ -1469,7 +1477,7 @@ def generCertificate(certFile, medal, userCName, examName, examDate, maxCertNum)
     imMedal.close()
     dr = ImageDraw.Draw(im)
     dr.text((160, 132), f"No.{str(maxCertNum).rjust(5, '0')}", font=font4, fill='grey')
-    if len(userCName.replace(" ", "")) - 1 >= 0 and len(userCName.replace(" ", "")) - 1 <= 5:
+    if 0 <= len(userCName.replace(" ", "")) - 1 <= 5:
         dr.text((namePosX[len(userCName.replace(" ", "")) - 1], 460), userCName, font=font, fill='grey')
     else:
         dr.text((460, 460), userCName, font=font, fill='grey')
@@ -1580,6 +1588,7 @@ def studyResetAction():
     updateKeyAction("重置学习记录")
 
 
+# noinspection PyTypeChecker
 def studyinfoDetail():
     scol1, scol2, scol3 = st.columns(3)
     SQL = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' and chapterName <> '关注题集'"
@@ -1801,6 +1810,7 @@ def aboutReadme():
     st.markdown(open("./README.md", "r", encoding="utf-8").read())
 
 
+# noinspection PyUnboundLocalVariable
 def training():
     flagProc, failInfo = True, ""
     if st.session_state.examType == "exam":
@@ -2176,6 +2186,7 @@ def addFavQues(favRow):
         st.toast("已添加到关注题集")
 
 
+# noinspection PyUnboundLocalVariable
 @st.fragment
 def exam(row):
     option, AIModelName, AIOption, AIOptionIndex = [], "", [], 0
@@ -2342,14 +2353,13 @@ def manualFIB(rowID):
     fibRow = mdb_sel(cur, SQL)[0]
     fibQues = fibRow[0]
     userAP = fibRow[2].split(";")
-    if fibQues.count("()") == len(userAP):
-        for each in userAP:
+    qAP = fibRow[1].split(";")
+    if len(qAP) == len(userAP):
+        for each in qAP:
             b1 = fibQues.find("()")
             if b1 != -1:
                 fibQues = f"{fibQues[:b1]}({each}){fibQues[b1 + 2:]}"
-        fibAI = xunfei_xh_AI_fib(fibQues)
-    else:
-        st.error("⚠️ 试题或是答案数量不匹配, 请检查")
+        fibAI = xunfei_xh_AI_fib(userAP, fibQues)
 
     return fibAI
 
@@ -2374,6 +2384,7 @@ def getStandardAnswer(qRow):
     return standardAnswer
 
 
+# noinspection PyTypeChecker
 @st.fragment
 def updateTA():
     textAnswerPack = []
@@ -2749,7 +2760,7 @@ def updateSwitchOption(quesType):
 
 
 def setupReset():
-    mdb_del(conn, cur, SQL=f"DELETE from setup_{st.session_state.StationCN}")
+    mdb_del(conn, cur, SQL=f"DELETE from setup_{st.session_state.StationCN} where ID > 0")
     SQL = f"INSERT INTO setup_{st.session_state.StationCN}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
     mdb_ins(conn, cur, SQL)
     SQL = f"UPDATE questionaff set chapterRatio = 10, examChapterRatio = 10 where StationCN = '{st.session_state.StationCN}' and (chapterName = '公共题库' or chapterName = '错题集')"
@@ -2776,6 +2787,7 @@ def updateAIModel2(AIOption, AIOptionIndex):
     mdb_modi(conn, cur, SQL)
 
 
+# noinspection PyTypeChecker
 def highlight_max(x, forecolor='black', backcolor='yellow'):
     is_max = x == x.max()
 
@@ -2867,6 +2879,7 @@ def queryExamAnswer(tablename):
         st.warning("请设置查询类型")
 
 
+# noinspection PyTypeChecker
 def queryExamResult():
     searchOption = []
     SQL = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
@@ -3255,7 +3268,7 @@ if st.session_state.logged_in:
                     nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", disabled=True)
                     submitButton = qcol1.button("交卷", icon=":material/publish:")
                     st.session_state.flagCompleted = True
-                elif st.session_state.curQues > 1 and st.session_state.curQues < quesCount:
+                elif 1 < st.session_state.curQues < quesCount:
                     preButton = qcol3.button("上题", icon=":material/arrow_back_ios:", on_click=changeCurQues, args=(-1, quesCount,))
                     nextButton = qcol4.button("下题", icon=":material/arrow_forward_ios:", on_click=changeCurQues, args=(1, quesCount,))
                     submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)

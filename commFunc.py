@@ -195,14 +195,14 @@ def xunfei_xh_AI(ques, option, quesType):
 
 def xunfei_xh_AI_fib(ques, ques2):
     aikey = getEncryptKeys("xfxh")
-    prompt = "我会给你一行话，请根据我给你的参考资料结合上下文判断()中的内容是否正确，不做推导过程，只输出正确还是错误，格式如下:<参考资料>:\n\n<判断内容>:\n\n"
+    prompt = "我给你一行话，请根据我给你的参考资料判断提供的答案替换参考资料中括号内的内容后是否正确，不做推导过程，只输出正确还是错误，格式如下:<参考资料>:\n\n<答案>:\n\n"
     client = OpenAI(api_key=aikey, base_url='https://spark-api-open.xf-yun.com/v1')
     completion = client.chat.completions.create(
         model='4.0Ultra',
         messages=[
             {
                 "role": "user",
-                "content": f"{prompt}\n<参考资料>:\n\n{ques2}\n\n<判断内容>:\n\n{ques}"
+                "content": f"{prompt}\n<参考资料>:\n\n{ques2}\n\n<答案>:\n\n{ques}"
             }
         ]
     )
