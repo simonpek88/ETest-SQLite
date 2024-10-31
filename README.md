@@ -22,7 +22,6 @@
     - 主要依赖
       - Streamlit # 前端框架
       - streamlit-antd-components/extras/keyup # 前端组件库
-      - apsw-sqlite3mc # 数据库操作及加密模块
       - pycryptodome # 数据加密模块
       - openai/qianfan # A.I.调用模块及文心千帆API调用接口
       - folium/pydeck # 地图可视化
