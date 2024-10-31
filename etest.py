@@ -1337,7 +1337,7 @@ def displayUserRanking():
                 m = folium.Map(
                     location=[lat, lng],
                     tiles="https://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7",
-                    attr='高德-常规图',
+                    attr='高德-道路图',
                     zoom_start=11,
                     control_scale=True,
                     )
@@ -1366,7 +1366,7 @@ def displayUserRanking():
                 height=120,
                 minimized=True,
                 )
-            #m.add_child(minimap)
+            m.add_child(minimap)
             st_folium(m, use_container_width=True, height=430)
     st.subheader(boardInfo)
 
@@ -2483,41 +2483,6 @@ def displayTimeCountdown():
         info3.metric(label="未答题", value=acAnswer2)
         info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
         style_metric_cards(border_left_color=st.session_state.tooltipColor)
-
-
-@st.fragment
-def displayTime():
-    components.html(
-        """
-        <html>
-        <head>
-            <style>
-                h1 {
-                font-size: 20px;
-                color: red;
-                text-align: center;
-                }
-                div{
-                font-size: 26px;
-                color: green;
-                text-align: center;
-                }
-            </style>
-        </head>
-        <body>
-            <script type="text/javascript" src="./js/jquery.min.js"></script>
-            <script type="text/javascript" src="./js/jquery.flipcountdown.js"></script>
-            <link rel="stylesheet" type="text/css" href="./css/jquery.flipcountdown.css" />
-            <div id="retroclockbox_sm"></div>
-            <script>
-            jQuery(function($){
-                $('#retroclockbox_sm').flipcountdown({size:'sm'});
-            })
-            </script>
-        </body>
-        </html>
-        """,
-    )
 
 
 @st.fragment
