@@ -3,9 +3,9 @@ import datetime
 import json
 import os
 import re
+import sqlite3
 import time
 
-import apsw
 import folium
 import openpyxl
 import pandas as pd
@@ -201,9 +201,6 @@ def login():
                 SQL = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
                 mdb_modi(conn, cur, SQL)
                 ClearTables()
-                if st.session_state.debug:
-                    #print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
-                    pass
                 if examType == "练习":
                     st.session_state.examType = "training"
                     st.session_state.examName = "练习题库"
@@ -226,13 +223,10 @@ def logout():
     SQL = f"UPDATE users set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
     cur.execute("VACUUM")
-    if st.session_state.debug:
-        #print(f"Logout: userName: {st.session_state.userName} userCName: {st.session_state.userCName} Station: {st.session_state.StationCN} userType: {st.session_state.userType}")
-        pass
+    conn.commit()
 
     for key in st.session_state.keys():
         del st.session_state[key]
-    #st.session_state.logged_in = False
 
     cur.close()
     conn.close()
@@ -756,6 +750,7 @@ def dbinputSubmit(tarTable, orgTable):
                 singleQues = [cell.value for cell in row]
                 if singleQues[0] is not None:
                     cur.execute(SQL, singleQues)
+                    conn.commit()
             listinsheet.close()
             if each.find("_用户上传_") != -1:
                 os.remove(f"./InputQues/{each}.xlsx")
@@ -2566,7 +2561,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['New']} 练习模式为每个用户增加单独的题型设置并简化操作")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['New']} 数据库操作库转回SQLite3, 优化了部分SQL语句, 修复了部分BUG")
     components.html(infoStr, height=300)
 
 
@@ -2658,6 +2653,7 @@ def addStation():
                         );"""
                 SQL = SQL.replace("exampleTable", f"setup_{sn}")
                 cur.execute(SQL)
+                conn.commit()
                 SQL = f"INSERT INTO setup_{sn}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
                 mdb_ins(conn, cur, SQL)
             for each in ["公共题库", "错题集", "关注题集"]:
@@ -3089,12 +3085,8 @@ global appName, emoji, updateType
 dbFile = "./DB/ETest.db"
 #dbFile = "./DB/ETest_enc.db"
 
-conn = apsw.Connection(dbFile)
+conn = sqlite3.Connection(dbFile, check_same_thread=False)
 cur = conn.cursor()
-if dbFile.endswith("_enc.db"):
-    cur.execute("PRAGMA cipher = 'aes256cbc'")
-    cur.execute("PRAGMA key = '7745'")
-cur.execute("PRAGMA journal_mode = WAL")
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
