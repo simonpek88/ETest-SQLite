@@ -273,6 +273,7 @@ def CreateExamTable(tablename, examRandom):
     return flagTableExist
 
 
+# noinspection PyBroadException
 def mdb_ins(conn, cur, SQL):
     try:
         cur.execute(SQL)
@@ -282,6 +283,7 @@ def mdb_ins(conn, cur, SQL):
         return False
 
 
+# noinspection PyBroadException
 def mdb_modi(conn, cur, SQL):
     try:
         cur.execute(SQL)
@@ -291,6 +293,7 @@ def mdb_modi(conn, cur, SQL):
         return False
 
 
+# noinspection PyBroadException
 def mdb_sel(cur, SQL):
     try:
         cur.execute(SQL)
@@ -299,6 +302,7 @@ def mdb_sel(cur, SQL):
         return []
 
 
+# noinspection PyBroadException
 def mdb_del(conn, cur, SQL):
     try:
         cur.execute(SQL)
@@ -334,6 +338,7 @@ def getChapterRatio(StationCN, qAff, examType):
     return cr
 
 
+# noinspection DuplicatedCode
 def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examRandom, flagNewOnly):
     if examRandom:
         examTable = f"exam_{StationCN}_{userName}_{examName}"
