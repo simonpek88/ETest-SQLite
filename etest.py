@@ -393,7 +393,7 @@ def examResulttoExcel():
         searchButton = st.button("导出为Excel文件", type="primary")
         if searchButton and searchExamName:
             if options:
-                SQL = "SELECT ID, userName, userCName, examScore, examDate, examPass from examresult where examName = '" + searchExamName + "' and ("
+                SQL = f"SELECT ID, userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
                 for each in options:
                     if each == "通过":
                         SQL = SQL + " examPass = 1 or "
@@ -2899,7 +2899,7 @@ def queryExamResult():
     if searchButton and searchExamName:
         if options:
             tab1, tab2 = st.tabs(["简报", "详情"])
-            SQL = "SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '" + searchExamName + "' and ("
+            SQL = f"SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
             for each in options:
                 if each == "通过":
                     SQL = SQL + " examPass = 1 or "
