@@ -5,7 +5,7 @@ openpyxl==3.2.0b1
 pycryptodome==3.21.0
 python-docx==1.1.2
 pandas==2.2.3
-pillow==11.0.0
+pillow==10.4.0
 pydeck==0.9.1
 qianfan==0.4.11
 redis==5.2.0
