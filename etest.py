@@ -2456,8 +2456,11 @@ def displayTimeCountdown():
         #st.write(f"### :red[{st.session_state.examName}]")
         #st.markdown(f"<font face='微软雅黑' color=red size=16><center>**{st.session_state.examName}**</center></font>", unsafe_allow_html=True)
         #st.markdown(f"### <font face='微软雅黑' color=red><center>{st.session_state.examName}</center></font>", unsafe_allow_html=True)
-        info1, info2, info3, info4 = st.columns(4)
         flagTime = bool(getParam("显示考试时间", st.session_state.StationCN))
+        if flagTime:
+            info1, info2, info3, info4 = st.columns(4)
+        else:
+            info1, info2, info3 = st.columns(3)
         if st.session_state.examType == "exam" or flagTime:
             examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
             examEndTime = st.session_state.examStartTime + examTimeLimit
@@ -2479,9 +2482,14 @@ def displayTimeCountdown():
         acAnswer1 = mdb_sel(cur, SQL)[0][0]
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
         acAnswer2 = mdb_sel(cur, SQL)[0][0]
-        info2.metric(label="已答题", value=acAnswer1)
-        info3.metric(label="未答题", value=acAnswer2)
-        info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
+        if flagTime:
+            info2.metric(label="已答题", value=acAnswer1)
+            info3.metric(label="未答题", value=acAnswer2)
+            info4.metric(label="总题数", value=acAnswer1 + acAnswer2)
+        else:
+            info1.metric(label="已答题", value=acAnswer1)
+            info2.metric(label="未答题", value=acAnswer2)
+            info3.metric(label="总题数", value=acAnswer1 + acAnswer2)
         style_metric_cards(border_left_color=st.session_state.tooltipColor)
 
 
