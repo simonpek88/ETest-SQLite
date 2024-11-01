@@ -3058,8 +3058,11 @@ cur = conn.cursor()
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
+# noinspection PyRedeclaration
 appName = "专业技能考试系统 — 离线版"
+# noinspection PyRedeclaration
 emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
+# noinspection PyRedeclaration
 updateType = {"New": "🔖", "Optimize": "🍀", "Fix": "🐞"}
 selected = None
 if "logged_in" not in st.session_state:
