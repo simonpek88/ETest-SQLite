@@ -223,6 +223,7 @@ def logout():
     SQL = f"UPDATE users set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
     mdb_modi(conn, cur, SQL)
     cur.execute("VACUUM")
+    conn.commit()
 
     for key in st.session_state.keys():
         del st.session_state[key]
