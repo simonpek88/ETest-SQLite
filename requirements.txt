@@ -9,6 +9,7 @@ attrs==24.2.0
 bce-python-sdk==0.9.23
 beautifulsoup4==4.12.3
 blinker==1.8.2
+bokeh==2.4.3
 branca==0.8.0
 cachetools==5.5.0
 certifi==2024.8.30
@@ -52,14 +53,13 @@ multiprocess==0.70.17
 narwhals==1.12.1
 numpy==2.1.2
 openai==1.53.0
-openpyxl==3.2.0b1
+openpyxl==3.1.5
 packaging==24.1
 pandas==2.2.3
 pillow==10.4.0
 plotly==5.24.1
 prometheus-client==0.21.0
 prompt-toolkit==3.0.48
-propcache==0.2.0
 protobuf==5.28.3
 pyarrow==18.0.0
 pycryptodome==3.21.0
@@ -104,11 +104,9 @@ streamlit-vis-timeline==0.3.0
 tenacity==8.5.0
 toml==0.10.2
 tornado==6.4.1
-tqdm==4.66.6
 typer==0.12.5
 typing-extensions==4.12.2
 tzdata==2024.2
-urllib3==2.2.3
 validators==0.34.0
 watchdog==5.0.3
 wcwidth==0.2.13
