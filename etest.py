@@ -2473,8 +2473,8 @@ def displayTimeCountdown():
                     st.session_state.examStartTime = int(time.time())
             elif remainingTime < 900:
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
-        with info1:
-            components.html(remindTimeText)
+            with info1:
+                components.html(remindTimeText)
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
         acAnswer1 = mdb_sel(cur, SQL)[0][0]
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
