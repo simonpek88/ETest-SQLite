@@ -52,7 +52,7 @@ multiprocess==0.70.17
 narwhals==1.12.1
 numpy==2.1.2
 openai==1.53.0
-openpyxl==3.2.0
+openpyxl==3.1.5
 packaging==24.1
 pandas==2.2.3
 pillow==10.4.0

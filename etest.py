@@ -485,7 +485,6 @@ def questoWord():
         headerExamName = st.text_input("请设置试卷名称", max_chars=20, help="文件抬头显示的试卷名称, 不填则使用默认名称")
         if "examFinalTable" in st.session_state:
             stationCN = st.session_state.StationCN
-            tablename = st.session_state.examFinalTable
             st.write("📢:red[试卷题库如果导出文件中不包含设置的题型, 请按如下提示操作, 其他类型题库没有此限制.]")
             step = sac.steps(
                 items=[
@@ -577,6 +576,7 @@ def questoWord():
                         #textQues.element.rPr.rFonts.set(qn("w:eastAsia"), "Microsoft YaHei")
                         #if st.session_state.sac_recheck and row[5] == "AI-LLM":
                         #textQues.font.color.rgb = RGBColor(155, 17, 30)
+                        textQues.font.size = Pt(quesFS)
                         aa = row[2].replace("；", ";").split(";")
                         pOption = None
                         if each != "填空题":
@@ -934,7 +934,6 @@ def inputWord():
                         mdb_ins(conn, cur, SQL)
                         generQuesCount += 1
                     ques, qAnswer, qOption = "", "", ""
-                temp = ""
                 if st.session_state.debug:
                     print(f"Ques:{line}")
                 if line[:7].find("、") != -1:
@@ -998,7 +997,6 @@ def resetTableID():
 # noinspection PyShadowingNames,PyUnboundLocalVariable
 def AIGenerQues():
     quesPack, chars, chapterPack, dynaQuesType, generQuesCount = [], ["A", "B", "C", "D", "E", "F", "G", "H"], [], ["单选题", "多选题", "判断题", "填空题"], 0
-    AIModelNamePack, quesTypePack, generQuesCountPack, gqc = [], [], [], 0
     StationCNPack, chosenStationCN = [], st.session_state.StationCN
     temp = f"{st.session_state.StationCN}-站室题库现有: "
     for each in dynaQuesType:
@@ -2187,7 +2185,6 @@ def exam(row):
     for index, value in enumerate(tempTable):
         AIOption.append(value[0])
         if value[1] == 1:
-            AIModelName = value[0]
             AIOptionIndex = index
     if row[4] == "填空题":
         reviseQues = row[1].replace("(", ":red[ ( _ ]").replace(")", ":red[ _ _ ) ]").strip()
@@ -2408,49 +2405,7 @@ def quesGoto():
 
 @st.fragment
 def displayTimeCountdown():
-    remindTimeText = """
-        <html>
-        <head>
-            <style>
-                h1 {
-                font-size: 20px;
-                color: red;
-                text-align: center;
-                }
-                div{
-                font-size: 26px;
-                color: green;
-                text-align: center;
-                }
-            </style>
-        </head>
-        <body>
-        <h1>考试剩余时间</h1>
-        <div id="countdown"></div>
-        <script>
-            var targetDate = new Date(remindTime);
-            function updateCountdown() {
-            var now = new Date();
-            var timeLeft = targetDate - now;
-            if (timeLeft < 0) {
-                document.getElementById("countdown").innerHTML = "考试已结束";
-                }
-                else {
-                var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                hours = hours<10? '0'+hours : hours;
-                var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                minutes = minutes<10? '0'+minutes : minutes;
-                var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                seconds = seconds<10? '0'+seconds : seconds;
-                document.getElementById("countdown").innerHTML = hours + ":" + minutes + ":" + seconds;
-            }
-            setTimeout(updateCountdown, 1000);
-            }
-            updateCountdown();
-        </script>
-        </body>
-        </html>
-    """
+    remindTimeText = open("./MyComponentsScript/Countdown-NoFlip.txt", "r", encoding="utf-8").read()
     timeArea = st.empty()
     with timeArea.container():
         #st.write(f"### :red[{st.session_state.examName}]")
@@ -2759,7 +2714,6 @@ def highlight_max(x, forecolor='black', backcolor='yellow'):
 
 
 def queryExamAnswer(tablename):
-    chosenType = []
     if tablename == "morepractise":
         chosenType = ["错题"]
     else:
@@ -3286,7 +3240,6 @@ if st.session_state.logged_in:
                 st.info("请先选择考试场次并点击开始考试", icon="ℹ️")
     elif selected == "数据录入":
         st.subheader(":orange[基础数据录入]", divider="violet")
-        #selectFunc = st.selectbox("请选择数据表", ["章节信息", "站室专用题库", "公共题库", "考试场次", "站室", "用户"], index=None, help="请选择数据表")
         selectFunc = st.selectbox("请选择数据表", ["考试场次", "站室", "用户"], index=None, help="请选择数据表")
         stationCName = getStationCNALL()
         if selectFunc == "考试场次":
