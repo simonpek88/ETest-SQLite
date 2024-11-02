@@ -52,7 +52,7 @@ multiprocess==0.70.17
 narwhals==1.12.1
 numpy==2.1.2
 openai==1.53.0
-openpyxl==3.1.5
+openpyxl==3.2.0
 packaging==24.1
 pandas==2.2.3
 pillow==10.4.0
@@ -101,10 +101,10 @@ streamlit-keyup==0.2.4
 streamlit-toggle-switch==1.0.2
 streamlit-vertical-slider==2.5.5
 streamlit-vis-timeline==0.3.0
-tenacity==8.5.0
+tenacity==9.0.0
 toml==0.10.2
 tornado==6.4.1
-tqdm==4.66.1
+tqdm==4.66.6
 typer==0.12.5
 typing-extensions==4.12.2
 tzdata==2024.2
@@ -115,3 +115,4 @@ wcwidth==0.2.13
 xlsxwriter==3.2.0
 xyzservices==2024.9.0
 yarl==1.17.1
+streamlit_folium==0.23.1
