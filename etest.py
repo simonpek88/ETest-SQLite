@@ -2411,6 +2411,8 @@ def displayTimeCountdown():
         remindTimeText = open("./MyComponentsScript/Countdown-NoFlip.txt", "r", encoding="utf-8").read()
     elif countdownType == "Circle":
         remindTimeText = open("./MyComponentsScript/Countdown-Circle.txt", "r", encoding="utf-8").read()
+    else:
+        remindTimeText = ""
     timeArea = st.empty()
     with timeArea.container():
         #st.write(f"### :red[{st.session_state.examName}]")
@@ -2440,7 +2442,8 @@ def displayTimeCountdown():
             elif remainingTime < 900:
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
             with info1:
-                components.html(remindTimeText, height=92)
+                if remindTimeText != "":
+                    components.html(remindTimeText, height=92)
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
         acAnswer1 = mdb_sel(cur, SQL)[0][0]
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
