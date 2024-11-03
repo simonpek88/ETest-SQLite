@@ -74,7 +74,7 @@ python-docx==1.1.2
 python-dotenv==1.0.1
 pytz==2024.2
 pyyaml==6.0.2
-qianfan==0.4.10.1
+qianfan==0.4.11
 redis==5.2.0
 referencing==0.35.1
 requests==2.32.3
@@ -101,7 +101,7 @@ streamlit-keyup==0.2.4
 streamlit-toggle-switch==1.0.2
 streamlit-vertical-slider==2.5.5
 streamlit-vis-timeline==0.3.0
-tenacity==9.0.0
+tenacity==8.5.0
 toml==0.10.2
 tornado==6.4.1
 tqdm==4.66.6
