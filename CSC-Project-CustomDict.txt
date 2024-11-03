@@ -14,6 +14,7 @@ commquestions
 createtextfile
 crsetup
 dasetup
+Dasharray
 datainlist
 dbbasedata
 dbfunc
@@ -41,6 +42,7 @@ indivquescount
 JXQW
 keyactionlog
 keyup
+linecap
 listinsheet
 maptype
 markertype

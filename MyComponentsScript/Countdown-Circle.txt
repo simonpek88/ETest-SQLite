@@ -2,17 +2,23 @@
 <head>
   <meta charset="UTF-8">
 <style>
+  p{
+    top: 0;
+    font-size: 14px;
+    color: green;
+    text-align: center;
+  }
   body {
     font-family: 'Helvetica Neue', 'Arial', sans-serif;
     display: grid;
-    height: 100vh;
+    height: 0vh;
     place-items: center;
   }
 
   .base-timer {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 80px;
+    height: 80px;
   }
 
   .base-timer__svg {
@@ -25,12 +31,12 @@
   }
 
   .base-timer__path-elapsed {
-    stroke-width: 7px;
+    stroke-width: 4px;
     stroke: grey;
   }
 
   .base-timer__path-remaining {
-    stroke-width: 7px;
+    stroke-width: 4px;
     stroke-linecap: round;
     transform: rotate(90deg);
     transform-origin: center;
@@ -53,25 +59,23 @@
 
   .base-timer__label {
     position: absolute;
-    width: 300px;
-    height: 300px;
+    width: 80px;
+    height: 80px;
     top: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
+    font-size: 18px;
   }
 </style>
 
 </head>
 <body>
-<!-- partial:index.partial.html -->
 <div id="countdown-circle"></div>
-<!-- partial -->
 <script>
   const FULL_DASH_ARRAY = 283;
-  const WARNING_THRESHOLD = 10;
-  const ALERT_THRESHOLD = 5;
+  const WARNING_THRESHOLD = 900;
+  const ALERT_THRESHOLD = 300;
 
   const COLOR_CODES = {
     info: {
@@ -87,7 +91,7 @@
     }
   };
 
-  const TIME_LIMIT = 20;
+  const TIME_LIMIT = remindTime;
   let timePassed = 0;
   let timeLeft = TIME_LIMIT;
   let timerInterval = null;

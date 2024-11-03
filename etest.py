@@ -2405,7 +2405,11 @@ def quesGoto():
 
 @st.fragment
 def displayTimeCountdown():
-    remindTimeText = open("./MyComponentsScript/Countdown-NoFlip.txt", "r", encoding="utf-8").read()
+    countdownType = "Circle"
+    if countdownType == "Flip":
+        remindTimeText = open("./MyComponentsScript/Countdown-NoFlip.txt", "r", encoding="utf-8").read()
+    elif countdownType == "Circle":
+        remindTimeText = open("./MyComponentsScript/Countdown-Circle.txt", "r", encoding="utf-8").read()
     timeArea = st.empty()
     with timeArea.container():
         #st.write(f"### :red[{st.session_state.examName}]")
@@ -2419,7 +2423,10 @@ def displayTimeCountdown():
         if st.session_state.examType == "exam" or flagTime:
             examTimeLimit = int(getParam("考试时间", st.session_state.StationCN) * 60)
             examEndTime = st.session_state.examStartTime + examTimeLimit
-            examEndTimeText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examEndTime))
+            if countdownType == "Flip":
+                examEndTimeText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examEndTime))
+            elif countdownType == "Circle":
+                examEndTimeText = str(examTimeLimit - int(time.time() - st.session_state.examStartTime))
             remindTimeText = remindTimeText.replace("remindTime", f'"{examEndTimeText}"')
             remainingTime = examTimeLimit - (int(time.time() - st.session_state.examStartTime))
             if remainingTime < 0:
