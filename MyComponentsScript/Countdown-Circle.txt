@@ -2,23 +2,19 @@
 <head>
   <meta charset="UTF-8">
 <style>
-  p{
-    top: 0;
-    font-size: 14px;
-    color: green;
-    text-align: center;
-  }
   body {
     font-family: 'Helvetica Neue', 'Arial', sans-serif;
     display: grid;
     height: 0vh;
     place-items: center;
+    margin: 0;
+    padding: 0;
   }
 
   .base-timer {
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 76px;
+    height: 76px;
   }
 
   .base-timer__svg {
@@ -59,8 +55,8 @@
 
   .base-timer__label {
     position: absolute;
-    width: 80px;
-    height: 80px;
+    width: 76px;
+    height: 76px;
     top: 0;
     display: flex;
     align-items: center;
@@ -71,6 +67,7 @@
 
 </head>
 <body>
+<span style="font-size: 14px; color: #ed872d;">考试剩余时间</span>
 <div id="countdown-circle"></div>
 <script>
   const FULL_DASH_ARRAY = 283;

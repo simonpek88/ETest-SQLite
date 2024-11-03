@@ -195,6 +195,7 @@ def login():
                 st.session_state.clockType = bool(getParam("时钟样式", st.session_state.StationCN))
                 st.session_state.curQues = 0
                 st.session_state.examChosen = False
+                st.session_state.tooltipColor = "#ed872d"
                 st.session_state.loginTime = int(time.time())
                 SQL = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
                 mdb_modi(conn, cur, SQL)
@@ -2439,7 +2440,7 @@ def displayTimeCountdown():
             elif remainingTime < 900:
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
             with info1:
-                components.html(remindTimeText)
+                components.html(remindTimeText, height=92)
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
         acAnswer1 = mdb_sel(cur, SQL)[0][0]
         SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
@@ -3136,7 +3137,6 @@ if st.session_state.logged_in:
             #st.markdown("<font face='微软雅黑' color=red size=20><center>**选择考试**</center></font>", unsafe_allow_html=True)
             st.markdown("### <font face='微软雅黑' color=red><center>选择考试</center></font>", unsafe_allow_html=True)
         if not st.session_state.examChosen or not st.session_state.calcScore:
-            st.session_state.tooltipColor = "#ed872d"
             SQL = "UPDATE verinfo set pyLM = 0 where pyFile = 'chapterChosenType'"
             mdb_modi(conn, cur, SQL)
             training()
