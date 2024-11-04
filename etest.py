@@ -29,7 +29,7 @@ from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook
 
 from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
-                      getUserEDKeys, mdb_del, mdb_ins, mdb_modi, mdb_sel,
+                      getUserEDKeys, execute_sql, execute_sql_and_commit,
                       qianfan_AI, qianfan_AI_GenerQues, updateActionUser,
                       updatePyFileinfo, xunfei_xh_AI, xunfei_xh_AI_fib)
 
@@ -39,22 +39,22 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
 
 @st.fragment
 def updateKeyAction(keyAction):
-    SQL = f"SELECT ID from keyactionlog where userName = {st.session_state.userName} and userCName = '{st.session_state.userCName}' and userAction = '{keyAction}' and actionDate = {int(time.time())}"
-    if not mdb_sel(cur, SQL):
-        SQL = f"INSERT INTO keyactionlog(userName, userCName, StationCN, userAction, actionDate) VALUES({st.session_state.userName}, '{st.session_state.userCName}', '{st.session_state.StationCN}', '{keyAction}', {int(time.time())})"
-        mdb_ins(conn, cur, SQL)
+    sql = f"SELECT ID from keyactionlog where userName = {st.session_state.userName} and userCName = '{st.session_state.userCName}' and userAction = '{keyAction}' and actionDate = {int(time.time())}"
+    if not execute_sql(cur, sql):
+        sql = f"INSERT INTO keyactionlog(userName, userCName, StationCN, userAction, actionDate) VALUES({st.session_state.userName}, '{st.session_state.userCName}', '{st.session_state.StationCN}', '{keyAction}', {int(time.time())})"
+        execute_sql_and_commit(conn, cur, sql)
 
 
 # noinspection PyShadowingNames
 @st.fragment
 def getUserCName(sUserName, sType="Digit"):
-    SQL = ""
+    sql = ""
     if sType.capitalize() == "Digit":
-        SQL = f"SELECT userCName, StationCN from users where userName = {sUserName}"
+        sql = f"SELECT userCName, StationCN from users where userName = {sUserName}"
     elif sType.capitalize() == "Str":
-        SQL = f"SELECT userCName, StationCN from users where userCName = '{sUserName}'"
-    if SQL != "":
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT userCName, StationCN from users where userCName = '{sUserName}'"
+    if sql != "":
+        rows = execute_sql(cur, sql)
         if rows:
             st.session_state.userCName = rows[0][0]
             st.session_state.StationCN = rows[0][1]
@@ -68,9 +68,9 @@ def getUserCName(sUserName, sType="Digit"):
 
 def delOutdatedTable():
     if st.session_state.examRandom and "examTable" in st.session_state:
-        mdb_del(conn, cur, SQL=f"DROP TABLE IF EXISTS {st.session_state.examTable}")
+        execute_sql_and_commit(conn, cur, sql=f"DROP TABLE IF EXISTS {st.session_state.examTable}")
     if "examFinalTable" in st.session_state:
-        mdb_del(conn, cur, SQL=f"DROP TABLE IF EXISTS {st.session_state.examFinalTable}")
+        execute_sql_and_commit(conn, cur, sql=f"DROP TABLE IF EXISTS {st.session_state.examFinalTable}")
 
 
 # noinspection PyShadowingNames
@@ -86,14 +86,14 @@ def changePassword():
         verifyUPW = verifyUserPW(st.session_state.userName, oldPassword)
         if verifyUPW[0]:
             oldPassword = verifyUPW[1]
-        SQL = f"SELECT ID from users where userName = {st.session_state.userName} and userPassword = '{oldPassword}'"
-        if mdb_sel(cur, SQL):
+        sql = f"SELECT ID from users where userName = {st.session_state.userName} and userPassword = '{oldPassword}'"
+        if execute_sql(cur, sql):
             if newPassword and confirmPassword and newPassword != "":
                 if newPassword == confirmPassword:
                     if buttonSubmit:
                         newPassword = getUserEDKeys(newPassword, "enc")
-                        SQL = f"UPDATE users set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
-                        mdb_modi(conn, cur, SQL)
+                        sql = f"UPDATE users set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
+                        execute_sql_and_commit(conn, cur, sql)
                         updateKeyAction("用户密码修改")
                         st.toast("密码修改成功, 请重新登录")
                         logout()
@@ -113,8 +113,8 @@ def changePassword():
 def get_userName(searchUserName=""):
     searchUserNameInfo = ""
     if len(searchUserName) > 1:
-        SQL = f"SELECT userName, userCName, StationCN from users where userName like '{searchUserName}%'"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT userName, userCName, StationCN from users where userName like '{searchUserName}%'"
+        rows = execute_sql(cur, sql)
         for row in rows:
             searchUserNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
     if searchUserNameInfo != "":
@@ -126,8 +126,8 @@ def get_userName(searchUserName=""):
 def get_userCName(searchUserCName=""):
     searchUserCNameInfo = ""
     if len(searchUserCName) > 1:
-        SQL = f"SELECT userName, userCName, StationCN from users where userCName like '{searchUserCName}%'"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT userName, userCName, StationCN from users where userCName like '{searchUserCName}%'"
+        rows = execute_sql(cur, sql)
         for row in rows:
             searchUserCNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
     else:
@@ -179,8 +179,8 @@ def login():
             verifyUPW = verifyUserPW(userName, userPassword)
             if verifyUPW[0]:
                 userPassword = verifyUPW[1]
-            SQL = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
-            result = mdb_sel(cur, SQL)
+            sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
+            result = execute_sql(cur, sql)
             if result:
                 st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
                 login.empty()
@@ -197,10 +197,10 @@ def login():
                 st.session_state.examChosen = False
                 st.session_state.tooltipColor = "#ed872d"
                 st.session_state.loginTime = int(time.time())
-                SQL = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
-                mdb_modi(conn, cur, SQL)
-                SQL = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
-                mdb_modi(conn, cur, SQL)
+                sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
+                execute_sql_and_commit(conn, cur, sql)
+                sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
+                execute_sql_and_commit(conn, cur, sql)
                 ClearTables()
                 if examType == "练习":
                     st.session_state.examType = "training"
@@ -221,8 +221,8 @@ def login():
 
 def logout():
     try:
-        SQL = f"UPDATE users set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
-        mdb_modi(conn, cur, SQL)
+        sql = f"UPDATE users set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
+        execute_sql_and_commit(conn, cur, sql)
         delOutdatedTable()
 
     finally:
@@ -273,18 +273,18 @@ def aboutInfo():
     stars = sac.rate(label='Please give me a star if you like it!', align='start')
     if stars > 0:
         st.write(f"I feel {emoji[int(stars) - 1][1]} {emoji[int(stars) - 1][0]}")
-    SQL = f"UPDATE verinfo set pyMC = pyMC + 1 where pyFile = 'thumbs-up-stars' and pyLM = {stars}"
-    mdb_modi(conn, cur, SQL)
+    sql = f"UPDATE verinfo set pyMC = pyMC + 1 where pyFile = 'thumbs-up-stars' and pyLM = {stars}"
+    execute_sql_and_commit(conn, cur, sql)
     updateActionUser(st.session_state.userName, "浏览[关于]信息", st.session_state.loginTime)
 
 
 def getVerInfo():
-    SQL = "SELECT Sum(pyMC) from verinfo"
-    verinfo = mdb_sel(cur, SQL)[0][0]
-    SQL = "SELECT Max(pyLM) from verinfo"
-    verLM = mdb_sel(cur, SQL)[0][0]
-    SQL = "SELECT Sum(pyLM * pyMC), Sum(pyMC) from verinfo where pyFile = 'thumbs-up-stars'"
-    tmpTable = mdb_sel(cur, SQL)
+    sql = "SELECT Sum(pyMC) from verinfo"
+    verinfo = execute_sql(cur, sql)[0][0]
+    sql = "SELECT Max(pyLM) from verinfo"
+    verLM = execute_sql(cur, sql)[0][0]
+    sql = "SELECT Sum(pyLM * pyMC), Sum(pyMC) from verinfo where pyFile = 'thumbs-up-stars'"
+    tmpTable = execute_sql(cur, sql)
     likeCM = round(tmpTable[0][0] / tmpTable[0][1], 1)
 
     return verinfo, verLM, likeCM
@@ -316,14 +316,14 @@ def actDelTable():
         if each.startswith("delStaticExamTable_"):
             if st.session_state[each]:
                 each = each.replace("delStaticExamTable_", "")
-                mdb_del(conn, cur, SQL=f"DROP TABLE IF EXISTS {each}")
+                execute_sql_and_commit(conn, cur, sql=f"DROP TABLE IF EXISTS {each}")
                 st.info(f"{each} 静态题库删除成功")
 
 
 def delStaticExamTable():
     flagExistTable = False
-    SQL = "SELECT name from sqlite_master where type = 'table' and name like 'exam_%'"
-    tempTable = mdb_sel(cur, SQL)
+    sql = "SELECT name from sqlite_master where type = 'table' and name like 'exam_%'"
+    tempTable = execute_sql(cur, sql)
     if tempTable:
         st.subheader("删除静态题库", divider="red")
         for row in tempTable:
@@ -339,15 +339,15 @@ def delStaticExamTable():
 def resultExcel():
     st.subheader("试卷导出", divider="blue")
     examResultPack, examResultPack2 = [], []
-    SQL = "SELECT name from sqlite_master where type = 'table' and name like 'exam_final_%'"
-    tempTable = mdb_sel(cur, SQL)
+    sql = "SELECT name from sqlite_master where type = 'table' and name like 'exam_final_%'"
+    tempTable = execute_sql(cur, sql)
     if tempTable:
         for row in tempTable:
             examResultPack2.append(row[0])
             tmp = row[0][:row[0].rfind("_")]
             tmp = tmp[tmp.rfind("_") + 1:]
-            SQL = "SELECT userCName from users where userName = " + str(tmp)
-            tempTable = mdb_sel(cur, SQL)
+            sql = "SELECT userCName from users where userName = " + str(tmp)
+            tempTable = execute_sql(cur, sql)
             if tempTable:
                 tempUserCName = tempTable[0][0]
                 examResultPack.append(row[0].replace("exam_final_", "").replace(tmp, tempUserCName))
@@ -360,8 +360,8 @@ def resultExcel():
                 if value == examResult:
                     examResult = examResultPack2[index]
                     break
-            SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer from {examResult} order by ID"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer from {examResult} order by ID"
+            rows = execute_sql(cur, sql)
             if rows:
                 df = pd.DataFrame(rows)
                 df.columns = ["题目", "选项", "标准答案", "类型", "解析", "你的答案"]
@@ -373,8 +373,8 @@ def resultExcel():
 def examResulttoExcel():
     st.subheader("考试成绩导出", divider="blue")
     searchOption = []
-    SQL = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
         searchOption.append(row[1])
     searchExamName = st.selectbox("请选择考试场次", searchOption, index=None)
@@ -383,15 +383,15 @@ def examResulttoExcel():
         searchButton = st.button("导出为Excel文件", type="primary")
         if searchButton and searchExamName:
             if options:
-                SQL = f"SELECT ID, userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
+                sql = f"SELECT ID, userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
                 for each in options:
                     if each == "通过":
-                        SQL = SQL + " examPass = 1 or "
+                        sql = sql + " examPass = 1 or "
                     elif each == "未通过":
-                        SQL = SQL + " examPass = 0 or "
-                if SQL.endswith(" or "):
-                    SQL = SQL[:-4] + ") order by ID"
-                rows = mdb_sel(cur, SQL)
+                        sql = sql + " examPass = 0 or "
+                if sql.endswith(" or "):
+                    sql = sql[:-4] + ") order by ID"
+                rows = execute_sql(cur, sql)
                 outputFile = f"./ExamResult/{searchExamName}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.xlsx"
                 if os.path.exists(outputFile):
                     os.remove(outputFile)
@@ -426,20 +426,20 @@ def examResulttoExcel():
 
 
 def ClearTables():
-    SQL = "DELETE from questions where rowid NOT IN (SELECT Min(rowid) from questions GROUP BY Question, qType, StationCN, chapterName)"
-    mdb_del(conn, cur, SQL)
-    SQL = "DELETE from commquestions where rowid NOT IN (SELECT Min(rowid) from commquestions GROUP BY Question, qType)"
-    mdb_del(conn, cur, SQL)
-    SQL = "DELETE from morepractise where rowid NOT IN (SELECT Min(rowid) from morepractise GROUP BY Question, qType, userName)"
-    mdb_del(conn, cur, SQL)
-    SQL = "DELETE from questionaff where rowid NOT IN (SELECT Min(rowid) from questionaff GROUP BY chapterName, StationCN)"
-    mdb_del(conn, cur, SQL)
-    SQL = "DELETE from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' and chapterName not in (SELECT DISTINCT(chapterName) from questions)"
-    mdb_del(conn, cur, SQL)
-    SQL = "UPDATE users set userCName = replace(userCName, ' ', '') where userCName like '% %'"
-    mdb_modi(conn, cur, SQL)
+    sql = "DELETE from questions where rowid NOT IN (SELECT Min(rowid) from questions GROUP BY Question, qType, StationCN, chapterName)"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = "DELETE from commquestions where rowid NOT IN (SELECT Min(rowid) from commquestions GROUP BY Question, qType)"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = "DELETE from morepractise where rowid NOT IN (SELECT Min(rowid) from morepractise GROUP BY Question, qType, userName)"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = "DELETE from questionaff where rowid NOT IN (SELECT Min(rowid) from questionaff GROUP BY chapterName, StationCN)"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = "DELETE from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' and chapterName not in (SELECT DISTINCT(chapterName) from questions)"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = "UPDATE users set userCName = replace(userCName, ' ', '') where userCName like '% %'"
+    execute_sql_and_commit(conn, cur, sql)
     for each in ["questions", "commquestions", "morepractise"]:
-        mdb_modi(conn, cur, SQL=f"update {each} set Question = REPLACE(Question,'\n', '') where Question like '%\n%'")
+        execute_sql_and_commit(conn, cur, sql=f"update {each} set Question = REPLACE(Question,'\n', '') where Question like '%\n%'")
     #st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
 
 
@@ -472,8 +472,8 @@ def add_page_number(run):
 def questoWord():
     allType, stationCName, chapterNamePack, outChapterName = [], [], [], []
     st.subheader("题库导出", divider="blue")
-    SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'questype'"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'questype'"
+    rows = execute_sql(cur, sql)
     for row in rows:
         allType.append(row[0])
     quesTable = st.selectbox("请选择功能类型", ("站室题库", "公共题库", "试卷", "错题集", "关注题集"), index=None)
@@ -501,8 +501,8 @@ def questoWord():
             st.info("请先生成题库")
             quesTable = ""
     if stationCN != "全站" and quesTable == "站室题库":
-        SQL = f"SELECT chapterName from questionaff where StationCN = '{stationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by ID"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT chapterName from questionaff where StationCN = '{stationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by ID"
+        rows = execute_sql(cur, sql)
         for row in rows:
             chapterNamePack.append(row[0])
         outChapterName = st.multiselect("章节", chapterNamePack, default=chapterNamePack)
@@ -544,19 +544,19 @@ def questoWord():
             textHeader.font.color.rgb = RGBColor(40, 106, 205)
             for each in quesType:
                 if stationCN == "全站" or quesTable == "试卷":
-                    SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' order by ID"
+                    sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' order by ID"
                 else:
                     if quesTable != "站室题库" and quesTable != "公共题库":
-                        SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
+                        sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
                     elif quesTable == "站室题库":
                         if outChapterName:
-                            SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' and (chapterName = "
+                            sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' and (chapterName = "
                             for each5 in outChapterName:
-                                SQL += f"'{each5}' or chapterName = "
-                            SQL = SQL[:-18] + ") order by ID"
+                                sql += f"'{each5}' or chapterName = "
+                            sql = sql[:-18] + ") order by ID"
                         else:
-                            SQL = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
-                rows = mdb_sel(cur, SQL)
+                            sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
+                rows = execute_sql(cur, sql)
                 #st.write(f"{each} 共 {len(rows)}")
                 i = 1
                 if rows:
@@ -613,15 +613,15 @@ def questoWord():
                             textAnswer.font.bold = True
                             textAnswer.font.color.rgb = RGBColor(155, 17, 30)
                             if stationCN != "全站":
-                                SQL = f"SELECT chapterName from questions where Question = '{row[0]}'"
+                                sql = f"SELECT chapterName from questions where Question = '{row[0]}'"
                             else:
-                                SQL = f"SELECT chapterName from questions where Question = '{row[0]}' and StationCN = '{stationCN}'"
-                            tempTable = mdb_sel(cur, SQL)
+                                sql = f"SELECT chapterName from questions where Question = '{row[0]}' and StationCN = '{stationCN}'"
+                            tempTable = execute_sql(cur, sql)
                             if tempTable:
                                 fhQT = tempTable[0][0]
                             else:
-                                SQL = f"SELECT ID from commquestions where Question = '{row[0]}'"
-                                if mdb_sel(cur, SQL):
+                                sql = f"SELECT ID from commquestions where Question = '{row[0]}'"
+                                if execute_sql(cur, sql):
                                     fhQT = "公共题库"
                                 else:
                                     fhQT = "未知"
@@ -702,14 +702,14 @@ def actDelExamTable():
         if each.startswith("delExamTable_"):
             if st.session_state[each]:
                 each = each.replace("delExamTable_", "")
-                mdb_del(conn, cur, SQL=f"DROP TABLE IF EXISTS {each}")
+                execute_sql_and_commit(conn, cur, sql=f"DROP TABLE IF EXISTS {each}")
                 st.info(f"{each} 试卷删除成功")
 
 
 def delExamTable():
     flagExistTable = False
-    SQL = "SELECT name from sqlite_master where type = 'table' and name like 'exam_%'"
-    tempTable = mdb_sel(cur, SQL)
+    sql = "SELECT name from sqlite_master where type = 'table' and name like 'exam_%'"
+    tempTable = execute_sql(cur, sql)
     if tempTable:
         st.subheader("删除试卷", divider="red")
         for row in tempTable:
@@ -724,19 +724,19 @@ def delExamTable():
 
 # noinspection PyUnboundLocalVariable
 def dbinputSubmit(tarTable, orgTable):
-    tmpTable, SQL, maxcol = "", "", 0
+    tmpTable, sql, maxcol = "", "", 0
     if tarTable == "站室题库":
         tablename = "questions"
-        SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName) VALUES (?, ?, ?, ?, ?, ?, ?)"
         maxcol = 7
     elif tarTable == "公共题库":
         tablename = "commquestions"
-        SQL = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis) VALUES (?, ?, ?, ?, ?)"
+        sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis) VALUES (?, ?, ?, ?, ?)"
         maxcol = 5
-    if SQL != "":
+    if sql != "":
         st.spinner(f"正在向 [{tarTable}] 导入题库...")
-        SQL2 = f"SELECT Max(ID) from {tablename}"
-        maxid = mdb_sel(cur, SQL2)[0][0]
+        sql2 = f"SELECT Max(ID) from {tablename}"
+        maxid = execute_sql(cur, sql2)[0][0]
         if maxid is None:
             maxid = 0
         for each in orgTable:
@@ -745,38 +745,38 @@ def dbinputSubmit(tarTable, orgTable):
             for row in datainlist.iter_rows(min_row=2, max_col=maxcol, max_row=datainlist.max_row):
                 singleQues = [cell.value for cell in row]
                 if singleQues[0] is not None:
-                    cur.execute(SQL, singleQues)
+                    cur.execute(sql, singleQues)
                     conn.commit()
             listinsheet.close()
             if each.find("_用户上传_") != -1:
                 os.remove(f"./InputQues/{each}.xlsx")
             tmpTable = tmpTable + each + ", "
-        SQL = f"UPDATE {tablename} set qOption = '' where qOption is Null"
-        mdb_modi(conn, cur, SQL)
-        SQL = f"UPDATE {tablename} set qAnalysis = '' where qAnalysis is Null"
-        mdb_modi(conn, cur, SQL)
-        SQL = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
-        mdb_modi(conn, cur, SQL)
-        SQL = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题' or qType = '填空题')"
-        mdb_modi(conn, cur, SQL)
-        SQL = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and ID > {maxid}"
-        mdb_modi(conn, cur, SQL)
-        SQL = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
-        rows = mdb_sel(cur, SQL)
+        sql = f"UPDATE {tablename} set qOption = '' where qOption is Null"
+        execute_sql_and_commit(conn, cur, sql)
+        sql = f"UPDATE {tablename} set qAnalysis = '' where qAnalysis is Null"
+        execute_sql_and_commit(conn, cur, sql)
+        sql = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
+        execute_sql_and_commit(conn, cur, sql)
+        sql = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题' or qType = '填空题')"
+        execute_sql_and_commit(conn, cur, sql)
+        sql = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and ID > {maxid}"
+        execute_sql_and_commit(conn, cur, sql)
+        sql = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
+        rows = execute_sql(cur, sql)
         for row in rows:
-            SQL = ""
+            sql = ""
             if row[3] == "单选题" or row[3] == "多选题":
                 for each in row[2].split(";"):
                     if int(each) < 0 or int(each) >= len(row[1].split(";")) or len(row[1].split(";")) > 8:
-                        SQL = f"DELETE from {tablename} where ID = {row[0]}"
+                        sql = f"DELETE from {tablename} where ID = {row[0]}"
             elif row[3] == "判断题":
                 if int(row[2]) < 0 or int(row[2]) > 1:
-                    SQL = f"DELETE from {tablename} where ID = {row[0]}"
-            if SQL != "":
-                mdb_del(conn, cur, SQL)
+                    sql = f"DELETE from {tablename} where ID = {row[0]}"
+            if sql != "":
+                execute_sql_and_commit(conn, cur, sql)
                 st.warning(f"试题: [{row[4]}] 题型: [{row[3]}] 选项: [{row[1]}] 答案: [{row[2]}] 因为选项及答案序号不相符, 没有导入")
-        SQL = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
-        mdb_ins(conn, cur, SQL)
+        sql = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
+        execute_sql_and_commit(conn, cur, sql)
         ClearTables()
         st.success(f":green[{tmpTable[:-2]}.xlsx] 向 :red[{tarTable}] :gray[导入成功]")
         updateKeyAction(f"Excel文件导入试题至{tarTable}")
@@ -888,8 +888,8 @@ def actionDelUserUploadFiles():
 
 
 def resetActiveUser():
-    SQL = f"UPDATE users set activeUser = 0 where userName <> {st.session_state.userName}"
-    mdb_modi(conn, cur, SQL)
+    sql = f"UPDATE users set activeUser = 0 where userName <> {st.session_state.userName}"
+    execute_sql_and_commit(conn, cur, sql)
     st.success("已重置所有用户状态")
     updateKeyAction("重置所有用户状态")
 
@@ -929,10 +929,10 @@ def inputWord():
                         qType = "多选题"
                     if st.session_state.debug:
                         print(f"Record: Q: {ques} T: {qType} O: {qOption} A: {qAnswer}")
-                    SQL = f"SELECT ID from questions where Question = '{ques}' and qType = '{qType}' and StationCN = '{st.session_state.StationCN}' and chapterName = '{chapter}'"
-                    if not mdb_sel(cur, SQL):
-                        SQL = f"INSERT INTO questions(Question, qOption, qAnswer, qType, StationCN, chapterName, SourceType) VALUES ('{ques}', '{qOption}', '{qAnswer}', '{qType}', '{st.session_state.StationCN}', '{chapter}', '人工')"
-                        mdb_ins(conn, cur, SQL)
+                    sql = f"SELECT ID from questions where Question = '{ques}' and qType = '{qType}' and StationCN = '{st.session_state.StationCN}' and chapterName = '{chapter}'"
+                    if not execute_sql(cur, sql):
+                        sql = f"INSERT INTO questions(Question, qOption, qAnswer, qType, StationCN, chapterName, SourceType) VALUES ('{ques}', '{qOption}', '{qAnswer}', '{qType}', '{st.session_state.StationCN}', '{chapter}', '人工')"
+                        execute_sql_and_commit(conn, cur, sql)
                         generQuesCount += 1
                     ques, qAnswer, qOption = "", "", ""
                 if st.session_state.debug:
@@ -979,17 +979,17 @@ def inputWord():
 
 def resetTableID():
     for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "examresult", "questionaff", "studyinfo", "users", "keyactionlog", "setup_默认", f"setup_{st.session_state.StationCN}"]:
-        SQL = f"SELECT ID from {tablename} order by ID"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT ID from {tablename} order by ID"
+        rows = execute_sql(cur, sql)
         for i, row in enumerate(rows):
-            SQL = f"UPDATE {tablename} set ID = {i + 1} where ID = {row[0]}"
-            mdb_modi(conn, cur, SQL)
+            sql = f"UPDATE {tablename} set ID = {i + 1} where ID = {row[0]}"
+            execute_sql_and_commit(conn, cur, sql)
             if tablename == "questions" or tablename == "commquestions":
-                SQL = f"UPDATE studyinfo set cid = {i + 1} where cid = {row[0]} and questable = '{tablename}'"
-                mdb_modi(conn, cur, SQL)
+                sql = f"UPDATE studyinfo set cid = {i + 1} where cid = {row[0]} and questable = '{tablename}'"
+                execute_sql_and_commit(conn, cur, sql)
         if len(rows) > 0:
-            SQL = f"UPDATE sqlite_sequence SET seq = {len(rows)} where name = '{tablename}'"
-            mdb_modi(conn, cur, SQL)
+            sql = f"UPDATE sqlite_sequence SET seq = {len(rows)} where name = '{tablename}'"
+            execute_sql_and_commit(conn, cur, sql)
         #st.toast(f"重置 {tablename} 表ID完毕")
     st.success("题库ID重置成功")
     updateKeyAction("重置题库ID")
@@ -1001,26 +1001,26 @@ def AIGenerQues():
     StationCNPack, chosenStationCN = [], st.session_state.StationCN
     temp = f"{st.session_state.StationCN}-站室题库现有: "
     for each in dynaQuesType:
-        SQL = f"SELECT Count(ID) from questions where qType = '{each}' and StationCN = '{st.session_state.StationCN}'"
-        qCount = mdb_sel(cur, SQL)[0][0]
+        sql = f"SELECT Count(ID) from questions where qType = '{each}' and StationCN = '{st.session_state.StationCN}'"
+        qCount = execute_sql(cur, sql)[0][0]
         temp = temp + ":red[" + each + "]: " + str(qCount) + "道 "
     temp = temp + "\n\n公共题库现有: "
     for each in dynaQuesType:
-        SQL = f"SELECT Count(ID) from commquestions where qType = '{each}'"
-        qCount = mdb_sel(cur, SQL)[0][0]
+        sql = f"SELECT Count(ID) from commquestions where qType = '{each}'"
+        qCount = execute_sql(cur, sql)[0][0]
         temp = temp + ":red[" + each + "]: " + str(qCount) + "道 "
     temp = temp.strip()
     st.caption(temp)
     table = st.radio(label="请选择要生成的题库", options=("站室题库", "公共题库"), horizontal=True, index=None)
     if table and table != "公共题库":
-        SQL = "SELECT Station from stations order by ID"
-        rows = mdb_sel(cur, SQL)
+        sql = "SELECT Station from stations order by ID"
+        rows = execute_sql(cur, sql)
         for row in rows:
             StationCNPack.append(row[0])
         chosenStationCN = st.select_slider("请选择要导入的站室", options=StationCNPack, value=st.session_state.StationCN)
         col1, col2 = st.columns(2)
-        SQL = f"SELECT chapterName from questionaff where StationCN = '{chosenStationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT chapterName from questionaff where StationCN = '{chosenStationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
+        rows = execute_sql(cur, sql)
         for row in rows:
             chapterPack.append(row[0])
         with col1:
@@ -1046,10 +1046,10 @@ def AIGenerQues():
         buttonGener = st.button("生成试题")
         if buttonGener:
             if chapter is None and textChapter != "":
-                SQL = f"SELECT ID from questionaff where chapterName = '{textChapter}' and StationCN = '{chosenStationCN}'"
-                if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES ('{textChapter}', '{chosenStationCN}', 5, 5)"
-                    mdb_ins(conn, cur, SQL)
+                sql = f"SELECT ID from questionaff where chapterName = '{textChapter}' and StationCN = '{chosenStationCN}'"
+                if not execute_sql(cur, sql):
+                    sql = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES ('{textChapter}', '{chosenStationCN}', 5, 5)"
+                    execute_sql_and_commit(conn, cur, sql)
                     st.toast(f"新的章节: :red[{textChapter}]添加完毕")
                 chapter = textChapter
             if chapter is not None and table == "站室题库" or table == "公共题库":
@@ -1160,18 +1160,18 @@ def AIGenerQues():
                                         print(f"debug: 题目:[{quesHeader}] 选项:[{qOption}], 标准答案:[{qAnswer}] 答题解析:[{qAnalysis}]")
                                 if qAnswer != "" and quesHeader != "" and len(str(qAnswer)) < 200 and len(quesHeader) < 200 and flagSuccess:
                                     if table == "公共题库":
-                                        SQL = f"SELECT ID from commquestions where Question = '{quesHeader}' and qType = '{quesType}'"
-                                        if not mdb_sel(cur, SQL):
-                                            SQL = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', 'AI-LLM')"
-                                            mdb_ins(conn, cur, SQL)
+                                        sql = f"SELECT ID from commquestions where Question = '{quesHeader}' and qType = '{quesType}'"
+                                        if not execute_sql(cur, sql):
+                                            sql = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', 'AI-LLM')"
+                                            execute_sql_and_commit(conn, cur, sql)
                                             generQuesCount += 1
                                             gqc += 1
                                             displayQues = displayQues + f":blue[**第{generQuesCount}题:**]\n\n:red[题型: ]{quesType}\n\n:red[题目: ]{quesHeader}\n\n:red[选项: ]\n{displayOption}\n\n:red[答案: ]{displayAnswer}\n\n:red[解析: ]{qAnalysis}\n\n{'-' * 40}\n\n"
                                     elif table == "站室题库":
-                                        SQL = f"SELECT ID from questions where Question = '{quesHeader}' and qType = '{quesType}' and StationCN = '{chosenStationCN}' and chapterName = '{chapter}'"
-                                        if not mdb_sel(cur, SQL):
-                                            SQL = f"INSERT INTO questions(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', '{chosenStationCN}', '{chapter}', 'AI-LLM')"
-                                            mdb_ins(conn, cur, SQL)
+                                        sql = f"SELECT ID from questions where Question = '{quesHeader}' and qType = '{quesType}' and StationCN = '{chosenStationCN}' and chapterName = '{chapter}'"
+                                        if not execute_sql(cur, sql):
+                                            sql = f"INSERT INTO questions(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', '{chosenStationCN}', '{chapter}', 'AI-LLM')"
+                                            execute_sql_and_commit(conn, cur, sql)
                                             generQuesCount += 1
                                             gqc += 1
                                             displayQues = displayQues + f":blue[**第{generQuesCount}题:**]\n\n:red[题型: ]{quesType}\n\n:red[题目: ]{quesHeader}\n\n:red[选项: ]\n{displayOption}\n\n:red[答案: ]{displayAnswer}\n\n:red[解析: ]{qAnalysis}\n\n{'-' * 40}\n\n"
@@ -1205,7 +1205,7 @@ def ClearMP():
 
 
 def ClearMPAction(bcArea):
-    mdb_del(conn, cur, SQL="DELETE from morepractise where ID > 0")
+    execute_sql_and_commit(conn, cur, sql="DELETE from morepractise where ID > 0")
     bcArea.empty()
     st.success("错题集已重置")
     updateKeyAction("清空错题集所有记录")
@@ -1260,12 +1260,12 @@ def displayUserRanking():
     markertype = col3.radio("标记", options=["默认", "公司Logo"], index=1, horizontal=True)
     maptype = "高德"
     if boardType == "个人榜":
-        SQL = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC, ID limit 0, 5"
+        sql = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC, ID limit 0, 5"
     elif boardType == "站室榜":
-        SQL = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN order by Count DESC"
+        sql = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN order by Count DESC"
     else:
-        SQL = ""
-    rows = mdb_sel(cur, SQL)
+        sql = ""
+    rows = execute_sql(cur, sql)
     for index, row in enumerate(rows):
         xData.append(row[0])
         yData.append(row[2])
@@ -1282,8 +1282,8 @@ def displayUserRanking():
         if heatmap == "Pydeck":
             data = []
             for row in rows:
-                SQL = f"SELECT lat, lng, Station from stations where Station = '{row[0]}'"
-                tmpTable = mdb_sel(cur, SQL)
+                sql = f"SELECT lat, lng, Station from stations where Station = '{row[0]}'"
+                tmpTable = execute_sql(cur, sql)
                 for i in range(row[2]):
                     data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
             chart_data = pd.DataFrame(data, columns=["lat", "lng"],)
@@ -1323,10 +1323,10 @@ def displayUserRanking():
             )
         elif heatmap == "Folium":
             heatData = []
-            SQL = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN order by Ranking DESC"
-            rows = mdb_sel(cur, SQL)
-            SQL = f"SELECT lat, lng, Station from stations where Station == '{rows[0][0]}'"
-            row = mdb_sel(cur, SQL)[0]
+            sql = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN order by Ranking DESC"
+            rows = execute_sql(cur, sql)
+            sql = f"SELECT lat, lng, Station from stations where Station == '{rows[0][0]}'"
+            row = execute_sql(cur, sql)[0]
             lat = round(row[0] / 100, 2)
             lng = round(row[1] / 100, 2)
             m = None
@@ -1341,8 +1341,8 @@ def displayUserRanking():
                     control_scale=True,
                     )
             for row in rows:
-                SQL = f"SELECT lat, lng from stations where Station = '{row[0]}'"
-                row2 = mdb_sel(cur, SQL)[0]
+                sql = f"SELECT lat, lng from stations where Station = '{row[0]}'"
+                row2 = execute_sql(cur, sql)[0]
                 lat = round(row2[0] / 100, 2)
                 lng = round(row2[1] / 100, 2)
                 iframe = folium.IFrame(f"{row[0]} 刷题{row[1]}道")
@@ -1372,17 +1372,17 @@ def displayUserRanking():
 
 def generTimeline():
     timelineData, i = [], 1
-    SQL = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
         if row[0] != "公共题库":
-            SQL = f"SELECT Count(ID) from questions where chapterName = '{row[0]}'"
-            quesCount = mdb_sel(cur, SQL)[0][0]
+            sql = f"SELECT Count(ID) from questions where chapterName = '{row[0]}'"
+            quesCount = execute_sql(cur, sql)[0][0]
         else:
-            SQL = "SELECT Count(ID) from commquestions"
-            quesCount = mdb_sel(cur, SQL)[0][0]
-        SQL = f"SELECT startTime from studyinfo where userName = '{st.session_state.userName}' and chapterName = '{row[0]}' order by startTime"
-        rows2 = mdb_sel(cur, SQL)
+            sql = "SELECT Count(ID) from commquestions"
+            quesCount = execute_sql(cur, sql)[0][0]
+        sql = f"SELECT startTime from studyinfo where userName = '{st.session_state.userName}' and chapterName = '{row[0]}' order by startTime"
+        rows2 = execute_sql(cur, sql)
         if rows2:
             trainingDate = time.strftime("%Y-%m-%d", time.localtime(rows2[0][0]))
             trainingDate2 = time.strftime("%Y-%m-%d", time.localtime(rows2[-1][0]))
@@ -1406,11 +1406,11 @@ def generTimeline():
 
 def displayCertificate():
     flagGener, flagInfo = False, True
-    SQL = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and examName <> '练习题库' order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and examName <> '练习题库' order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
-        SQL = f"SELECT userCName, examScore, examDate, CertificateNum, ID from examresult where userName = '{st.session_state.userName}' and examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 1"
-        rows2 = mdb_sel(cur, SQL)
+        sql = f"SELECT userCName, examScore, examDate, CertificateNum, ID from examresult where userName = '{st.session_state.userName}' and examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 1"
+        rows2 = execute_sql(cur, sql)
         if rows2:
             flagGener = True
             if flagGener and flagInfo:
@@ -1420,8 +1420,8 @@ def displayCertificate():
             with st.expander(label=f"{row[0]}", expanded=False):
                 examDateDetail = time.strftime("%Y%m%d%H%M%S", time.localtime(examDetail[2]))
                 if examDetail[3] == 0:
-                    SQL = "SELECT Max(CertificateNum) from examresult"
-                    maxCertNum = mdb_sel(cur, SQL)[0][0] + 1
+                    sql = "SELECT Max(CertificateNum) from examresult"
+                    maxCertNum = execute_sql(cur, sql)[0][0] + 1
                 else:
                     maxCertNum = examDetail[3]
                 certFile = f"./Images/Certificate/Cert-Num.{str(maxCertNum).rjust(5, '0')}-{st.session_state.userName}-{examDetail[0]}-{row[0]}_{examDateDetail}.png"
@@ -1435,8 +1435,8 @@ def displayCertificate():
                     examDate = time.strftime("%Y-%m-%d", time.localtime(examDetail[2]))
                     generCertificate(certFile, medal, st.session_state.userCName, row[0], examDate, maxCertNum)
                 if os.path.exists(certFile):
-                    SQL = f"UPDATE examresult set CertificateNum = {maxCertNum} where ID = {examDetail[4]}"
-                    mdb_modi(conn, cur, SQL)
+                    sql = f"UPDATE examresult set CertificateNum = {maxCertNum} where ID = {examDetail[4]}"
+                    execute_sql_and_commit(conn, cur, sql)
                     st.image(certFile)
                 with open(certFile, "rb") as file:
                     st.download_button(
@@ -1477,13 +1477,13 @@ def generCertificate(certFile, medal, userCName, examName, examDate, maxCertNum)
 
 
 def displayMedals():
-    SQL = "SELECT examName from examidd where examName <> '练习题库' order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = "SELECT examName from examidd where examName <> '练习题库' order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
         with st.expander(label=f"{row[0]}", expanded=False):
             mcol1, mcol2, mcol3, mcol4, mcol5, mcol6 = st.columns(6)
-            SQL = f"SELECT userCName, examScore, examDate from examresult where examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 3"
-            rows2 = mdb_sel(cur, SQL)
+            sql = f"SELECT userCName, examScore, examDate from examresult where examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 3"
+            rows2 = execute_sql(cur, sql)
             if rows2:
                 if len(rows2) > 0:
                     examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[0][2]))
@@ -1506,8 +1506,8 @@ def displayMedals():
 
 
 def displayErrorQues():
-    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID, WrongTime from morepractise where userAnswer <> '' and qAnswer <> userAnswer and userName = {st.session_state.userName} order by WrongTime DESC"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID, WrongTime from morepractise where userAnswer <> '' and qAnswer <> userAnswer and userName = {st.session_state.userName} order by WrongTime DESC"
+    rows = execute_sql(cur, sql)
     if rows:
         for row in rows:
             #st.subheader("", divider="red")
@@ -1571,8 +1571,8 @@ def studyReset():
 
 
 def studyResetAction():
-    SQL = f"DELETE from studyinfo where userName = {st.session_state.userName}"
-    mdb_del(conn, cur, SQL)
+    sql = f"DELETE from studyinfo where userName = {st.session_state.userName}"
+    execute_sql_and_commit(conn, cur, sql)
     st.success("学习记录已重置")
     updateKeyAction("重置学习记录")
 
@@ -1580,17 +1580,17 @@ def studyResetAction():
 # noinspection PyTypeChecker
 def studyinfoDetail():
     scol1, scol2, scol3 = st.columns(3)
-    SQL = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' and chapterName <> '关注题集'"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' and chapterName <> '关注题集'"
+    rows = execute_sql(cur, sql)
     scol1.metric(label="章节总计", value=rows[0][0], help="包含公共题库, 不含错题集")
-    SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}'"
-    ct1 = mdb_sel(cur, SQL)[0][0]
-    SQL = "SELECT Count(ID) from commquestions"
-    ct2 = mdb_sel(cur, SQL)[0][0]
+    sql = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}'"
+    ct1 = execute_sql(cur, sql)[0][0]
+    sql = "SELECT Count(ID) from commquestions"
+    ct2 = execute_sql(cur, sql)[0][0]
     ct = ct1 + ct2
     scol2.metric(label="试题总计", value=ct, help="包含公共题库, 不含错题集")
-    SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
+    rows = execute_sql(cur, sql)
     scol3.metric(label="已学习试题", value=f"{rows[0][0]} - {int(rows[0][0] / ct * 100)}%", help=f"总完成率: {int(rows[0][0] / ct * 100)}%")
     style_metric_cards(border_left_color="#8581d9")
     helpInfo = ["点击页面⤴️右上角红圈处图标, 并选择Settings", "点击Choose app theme, colors and fonts", "选择Light或是Custom Theme"]
@@ -1605,20 +1605,20 @@ def studyinfoDetail():
     if step is not None:
         st.image(f"./Images/help/themesetup{step}.png", caption=f"{helpInfo[step]}")
     with st.expander("各章节进度详情", icon=":material/format_list_bulleted:", expanded=True):
-        SQL = "SELECT Count(ID) from commquestions"
-        ct = mdb_sel(cur, SQL)[0][0]
+        sql = "SELECT Count(ID) from commquestions"
+        ct = execute_sql(cur, sql)[0][0]
         if ct > 0:
-            SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"
-            cs = mdb_sel(cur, SQL)[0][0]
+            sql = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"
+            cs = execute_sql(cur, sql)[0][0]
             st.progress(value=cs / ct, text=f":blue[公共题库] 已完成 :orange[{int((cs / ct) * 100)}%]")
-        SQL = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' order by ID"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' order by ID"
+        rows = execute_sql(cur, sql)
         for row in rows:
-            SQL = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' and chapterName = '{row[0]}'"
-            ct = mdb_sel(cur, SQL)[0][0]
+            sql = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' and chapterName = '{row[0]}'"
+            ct = execute_sql(cur, sql)[0][0]
             if ct > 0:
-                SQL = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '{row[0]}'"
-                cs = mdb_sel(cur, SQL)[0][0]
+                sql = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '{row[0]}'"
+                cs = execute_sql(cur, sql)[0][0]
                 st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{int((cs / ct) * 100)}%]")
 
 
@@ -1649,8 +1649,8 @@ def userStatus():
 
 
 def actionUserStatus():
-    SQL = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from users where activeUser = 1 order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from users where activeUser = 1 order by ID"
+    rows = execute_sql(cur, sql)
     df = pd.DataFrame(rows, dtype=str)
     df.columns = ["姓名", "类型", "站室", "用户操作", "登录时间", "活动时间", "累计活动时间"]
     for index, value in enumerate(rows):
@@ -1725,8 +1725,8 @@ def quesModify():
         col3, col4, col5 = st.columns(3)
         buttonDisplayQues = col3.button("显示试题", icon=":material/dvr:")
         if buttonDisplayQues:
-            SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis from {tablename} where ID = {quesID}"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis from {tablename} where ID = {quesID}"
+            rows = execute_sql(cur, sql)
             if rows:
                 col4.button("更新试题", on_click=actionQM, args=(quesID, tablename, rows[0]), icon=":material/published_with_changes:")
                 col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename, rows[0]), icon=":material/delete:")
@@ -1767,8 +1767,8 @@ def actionQM(quesID, tablename, mRow):
             mAnswer = mAnswer + st.session_state[f"qModifyQues_Answer_{i}"] + ";"
         if mAnswer.endswith(";"):
             mAnswer = mAnswer[:-1]
-    SQL = f"UPDATE {tablename} set Question = '{mQues}', qOption = '{mOption}', qAnswer = '{mAnswer}', qAnalysis = '{mAnalysis}' where ID = {quesID}"
-    mdb_modi(conn, cur, SQL)
+    sql = f"UPDATE {tablename} set Question = '{mQues}', qOption = '{mOption}', qAnswer = '{mAnswer}', qAnalysis = '{mAnalysis}' where ID = {quesID}"
+    execute_sql_and_commit(conn, cur, sql)
     clearModifyQues(quesID, tablename, mRow)
     for key in st.session_state.keys():
         if key.startswith("qModifyQues_"):
@@ -1777,8 +1777,8 @@ def actionQM(quesID, tablename, mRow):
 
 
 def actionDelQM(quesID, tablename, mRow):
-    SQL = f"DELETE from {tablename} where ID = {quesID}"
-    mdb_del(conn, cur, SQL)
+    sql = f"DELETE from {tablename} where ID = {quesID}"
+    execute_sql_and_commit(conn, cur, sql)
     clearModifyQues(quesID, tablename, mRow)
     for key in st.session_state.keys():
         if key.startswith("qModifyQues_"):
@@ -1789,10 +1789,10 @@ def actionDelQM(quesID, tablename, mRow):
 def clearModifyQues(quesID, tablename, mRow):
     delTablePack = ["morepractise", "favques"]
     for each in delTablePack:
-        SQL = f"DELETE from {each} where Question = '{mRow[0]}' and qOption = '{mRow[1]}' and qAnswer = '{mRow[2]}' and qType = '{mRow[3]}'"
-        mdb_del(conn, cur, SQL)
-    SQL = f"DELETE from studyinfo where cid = {quesID} and quesTable = '{tablename}'"
-    mdb_del(conn, cur, SQL)
+        sql = f"DELETE from {each} where Question = '{mRow[0]}' and qOption = '{mRow[1]}' and qAnswer = '{mRow[2]}' and qType = '{mRow[3]}'"
+        execute_sql_and_commit(conn, cur, sql)
+    sql = f"DELETE from studyinfo where cid = {quesID} and quesTable = '{tablename}'"
+    execute_sql_and_commit(conn, cur, sql)
 
 
 def aboutReadme():
@@ -1804,39 +1804,39 @@ def training():
     flagProc, failInfo = True, ""
     if st.session_state.examType == "exam":
         quesType = []
-        SQL = f"SELECT paramName from setup_{st.session_state.StationCN} where paramType = 'questype' and param = 1 order by ID"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT paramName from setup_{st.session_state.StationCN} where paramType = 'questype' and param = 1 order by ID"
+        rows = execute_sql(cur, sql)
         for row in rows:
             quesType.append([row[0], getParam(f"{row[0]}数量", st.session_state.StationCN)])
         for each in quesType:
             quesTypeCount = 0
             tmp = each[0].replace("数量", "")
-            SQL = f"SELECT count(ID) from questions where qType = '{tmp}' and StationCN = '{st.session_state.StationCN}'"
-            quesTypeCount += int(mdb_sel(cur, SQL)[0][0])
-            SQL = f"SELECT count(ID) from commquestions where qType = '{tmp}'"
-            quesTypeCount += int(mdb_sel(cur, SQL)[0][0])
+            sql = f"SELECT count(ID) from questions where qType = '{tmp}' and StationCN = '{st.session_state.StationCN}'"
+            quesTypeCount += int(execute_sql(cur, sql)[0][0])
+            sql = f"SELECT count(ID) from commquestions where qType = '{tmp}'"
+            quesTypeCount += int(execute_sql(cur, sql)[0][0])
             if quesTypeCount < each[1]:
                 flagProc = False
                 failInfo = failInfo + f"{tmp}/"
     elif st.session_state.examType == "training":
         quesType = [["单选题", 30], ["多选题", 10], ["判断题", 10], ["填空题", 0]]
-        SQL = f"SELECT mcq, mmcq, tfq, fibq from indivquescount where userName = {st.session_state.userName}"
-        rows = mdb_sel(cur, SQL)
+        sql = f"SELECT mcq, mmcq, tfq, fibq from indivquescount where userName = {st.session_state.userName}"
+        rows = execute_sql(cur, sql)
         if rows:
             row = rows[0]
             for i in range(4):
                 quesType[i][1] = row[i]
         else:
-            SQL = f"INSERT INTO indivquescount (userName, mcq, mmcq, tfq, fibq) VALUES({st.session_state.userName}, {quesType[0][1]}, {quesType[1][1]}, {quesType[2][1]}, {quesType[3][1]})"
-            mdb_ins(conn, cur, SQL)
+            sql = f"INSERT INTO indivquescount (userName, mcq, mmcq, tfq, fibq) VALUES({st.session_state.userName}, {quesType[0][1]}, {quesType[1][1]}, {quesType[2][1]}, {quesType[3][1]})"
+            execute_sql_and_commit(conn, cur, sql)
     if flagProc:
         generPack, examIDPack, chapterPack, genResult = [], [], [], []
         generQues = st.empty()
         with generQues.container():
             if st.session_state.examType == "exam":
                 date = int(time.time())
-                SQL = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and validDate >= {date} order by validDate"
-                rows = mdb_sel(cur, SQL)
+                sql = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and validDate >= {date} order by validDate"
+                rows = execute_sql(cur, sql)
                 for row in rows:
                     examIDPack.append(row[0])
                 examName = st.selectbox("请选择考试场次", examIDPack, index=None)
@@ -1846,16 +1846,16 @@ def training():
                         st.session_state.examName = examName
                         st.spinner("正在生成题库...")
                         reviseQues()
-                        SQL = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + st.session_state.StationCN + "'"
-                        rows = mdb_sel(cur, SQL)
+                        sql = "SELECT chapterName from questionaff where chapterName <> '错题集' and chapterName <> '关注题集' and StationCN = '" + st.session_state.StationCN + "'"
+                        rows = execute_sql(cur, sql)
                         for row in rows:
                             chapterPack.append(row[0])
                         genResult = GenerExam(chapterPack, st.session_state.StationCN, st.session_state.userName, st.session_state.examName, st.session_state.examType, quesType, st.session_state.examRandom, False)
             elif st.session_state.examType == "training":
                 tCol1, tCol2, tCol3 = st.columns(3)
                 generButtonQues = tCol1.button("生成题库")
-                SQL = "SELECT pyLM from verinfo where pyFile = 'chapterChosenType'"
-                chapterChosenType = mdb_sel(cur, SQL)[0][0]
+                sql = "SELECT pyLM from verinfo where pyFile = 'chapterChosenType'"
+                chapterChosenType = execute_sql(cur, sql)[0][0]
                 with tCol2:
                     uCCT = sac.segmented(
                         items=[
@@ -1865,8 +1865,8 @@ def training():
                         ], index=chapterChosenType, align="start", color="orange", return_index=True, size="sm",
                     )
                 if uCCT != 0:
-                    SQL = f"UPDATE verinfo set pyLM = {uCCT} where pyFile = 'chapterChosenType'"
-                    mdb_modi(conn, cur, SQL)
+                    sql = f"UPDATE verinfo set pyLM = {uCCT} where pyFile = 'chapterChosenType'"
+                    execute_sql_and_commit(conn, cur, sql)
                 tCol3.checkbox(":red[**仅未学习试题**]", value=False, key="GenerNewOnly", help="仅从未学习试题中生成")
                 indivCols = st.columns(4)
                 for i in range(4):
@@ -1876,8 +1876,8 @@ def training():
                 ddCol2.write("**权重**")
                 for each in ["公共题库", "错题集", "关注题集"]:
                     ddCol1, ddCol2 = st.columns(2)
-                    SQL = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
-                    row = mdb_sel(cur, SQL)[0]
+                    sql = f"SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName = '{each}'"
+                    row = execute_sql(cur, sql)[0]
                     if uCCT == 0:
                         if each == "公共题库":
                             generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=True))
@@ -1888,8 +1888,8 @@ def training():
                     elif uCCT == 2:
                         generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=False))
                     ddCol2.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining, label_visibility="collapsed")
-                SQL = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + st.session_state.StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
-                rows = mdb_sel(cur, SQL)
+                sql = "SELECT chapterName, chapterRatio, ID from questionaff where StationCN = '" + st.session_state.StationCN + "' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' order by chapterName"
+                rows = execute_sql(cur, sql)
                 for row in rows:
                     ddCol1, ddCol2 = st.columns(2)
                     if uCCT == 0 or uCCT == 1:
@@ -1899,8 +1899,8 @@ def training():
                     ddCol2.slider("章节权重", min_value=1, max_value=10, value=row[1], step=1, key=f"tempCR_{row[2]}", on_change=updateCRTraining, label_visibility="collapsed")
                 if generButtonQues:
                     st.session_state.examName = "练习题库"
-                    SQL = f"UPDATE indivquescount set mcq = {quesType[0][1]}, mmcq = {quesType[1][1]}, tfq = {quesType[2][1]}, fibq = {quesType[3][1]} where userName = {st.session_state.userName}"
-                    mdb_modi(conn, cur, SQL)
+                    sql = f"UPDATE indivquescount set mcq = {quesType[0][1]}, mmcq = {quesType[1][1]}, tfq = {quesType[2][1]}, fibq = {quesType[3][1]} where userName = {st.session_state.userName}"
+                    execute_sql_and_commit(conn, cur, sql)
                     for index, value in enumerate(generPack):
                         if value:
                             if index == 0:
@@ -1949,11 +1949,11 @@ def training():
 def reviseQues():
     for each in ["questions", "commquestions"]:
         for each2 in [['（', '('], ['）', ')']]:
-            SQL = f"UPDATE {each} set Question = replace(Question, '{each2[0]}', '{each2[1]}') where qType = '填空题' and Question like '%{each2[0]}%'"
-            mdb_modi(conn, cur, SQL)
+            sql = f"UPDATE {each} set Question = replace(Question, '{each2[0]}', '{each2[1]}') where qType = '填空题' and Question like '%{each2[0]}%'"
+            execute_sql_and_commit(conn, cur, sql)
         for each2 in ['( )', '(  )', '(   )', '(    )']:
-            SQL = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
-            mdb_modi(conn, cur, SQL)
+            sql = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
+            execute_sql_and_commit(conn, cur, sql)
 
 
 @st.fragment
@@ -1961,42 +1961,42 @@ def updateCRTraining():
     for key in st.session_state.keys():
         if key.startswith("tempCR_"):
             upID = key[key.find("_") + 1:]
-            SQL = f"UPDATE questionaff SET chapterRatio = {st.session_state[key]} WHERE ID = {upID}"
-            mdb_modi(conn, cur, SQL)
+            sql = f"UPDATE questionaff SET chapterRatio = {st.session_state[key]} WHERE ID = {upID}"
+            execute_sql_and_commit(conn, cur, sql)
 
 
 def updateCRExam():
     for key in st.session_state.keys():
         if key.startswith("crsetup_"):
             upID = key[key.find("_") + 1:]
-            SQL = f"UPDATE questionaff SET examChapterRatio = {st.session_state[key]} WHERE ID = {upID}"
-            mdb_modi(conn, cur, SQL)
+            sql = f"UPDATE questionaff SET examChapterRatio = {st.session_state[key]} WHERE ID = {upID}"
+            execute_sql_and_commit(conn, cur, sql)
     st.success("章节权重更新成功")
     updateKeyAction("考试章节权重更新")
 
 
 @st.fragment
 def updateAnswer(userQuesID):
-    SQL = f"UPDATE {st.session_state.examFinalTable} set userAnswer = '{st.session_state.answer}', userName = {st.session_state.userName} where ID = {userQuesID}"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"SELECT Question, qAnswer, qType, userAnswer, userName, qOption, qAnalysis, SourceType from {st.session_state.examFinalTable} where ID = {userQuesID}"
-    judTable = mdb_sel(cur, SQL)[0]
+    sql = f"UPDATE {st.session_state.examFinalTable} set userAnswer = '{st.session_state.answer}', userName = {st.session_state.userName} where ID = {userQuesID}"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = f"SELECT Question, qAnswer, qType, userAnswer, userName, qOption, qAnalysis, SourceType from {st.session_state.examFinalTable} where ID = {userQuesID}"
+    judTable = execute_sql(cur, sql)[0]
     if judTable[1] == judTable[3]:
-        SQL = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
-        mdb_modi(conn, cur, SQL)
-        SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
-        mdb_modi(conn, cur, SQL)
+        sql = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
+        execute_sql_and_commit(conn, cur, sql)
+        sql = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
+        execute_sql_and_commit(conn, cur, sql)
         #st.session_state.tooltipColor = "#ed872d"
     else:
-        SQL = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
-        if mdb_sel(cur, SQL):
-            SQL = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{judTable[3]}' where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
-            mdb_modi(conn, cur, SQL)
+        sql = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
+        if execute_sql(cur, sql):
+            sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{judTable[3]}' where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
+            execute_sql_and_commit(conn, cur, sql)
         else:
-            SQL = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}')"
-            mdb_ins(conn, cur, SQL)
+            sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}')"
+            execute_sql_and_commit(conn, cur, sql)
         #st.session_state.tooltipColor = "#8581d9"
-    mdb_del(conn, cur, SQL="DELETE from morepractise where WrongTime < 1")
+    execute_sql_and_commit(conn, cur, sql="DELETE from morepractise where WrongTime < 1")
 
 
 @st.dialog("考试成绩")
@@ -2019,8 +2019,8 @@ def score_dialog(userScore, passScore):
     if st.session_state.examType == "training":
         st.write("练习模式成绩不计入记录")
     if st.session_state.examType == "exam" and st.session_state.calcScore:
-        SQL = "INSERT INTO examresult(userName, userCName, examScore, examDate, examPass, examName) VALUES(" + str(st.session_state.userName) + ", '" + st.session_state.userCName + "', " + str(userScore) + ", " + str(examDate) + ", " + str(flagPass) + ", '" + st.session_state.examName + "')"
-        mdb_ins(conn, cur, SQL)
+        sql = "INSERT INTO examresult(userName, userCName, examScore, examDate, examPass, examName) VALUES(" + str(st.session_state.userName) + ", '" + st.session_state.userCName + "', " + str(userScore) + ", " + str(examDate) + ", " + str(flagPass) + ", '" + st.session_state.examName + "')"
+        execute_sql_and_commit(conn, cur, sql)
     st.session_state.calcScore = False
     buttonScore = st.button("确定")
     if buttonScore:
@@ -2036,19 +2036,19 @@ def calcScore():
     quesScore = getParam("单题分值", st.session_state.StationCN)
     passScore = getParam("合格分数线", st.session_state.StationCN)
     userScore = 0
-    SQL = f"SELECT qAnswer, qType, userAnswer, Question, qOption, qAnalysis, userName, SourceType from {st.session_state.examFinalTable} where userName = {st.session_state.userName} order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT qAnswer, qType, userAnswer, Question, qOption, qAnalysis, userName, SourceType from {st.session_state.examFinalTable} where userName = {st.session_state.userName} order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
         flagAIScore = False
         if row[0].replace(" ", "").lower() == row[2].replace(" ", "").lower():
             userScore += quesScore
-            SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
-            mdb_modi(conn, cur, SQL)
-            SQL = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
-            if mdb_sel(cur, SQL):
-                SQL = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
-                mdb_modi(conn, cur, SQL)
-            mdb_del(conn, cur, SQL="DELETE from morepractise where WrongTime < 1")
+            sql = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
+            execute_sql_and_commit(conn, cur, sql)
+            sql = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
+            if execute_sql(cur, sql):
+                sql = f"UPDATE morepractise set WrongTime = WrongTime - 1 where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
+                execute_sql_and_commit(conn, cur, sql)
+            execute_sql_and_commit(conn, cur, sql="DELETE from morepractise where WrongTime < 1")
         else:
             if row[1] == "填空题":
                 if flagUseAIFIB:
@@ -2070,21 +2070,21 @@ def calcScore():
                                 print(f"debug: [{row[3]}] [Q:{row[0]} / A:{row[2]}] / A.I.判断: [{fibAI}]")
                             if fibAI == "正确":
                                 userScore += quesScore
-                                SQL = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
-                                mdb_modi(conn, cur, SQL)
+                                sql = f"UPDATE users set userRanking = userRanking + 1 where userName = {st.session_state.userName}"
+                                execute_sql_and_commit(conn, cur, sql)
                                 flagAIScore = True
                             else:
                                 flagAIScore = False
                     else:
                         st.error("⚠️ 试题或是答案数量不匹配, 请检查")
             if not flagAIScore:
-                SQL = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
-                if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{row[3]}', '{row[4]}', '{row[0]}', '{row[1]}', '{row[5]}', '{row[2]}', {row[6]}, 1, '{st.session_state.StationCN}', '{row[7]}')"
-                    mdb_ins(conn, cur, SQL)
+                sql = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
+                if not execute_sql(cur, sql):
+                    sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{row[3]}', '{row[4]}', '{row[0]}', '{row[1]}', '{row[5]}', '{row[2]}', {row[6]}, 1, '{st.session_state.StationCN}', '{row[7]}')"
+                    execute_sql_and_commit(conn, cur, sql)
                 else:
-                    SQL = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{row[2]}' where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
-                    mdb_modi(conn, cur, SQL)
+                    sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{row[2]}' where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
+                    execute_sql_and_commit(conn, cur, sql)
     if st.session_state.calcScore:
         score_dialog(userScore, passScore)
 
@@ -2137,8 +2137,8 @@ def updateMOptionAnswer(row):
 def delQuestion(delQuesRow):
     delTablePack = ["questions", "commquestions", "morepractise"]
     for delTable in delTablePack:
-        SQL = f"DELETE from {delTable} where Question = '{delQuesRow[1]}' and qType = '{delQuesRow[4]}'"
-        mdb_del(conn, cur, SQL)
+        sql = f"DELETE from {delTable} where Question = '{delQuesRow[1]}' and qType = '{delQuesRow[4]}'"
+        execute_sql_and_commit(conn, cur, sql)
     updateKeyAction(f"删除试题: {delQuesRow[1]}")
 
 
@@ -2146,32 +2146,32 @@ def delQuestion(delQuesRow):
 def updateStudyInfo(studyRow):
     for each in ["questions", "commquestions"]:
         if each == "questions":
-            SQL = f"SELECT ID, chapterName from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}' and StationCN = '{st.session_state.StationCN}'"
+            sql = f"SELECT ID, chapterName from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}' and StationCN = '{st.session_state.StationCN}'"
         elif each == "commquestions":
-            SQL = f"SELECT ID, '公共题库' from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}'"
+            sql = f"SELECT ID, '公共题库' from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}'"
         else:
-            SQL = ""
-        studyResult = mdb_sel(cur, SQL)
+            sql = ""
+        studyResult = execute_sql(cur, sql)
         if studyResult:
-            SQL = f"SELECT ID from studyinfo where cid = {studyResult[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyResult[0][1]}'"
-            if not mdb_sel(cur, SQL):
-                SQL = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName, startTime) VALUES({studyResult[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyResult[0][1]}', {int(time.time())})"
-                mdb_ins(conn, cur, SQL)
+            sql = f"SELECT ID from studyinfo where cid = {studyResult[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyResult[0][1]}'"
+            if not execute_sql(cur, sql):
+                sql = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName, startTime) VALUES({studyResult[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyResult[0][1]}', {int(time.time())})"
+                execute_sql_and_commit(conn, cur, sql)
 
 
 @st.fragment
 def delFavQues(favRow):
-    SQL = f"DELETE from favques where Question = '{favRow[1]}' and userName = {st.session_state.userName} and qType = '{favRow[4]}' and StationCN = '{st.session_state.StationCN}'"
-    mdb_del(conn, cur, SQL)
+    sql = f"DELETE from favques where Question = '{favRow[1]}' and userName = {st.session_state.userName} and qType = '{favRow[4]}' and StationCN = '{st.session_state.StationCN}'"
+    execute_sql_and_commit(conn, cur, sql)
     st.toast("已从关注题集中删除")
 
 
 @st.fragment
 def addFavQues(favRow):
-    SQL = f"SELECT ID from favques where Question = '{favRow[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
-    if not mdb_sel(cur, SQL):
-        SQL = f"INSERT INTO favques(Question, qOption, qAnswer, qType, qAnalysis, userName, StationCN, SourceType) VALUES('{favRow[1]}', '{favRow[2]}', '{favRow[3]}', '{favRow[4]}', '{favRow[5]}', {st.session_state.userName}, '{st.session_state.StationCN}', '{favRow[8]}')"
-        mdb_ins(conn, cur, SQL)
+    sql = f"SELECT ID from favques where Question = '{favRow[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
+    if not execute_sql(cur, sql):
+        sql = f"INSERT INTO favques(Question, qOption, qAnswer, qType, qAnalysis, userName, StationCN, SourceType) VALUES('{favRow[1]}', '{favRow[2]}', '{favRow[3]}', '{favRow[4]}', '{favRow[5]}', {st.session_state.userName}, '{st.session_state.StationCN}', '{favRow[8]}')"
+        execute_sql_and_commit(conn, cur, sql)
         st.toast("已添加到关注题集")
 
 
@@ -2181,8 +2181,8 @@ def exam(row):
     option, AIModelName, AIOption, AIOptionIndex = [], "", [], 0
     st.session_state.answer = ""
     flagAIUpdate = bool(getParam("A.I.答案解析更新至题库", st.session_state.StationCN))
-    SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'others' and paramName like '%大模型' order by ID"
-    tempTable = mdb_sel(cur, SQL)
+    sql = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'others' and paramName like '%大模型' order by ID"
+    tempTable = execute_sql(cur, sql)
     for index, value in enumerate(tempTable):
         AIOption.append(value[0])
         if value[1] == 1:
@@ -2201,8 +2201,8 @@ def exam(row):
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
     if st.session_state.examType == "training":
-        SQL = f"SELECT ID from favques where Question = '{row[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
-        if mdb_sel(cur, SQL):
+        sql = f"SELECT ID from favques where Question = '{row[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
+        if execute_sql(cur, sql):
             acol2.button(label="", icon=":material/heart_minus:", on_click=delFavQues, args=(row,), help="从关注题集中删除")
         else:
             acol2.button(label="", icon=":material/heart_plus:", on_click=addFavQues, args=(row,), help="添加到关注题集")
@@ -2244,8 +2244,8 @@ def exam(row):
         if st.session_state.radioCompleted:
             radioArea.empty()
             st.session_state.radioCompleted = False
-            SQL = f"SELECT userAnswer from {st.session_state.examFinalTable} where ID = {row[0]}"
-            tempUserAnswer = mdb_sel(cur, SQL)[0][0]
+            sql = f"SELECT userAnswer from {st.session_state.examFinalTable} where ID = {row[0]}"
+            tempUserAnswer = execute_sql(cur, sql)[0][0]
             if tempUserAnswer != "":
                 st.radio(" ", option, index=int(tempUserAnswer) ^ 1, key="radioChosen2", on_change=updateRadioAnswer2, args=(row[0],), label_visibility="collapsed", horizontal=True)
     elif row[4] == '填空题':
@@ -2314,8 +2314,8 @@ def exam(row):
                         if flagAIUpdate:
                             AIAnswer = AIAnswer.replace('"', '""').replace("'", "''")
                             for each in ["questions", "commquestions", "morepractise", "favques", st.session_state.examTable, st.session_state.examFinalTable]:
-                                SQL = f"UPDATE {each} set qAnalysis = '{AIAnswer}' where Question = '{row[1]}' and qType = '{row[4]}'"
-                                mdb_modi(conn, cur, SQL)
+                                sql = f"UPDATE {each} set qAnalysis = '{AIAnswer}' where Question = '{row[1]}' and qType = '{row[4]}'"
+                                execute_sql_and_commit(conn, cur, sql)
                             st.toast("A.I.答案解析内容已更新至题库")
                     else:
                         st.info("A.I.获取答案解析失败")
@@ -2329,16 +2329,16 @@ def exam(row):
 @st.fragment
 def delAnalysis(row):
     for each in ["questions", "commquestions", "morepractise", "favques", st.session_state.examTable, st.session_state.examFinalTable]:
-        SQL = f"UPDATE {each} set qAnalysis = '' where Question = '{row[1]}' and qType = '{row[4]}'"
-        mdb_modi(conn, cur, SQL)
+        sql = f"UPDATE {each} set qAnalysis = '' where Question = '{row[1]}' and qType = '{row[4]}'"
+        execute_sql_and_commit(conn, cur, sql)
     st.info("本题解析已删除")
 
 
 @st.fragment
 def manualFIB(rowID):
     fibAI = ""
-    SQL = f"SELECT Question, qAnswer, userAnswer from {st.session_state.examFinalTable} where ID = {rowID}"
-    fibRow = mdb_sel(cur, SQL)[0]
+    sql = f"SELECT Question, qAnswer, userAnswer from {st.session_state.examFinalTable} where ID = {rowID}"
+    fibRow = execute_sql(cur, sql)[0]
     fibQues = fibRow[0]
     userAP = fibRow[2].split(";")
     qAP = fibRow[1].split(";")
@@ -2444,10 +2444,10 @@ def displayTimeCountdown():
             with info1:
                 if remindTimeText != "":
                     components.html(remindTimeText, height=92)
-        SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
-        acAnswer1 = mdb_sel(cur, SQL)[0][0]
-        SQL = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
-        acAnswer2 = mdb_sel(cur, SQL)[0][0]
+        sql = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
+        acAnswer1 = execute_sql(cur, sql)[0][0]
+        sql = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
+        acAnswer2 = execute_sql(cur, sql)[0][0]
         if flagTime:
             info2.metric(label="已答题", value=acAnswer1)
             info3.metric(label="未答题", value=acAnswer2)
@@ -2481,8 +2481,8 @@ def displayBigTimeCircle():
 
 @st.fragment
 def displayVisitCounter():
-    SQL = "SELECT pyLM from verinfo where pyFile = 'visitcounter'"
-    visitcount = mdb_sel(cur, SQL)[0][0]
+    sql = "SELECT pyLM from verinfo where pyFile = 'visitcounter'"
+    visitcount = execute_sql(cur, sql)[0][0]
     countScript = (open("./MyComponentsScript/FlipNumber.txt", "r", encoding="utf-8").read()).replace("visitcount", str(visitcount))
     components.html(countScript, height=40)
 
@@ -2495,7 +2495,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['New']} 更改了考试时的计数器样式, 修复在云端显示不正常的问题; 优化了一些细节问题")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['Optimize']} 更改了考试时的计数器样式, 修复在云端显示不正常的问题; 优化了一些细节问题")
     components.html(infoStr, height=300)
 
 
@@ -2531,10 +2531,10 @@ def addExamIDD():
             if buttonSubmit:
                 examDateStr = examDate
                 examDate = int(time.mktime(time.strptime(f"{examDate} 23:59:59", "%Y-%m-%d %H:%M:%S")))
-                SQL = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
-                if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO examidd(examName, validDate, StationCN) VALUES('{examName}', {examDate}, '{st.session_state.StationCN}')"
-                    mdb_ins(conn, cur, SQL)
+                sql = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
+                if not execute_sql(cur, sql):
+                    sql = f"INSERT INTO examidd(examName, validDate, StationCN) VALUES('{examName}', {examDate}, '{st.session_state.StationCN}')"
+                    execute_sql_and_commit(conn, cur, sql)
                     flagSuccess = True
                     itemArea.empty()
                 else:
@@ -2543,8 +2543,8 @@ def addExamIDD():
             if not examName:
                 st.warning("请输入考试名称")
     if flagSuccess:
-        SQL = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
-        if mdb_sel(cur, SQL):
+        sql = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
+        if execute_sql(cur, sql):
             st.success(f"考试场次: [{examName}] 有效期: [{examDateStr} 23:59:59] 添加成功")
             updateKeyAction(f"新建考试场次{examName}")
             itemArea.empty()
@@ -2562,10 +2562,10 @@ def addStation():
         if sn:
             buttonSubmit = st.button("添加站室名称")
             if buttonSubmit:
-                SQL = "SELECT ID from stations where Station = '" + sn + "'"
-                if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO stations(Station) VALUES('{sn}')"
-                    mdb_ins(conn, cur, SQL)
+                sql = "SELECT ID from stations where Station = '" + sn + "'"
+                if not execute_sql(cur, sql):
+                    sql = f"INSERT INTO stations(Station) VALUES('{sn}')"
+                    execute_sql_and_commit(conn, cur, sql)
                     flagSuccess = True
                     itemArea.empty()
                 else:
@@ -2574,27 +2574,27 @@ def addStation():
             if not sn:
                 st.warning("请输入站室名称")
     if flagSuccess:
-        SQL = "SELECT ID from stations where Station = '" + sn + "'"
-        if mdb_sel(cur, SQL):
-            SQL = f"SELECT * from sqlite_master where type = 'table' and name = 'setup_{sn}'"
-            tempTable = mdb_sel(cur, SQL)
+        sql = "SELECT ID from stations where Station = '" + sn + "'"
+        if execute_sql(cur, sql):
+            sql = f"SELECT * from sqlite_master where type = 'table' and name = 'setup_{sn}'"
+            tempTable = execute_sql(cur, sql)
             if not tempTable:
-                SQL = """CREATE TABLE exampleTable (
+                sql = """CREATE TABLE exampleTable (
                             ID integer not null primary key autoincrement,
                             paramName text not null,
                             param integer,
                             paramType text not null
                         );"""
-                SQL = SQL.replace("exampleTable", f"setup_{sn}")
-                cur.execute(SQL)
+                sql = sql.replace("exampleTable", f"setup_{sn}")
+                cur.execute(sql)
                 conn.commit()
-                SQL = f"INSERT INTO setup_{sn}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
-                mdb_ins(conn, cur, SQL)
+                sql = f"INSERT INTO setup_{sn}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
+                execute_sql_and_commit(conn, cur, sql)
             for each in ["公共题库", "错题集", "关注题集"]:
-                SQL = f"SELECT ID from questionaff where chapterName = '{each}' and StationCN = '{sn}'"
-                if not mdb_sel(cur, SQL):
-                    SQL = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{each}', '{sn}', 10, 10)"
-                    mdb_ins(conn, cur, SQL)
+                sql = f"SELECT ID from questionaff where chapterName = '{each}' and StationCN = '{sn}'"
+                if not execute_sql(cur, sql):
+                    sql = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{each}', '{sn}', 10, 10)"
+                    execute_sql_and_commit(conn, cur, sql)
             st.success(f"[{sn}] 站室添加成功")
             updateKeyAction(f"新建站室{sn}")
             itemArea.empty()
@@ -2626,11 +2626,11 @@ def addUser():
                     else:
                         ut = "user"
                     st.write(station)
-                    SQL = "SELECT ID from users where userName = " + str(un)
-                    if not mdb_sel(cur, SQL):
+                    sql = "SELECT ID from users where userName = " + str(un)
+                    if not execute_sql(cur, sql):
                         userPassword1 = getUserEDKeys(userPassword1, "enc")
-                        SQL = f"INSERT INTO users(userName, userCName, userType, StationCN, userPassword) VALUES({un}, '{userCName}', '{ut}', '{station}', '{userPassword1}')"
-                        mdb_ins(conn, cur, SQL)
+                        sql = f"INSERT INTO users(userName, userCName, userType, StationCN, userPassword) VALUES({un}, '{userCName}', '{ut}', '{station}', '{userPassword1}')"
+                        execute_sql_and_commit(conn, cur, sql)
                         flagSuccess = True
                         itemArea.empty()
                     else:
@@ -2645,8 +2645,8 @@ def addUser():
             elif not userPassword2:
                 st.warning("请确认密码")
     if flagSuccess:
-        SQL = "SELECT ID from users where userName = " + str(un) + " and StationCN = '" + station + "' and userCName = '" + userCName + "'"
-        if mdb_sel(cur, SQL):
+        sql = "SELECT ID from users where userName = " + str(un) + " and StationCN = '" + station + "' and userCName = '" + userCName + "'"
+        if execute_sql(cur, sql):
             st.success(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加成功")
             updateKeyAction(f"新建用户: {userName} 姓名: {userCName} 类型: {ut} 站室: {station}")
             itemArea.empty()
@@ -2658,8 +2658,8 @@ def getStationCNALL(flagALL=False):
     StationCNamePack = []
     if flagALL:
         StationCNamePack.append("全站")
-    SQL = "SELECT Station from stations order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = "SELECT Station from stations order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
         StationCNamePack.append(row[0])
 
@@ -2670,18 +2670,18 @@ def updateDAParam(updateParamType):
     for key in st.session_state.keys():
         if key.startswith("dasetup_"):
             upID = key[key.find("_") + 1:]
-            SQL = f"UPDATE setup_{st.session_state.StationCN} SET param = {int(st.session_state[key])} WHERE ID = {upID}"
-            mdb_modi(conn, cur, SQL)
+            sql = f"UPDATE setup_{st.session_state.StationCN} SET param = {int(st.session_state[key])} WHERE ID = {upID}"
+            execute_sql_and_commit(conn, cur, sql)
     st.success(f"{updateParamType} 参数更新成功")
     updateKeyAction("考试参数更新")
 
 
 def updateSwitchOption(quesType):
     if st.session_state[quesType]:
-        SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 1 where paramName = '{quesType}'"
+        sql = f"UPDATE setup_{st.session_state.StationCN} set param = 1 where paramName = '{quesType}'"
     else:
-        SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramName = '{quesType}'"
-    mdb_modi(conn, cur, SQL)
+        sql = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramName = '{quesType}'"
+    execute_sql_and_commit(conn, cur, sql)
     if quesType == "测试模式":
         st.session_state.debug = bool(st.session_state[quesType])
     if quesType == "时钟样式":
@@ -2690,31 +2690,31 @@ def updateSwitchOption(quesType):
 
 
 def setupReset():
-    mdb_del(conn, cur, SQL=f"DELETE from setup_{st.session_state.StationCN} where ID > 0")
-    SQL = f"INSERT INTO setup_{st.session_state.StationCN}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
-    mdb_ins(conn, cur, SQL)
-    SQL = f"UPDATE questionaff set chapterRatio = 10, examChapterRatio = 10 where StationCN = '{st.session_state.StationCN}' and (chapterName = '公共题库' or chapterName = '错题集')"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE questionaff set chapterRatio = 5, examChapterRatio = 5 where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
-    mdb_modi(conn, cur, SQL)
+    execute_sql_and_commit(conn, cur, sql=f"DELETE from setup_{st.session_state.StationCN} where ID > 0")
+    sql = f"INSERT INTO setup_{st.session_state.StationCN}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = f"UPDATE questionaff set chapterRatio = 10, examChapterRatio = 10 where StationCN = '{st.session_state.StationCN}' and (chapterName = '公共题库' or chapterName = '错题集')"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = f"UPDATE questionaff set chapterRatio = 5, examChapterRatio = 5 where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
+    execute_sql_and_commit(conn, cur, sql)
     st.success("所有设置已重置")
     updateKeyAction("重置所有设置")
 
 
 def updateAIModel():
-    SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramType = 'others' and paramName like '%大模型'"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 1 where paramType = 'others' and paramName = '{st.session_state.AIModel}'"
-    mdb_modi(conn, cur, SQL)
+    sql = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramType = 'others' and paramName like '%大模型'"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = f"UPDATE setup_{st.session_state.StationCN} set param = 1 where paramType = 'others' and paramName = '{st.session_state.AIModel}'"
+    execute_sql_and_commit(conn, cur, sql)
     st.success(f"LLM大模型已设置为{st.session_state.AIModel}")
 
 
 @st.fragment
 def updateAIModel2(AIOption, AIOptionIndex):
-    SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramType = 'others' and paramName like '%大模型'"
-    mdb_modi(conn, cur, SQL)
-    SQL = f"UPDATE setup_{st.session_state.StationCN} set param = 1 where paramType = 'others' and paramName = '{AIOption[AIOptionIndex]}'"
-    mdb_modi(conn, cur, SQL)
+    sql = f"UPDATE setup_{st.session_state.StationCN} set param = 0 where paramType = 'others' and paramName like '%大模型'"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = f"UPDATE setup_{st.session_state.StationCN} set param = 1 where paramType = 'others' and paramName = '{AIOption[AIOptionIndex]}'"
+    execute_sql_and_commit(conn, cur, sql)
 
 
 # noinspection PyTypeChecker
@@ -2738,17 +2738,17 @@ def queryExamAnswer(tablename):
         searchButton = st.button("查询")
         if searchButton:
             if len(options) == 2:
-                SQL = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and userName = " + str(st.session_state.userName) + " order by ID"
+                sql = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and userName = " + str(st.session_state.userName) + " order by ID"
             elif len(options) == 1:
                 if options[0] == "对题":
-                    SQL = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and qAnswer = userAnswer and userName = " + str(st.session_state.userName) + " order by ID"
+                    sql = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and qAnswer = userAnswer and userName = " + str(st.session_state.userName) + " order by ID"
                 elif options[0] == "错题":
-                    SQL = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and qAnswer <> userAnswer and userName = " + str(st.session_state.userName) + " order by ID"
+                    sql = "SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer, ID from " + tablename + " where userAnswer <> '' and qAnswer <> userAnswer and userName = " + str(st.session_state.userName) + " order by ID"
                 else:
-                    SQL = ""
+                    sql = ""
             else:
-                SQL = ""
-            rows = mdb_sel(cur, SQL)
+                sql = ""
+            rows = execute_sql(cur, sql)
             if rows:
                 for row in rows:
                     if row[2] != row[5]:
@@ -2811,8 +2811,8 @@ def queryExamAnswer(tablename):
 # noinspection PyTypeChecker
 def queryExamResult():
     searchOption = []
-    SQL = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
         searchOption.append(row[1])
     searchExamName = st.selectbox("请选择考试场次", searchOption, index=None)
@@ -2828,15 +2828,15 @@ def queryExamResult():
     if searchButton and searchExamName:
         if options:
             tab1, tab2 = st.tabs(["简报", "详情"])
-            SQL = f"SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
+            sql = f"SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
             for each in options:
                 if each == "通过":
-                    SQL = SQL + " examPass = 1 or "
+                    sql = sql + " examPass = 1 or "
                 elif each == "未通过":
-                    SQL = SQL + " examPass = 0 or "
-            if SQL.endswith(" or "):
-                SQL = SQL[:-4] + ") order by ID DESC"
-            rows = mdb_sel(cur, SQL)
+                    sql = sql + " examPass = 0 or "
+            if sql.endswith(" or "):
+                sql = sql[:-4] + ") order by ID DESC"
+            rows = execute_sql(cur, sql)
             if rows:
                 df = pd.DataFrame(rows, dtype=str)
                 df.columns = ["编号", "姓名", "成绩", "考试日期", "考试结果"]
@@ -2862,8 +2862,8 @@ def queryExamResult():
 
 def queryExamResultUsers():
     ExamNamePack = []
-    SQL = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
-    rows = mdb_sel(cur, SQL)
+    sql = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
+    rows = execute_sql(cur, sql)
     for row in rows:
         ExamNamePack.append(row[1])
     searchExamName = st.selectbox("请选择考试场次", ExamNamePack, index=None)
@@ -2877,21 +2877,21 @@ def queryExamResultUsers():
         if options:
             tab1, tab2 = st.tabs(["简报", "详情"])
             if len(options) == 2:
-                SQL = "SELECT userName, userCName, StationCN from users where StationCN = '" + st.session_state.StationCN + "' order by ID"
+                sql = "SELECT userName, userCName, StationCN from users where StationCN = '" + st.session_state.StationCN + "' order by ID"
             elif len(options) == 1:
                 if options[0] == "已参加考试":
-                    SQL = "SELECT users.userName, users.userCName, users.StationCN from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName and users.StationCN = '" + st.session_state.StationCN + "'"
+                    sql = "SELECT users.userName, users.userCName, users.StationCN from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName and users.StationCN = '" + st.session_state.StationCN + "'"
                 elif options[0] == "未参加考试":
-                    SQL = "SELECT userName, userCName, StationCN from users where userName not in (SELECT users.userName from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName) and StationCN = '" + st.session_state.StationCN + "'"
-            rows = mdb_sel(cur, SQL)
+                    sql = "SELECT userName, userCName, StationCN from users where userName not in (SELECT users.userName from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName) and StationCN = '" + st.session_state.StationCN + "'"
+            rows = execute_sql(cur, sql)
             if rows:
                 df = pd.DataFrame(rows)
                 df.columns = ["编号", "姓名", "站室"]
                 tab2.dataframe(df)
             if rows:
                 for row in rows:
-                    SQL = "SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '" + searchExamName + "' and userName = " + str(row[0])
-                    rows2 = mdb_sel(cur, SQL)
+                    sql = "SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '" + searchExamName + "' and userName = " + str(row[0])
+                    rows2 = execute_sql(cur, sql)
                     if rows2:
                         tab1.markdown(f"考生ID:  :red[{rows2[0][0]}] 考生姓名: :red[{rows2[0][1]}] 考试时间: :red[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(rows2[0][3]))}]")
                         tab1.subheader(f"考试成绩: {rows2[0][2]} 分")
@@ -2913,8 +2913,8 @@ def queryExamResultUsers():
 def verifyUserPW(vUserName, vUserPW):
     st.session_state.userPwRecheck = False
     vUserEncPW = ""
-    SQL = f"SELECT userPassword from users where userName = {vUserName}"
-    pwTable = mdb_sel(cur, SQL)
+    sql = f"SELECT userPassword from users where userName = {vUserName}"
+    pwTable = execute_sql(cur, sql)
     if pwTable:
         vUserEncPW = pwTable[0][0]
         vUserDecPW = getUserEDKeys(vUserEncPW, "dec")
@@ -2934,8 +2934,8 @@ def resetPassword():
         rCol1, rCol2, rCol3 = st.columns(3)
         rUserName = rCol1.number_input("用户编码", value=0)
         if rUserName != 0:
-            SQL = f"SELECT userCName, userType from users where userName = {rUserName}"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT userCName, userType from users where userName = {rUserName}"
+            rows = execute_sql(cur, sql)
             if rows:
                 rCol2.write(f"用户姓名: **{rows[0][0]}**")
                 with rCol3:
@@ -2968,28 +2968,28 @@ def actionResetUserPW(rUserName, rOption1, rOption2, rUserType):
     rInfo = ""
     if rOption1:
         resetPW = getUserEDKeys("1234", "enc")
-        SQL = f"UPDATE users SET userPassword = '{resetPW}' where userName = {rUserName}"
-        mdb_modi(conn, cur, SQL)
+        sql = f"UPDATE users SET userPassword = '{resetPW}' where userName = {rUserName}"
+        execute_sql_and_commit(conn, cur, sql)
         rInfo += "密码已重置为: 1234 / "
         updateKeyAction("密码重置")
     if rOption2:
         if rUserType:
-            SQL = f"UPDATE users SET userType = 'admin' where userName = {rUserName}"
+            sql = f"UPDATE users SET userType = 'admin' where userName = {rUserName}"
             rInfo += "账户类型已更改为: 管理员 / "
             updateKeyAction("更改账户类型为管理员")
         else:
-            SQL = f"UPDATE users SET userType = 'user' where userName = {rUserName}"
+            sql = f"UPDATE users SET userType = 'user' where userName = {rUserName}"
             rInfo += "账户类型已更改为: 用户 / "
             updateKeyAction("更改账户类型为用户")
-        mdb_modi(conn, cur, SQL)
+        execute_sql_and_commit(conn, cur, sql)
     st.success(f"**{rInfo[:-3]}**")
 
 
 def displayKeyAction():
     st.subheader(":violet[操作日志]", divider="red")
     if st.session_state.userPwRecheck:
-        SQL = "SELECT userName, userCName, StationCN, userAction, datetime(actionDate, 'unixepoch', 'localtime') from keyactionlog order by actionDate DESC"
-        rows = mdb_sel(cur, SQL)
+        sql = "SELECT userName, userCName, StationCN, userAction, datetime(actionDate, 'unixepoch', 'localtime') from keyactionlog order by actionDate DESC"
+        rows = execute_sql(cur, sql)
         if rows:
             df = pd.DataFrame(rows, columns=["用户编码", "用户姓名", "所属站室", "操作内容", "操作时间"])
             st.write(df)
@@ -3140,8 +3140,8 @@ if st.session_state.logged_in:
             #st.markdown("<font face='微软雅黑' color=red size=20><center>**选择考试**</center></font>", unsafe_allow_html=True)
             st.markdown("### <font face='微软雅黑' color=red><center>选择考试</center></font>", unsafe_allow_html=True)
         if not st.session_state.examChosen or not st.session_state.calcScore:
-            SQL = "UPDATE verinfo set pyLM = 0 where pyFile = 'chapterChosenType'"
-            mdb_modi(conn, cur, SQL)
+            sql = "UPDATE verinfo set pyLM = 0 where pyFile = 'chapterChosenType'"
+            execute_sql_and_commit(conn, cur, sql)
             training()
         else:
             st.error("你不能重复选择考试场次")
@@ -3153,8 +3153,8 @@ if st.session_state.logged_in:
         if "confirmSubmit" not in st.session_state:
             st.session_state.confirmSubmit = False
         if "examFinalTable" in st.session_state and "examName" in st.session_state and not st.session_state.confirmSubmit:
-            SQL = f"SELECT userName, examName from examresult GROUP BY userName, examName HAVING Count(examName) >= {st.session_state.examLimit} and userName = {st.session_state.userName} and examName = '{st.session_state.examName}'"
-            if not mdb_sel(cur, SQL) or st.session_state.examType == "training":
+            sql = f"SELECT userName, examName from examresult GROUP BY userName, examName HAVING Count(examName) >= {st.session_state.examLimit} and userName = {st.session_state.userName} and examName = '{st.session_state.examName}'"
+            if not execute_sql(cur, sql) or st.session_state.examType == "training":
                 if st.session_state.calcScore:
                     calcScore()
                 for key in st.session_state.keys():
@@ -3162,8 +3162,8 @@ if st.session_state.logged_in:
                         del st.session_state[key]
                 displayTimeCountdown()
                 qcol1, qcol2, qcol3, qcol4 = st.columns(4)
-                SQL = "SELECT * from " + st.session_state.examFinalTable + " order by ID"
-                rows = mdb_sel(cur, SQL)
+                sql = "SELECT * from " + st.session_state.examFinalTable + " order by ID"
+                rows = execute_sql(cur, sql)
                 quesCount = len(rows)
                 preButton, nextButton, submitButton = False, False, False
                 #st.write(f"Cur:{st.session_state.curQues} Comp:{st.session_state.flagCompleted}")
@@ -3201,13 +3201,13 @@ if st.session_state.logged_in:
                     submitButton = qcol1.button("交卷", icon=":material/publish:", disabled=True)
                 iCol1, iCol2 = st.columns(2)
                 completedPack, cpStr, cpCount = [], "", 0
-                SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer = '' order by ID"
-                rows3 = mdb_sel(cur, SQL)
+                sql = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer = '' order by ID"
+                rows3 = execute_sql(cur, sql)
                 for row3 in rows3:
                     completedPack.append(f"第{row3[0]}题 [{row3[1]}] 未作答")
                     cpStr = cpStr + str(row3[0]) + "/"
-                SQL = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer <> '' order by ID"
-                rows3 = mdb_sel(cur, SQL)
+                sql = f"SELECT ID, qType from {st.session_state.examFinalTable} where userAnswer <> '' order by ID"
+                rows3 = execute_sql(cur, sql)
                 for row3 in rows3:
                     completedPack.append(f"第{row3[0]}题 [{row3[1]}] 已作答")
                 cpCount = len(rows3)
@@ -3222,8 +3222,8 @@ if st.session_state.logged_in:
                 iCol2.selectbox(":green[答题卡] :red[[未答题前置排序]]", completedPack, index=None, on_change=quesGoto, key="chosenID")
                 st.divider()
                 if (preButton or nextButton or submitButton or st.session_state.goto) and not st.session_state.confirmSubmit:
-                    SQL = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"
-                    row = mdb_sel(cur, SQL)[0]
+                    sql = f"SELECT * from {st.session_state.examFinalTable} where ID = {st.session_state.curQues}"
+                    row = execute_sql(cur, sql)[0]
                     if preButton or nextButton or st.session_state.goto:
                         if st.session_state.goto:
                             st.session_state.goto = False
@@ -3231,8 +3231,8 @@ if st.session_state.logged_in:
                         exam(row)
                     if submitButton:
                         emptyAnswer = "你没有作答的题为:第["
-                        SQL = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer == '' order by ID"
-                        rows2 = mdb_sel(cur, SQL)
+                        sql = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer == '' order by ID"
+                        rows2 = execute_sql(cur, sql)
                         for row2 in rows2:
                             emptyAnswer = emptyAnswer + str(row2[0]) + ", "
                         if emptyAnswer.endswith(", "):
@@ -3278,8 +3278,8 @@ if st.session_state.logged_in:
         with st.expander("# :blue[考试参数设置]"):
             col1, col2, col3, col4 = st.columns(4)
             col5, col6, col7 = st.columns(3)
-            SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'exam' order by ID"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'exam' order by ID"
+            rows = execute_sql(cur, sql)
             for row in rows:
                 if row[0] == "单题分值":
                     quesScore = row[1]
@@ -3314,14 +3314,14 @@ if st.session_state.logged_in:
                     st.slider(row[0], min_value=1, max_value=150, value=row[1], key=f"dasetup_{row[2]}")
             updateDA = st.button("考试参数更新", on_click=updateDAParam, args=("考试",))
         with st.expander("# :red[章节权重设置]"):
-            SQL = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and StationCN = '" + st.session_state.StationCN + "'"
-            rows = mdb_sel(cur, SQL)
+            sql = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and StationCN = '" + st.session_state.StationCN + "'"
+            rows = execute_sql(cur, sql)
             if rows:
-                SQL = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '公共题库' and StationCN = '" + st.session_state.StationCN + "'"
-                row = mdb_sel(cur, SQL)[0]
+                sql = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '公共题库' and StationCN = '" + st.session_state.StationCN + "'"
+                row = execute_sql(cur, sql)[0]
                 st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
-                SQL = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '错题集' and StationCN = '" + st.session_state.StationCN + "'"
-                row = mdb_sel(cur, SQL)[0]
+                sql = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '错题集' and StationCN = '" + st.session_state.StationCN + "'"
+                row = execute_sql(cur, sql)[0]
                 st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="仅在练习题库中有效")
                 for row in rows:
                     st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
@@ -3329,15 +3329,15 @@ if st.session_state.logged_in:
             else:
                 st.info("该站室没有可设置章节")
         with st.expander("# :green[题型设置]"):
-            SQL = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'questype' order by ID"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT paramName, param from setup_{st.session_state.StationCN} where paramType = 'questype' order by ID"
+            rows = execute_sql(cur, sql)
             for row in rows:
                 sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
                 updateSwitchOption(row[0])
         with st.expander("# :violet[导出文件字体设置]"):
             col20, col21, col22 = st.columns(3)
-            SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'fontsize' order by ID"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'fontsize' order by ID"
+            rows = execute_sql(cur, sql)
             for row in rows:
                 if row[0] == "抬头字体大小":
                     col20.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}", help="题库导出至Word文件中的字体大小")
@@ -3351,8 +3351,8 @@ if st.session_state.logged_in:
                     col21.number_input(row[0], min_value=8, max_value=32, value=row[1], key=f"dasetup_{row[2]}")
             updateDA = st.button("字体设置更新", on_click=updateDAParam, args=("字体设置",))
         with st.expander("# :orange[其他设置]"):
-            SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'others' order by ID"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramType = 'others' order by ID"
+            rows = execute_sql(cur, sql)
             for row in rows:
                 if row[0] == "显示考试时间" or row[0] == "A.I.答案解析更新至题库" or row[0] == "测试模式":
                     sac.switch(label=row[0], value=row[1], key=row[0], on_label="On", align='start', size='md')
@@ -3361,8 +3361,8 @@ if st.session_state.logged_in:
                     sac.switch(label=row[0], value=row[1], key=row[0], on_label="翻牌", off_label="数字", align='start', size='md')
                     updateSwitchOption(row[0])
             AIModel, AIModelIndex = [], 0
-            SQL = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
-            rows = mdb_sel(cur, SQL)
+            sql = f"SELECT paramName, param, ID from setup_{st.session_state.StationCN} where paramName like '%大模型' and paramType = 'others' order by ID"
+            rows = execute_sql(cur, sql)
             for index, value in enumerate(rows):
                 AIModel.append(value[0])
                 if value[1] == 1:
@@ -3387,8 +3387,8 @@ if st.session_state.logged_in:
                     tablename = "morepractise"
                 else:
                     tablename = f"exam_final_{st.session_state.StationCN}_{st.session_state.userName}_{queryExamName}"
-                SQL = "SELECT * from sqlite_master where type = 'table' and name = '" + tablename + "'"
-                tempTable = mdb_sel(cur, SQL)
+                sql = "SELECT * from sqlite_master where type = 'table' and name = '" + tablename + "'"
+                tempTable = execute_sql(cur, sql)
                 if tempTable:
                     queryExamAnswer(tablename)
                 else:
