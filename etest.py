@@ -280,15 +280,18 @@ def aboutInfo():
 
 
 def getVerInfo():
-    sql = "SELECT Sum(pyMC) from verinfo"
-    verinfo = execute_sql(cur, sql)[0][0]
-    sql = "SELECT Max(pyLM) from verinfo"
-    verLM = execute_sql(cur, sql)[0][0]
-    sql = "SELECT Sum(pyLM * pyMC), Sum(pyMC) from verinfo where pyFile = 'thumbs-up-stars'"
-    tmpTable = execute_sql(cur, sql)
-    likeCM = round(tmpTable[0][0] / tmpTable[0][1], 1)
+    try:
+        sql = "SELECT Sum(pyMC) from verinfo"
+        verinfo = execute_sql(cur, sql)[0][0]
+        sql = "SELECT Max(pyLM) from verinfo"
+        verLM = execute_sql(cur, sql)[0][0]
+        sql = "SELECT Sum(pyLM * pyMC), Sum(pyMC) from verinfo where pyFile = 'thumbs-up-stars'"
+        tmpTable = execute_sql(cur, sql)
+        likeCM = round(tmpTable[0][0] / tmpTable[0][1], 1)
 
-    return verinfo, verLM, likeCM
+        return verinfo, verLM, likeCM
+    except Exception as e:
+        return 0, 0, 0
 
 
 def display_pypi():
