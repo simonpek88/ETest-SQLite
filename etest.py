@@ -2499,7 +2499,8 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['Optimize']} 更改了考试时的计数器样式, 修复在云端显示不正常的问题; 优化了一些细节问题")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['Optimize']} 查询结构优化, 避免SQL注入风险; 规范变量命名")
+
     components.html(infoStr, height=300)
 
 
