@@ -1,11 +1,10 @@
 # coding UTF-8
 import base64
+import logging
 import os
 import random
 import sqlite3
 import time
-import logging
-
 from hashlib import md5
 
 import qianfan

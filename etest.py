@@ -28,10 +28,11 @@ from streamlit_javascript import st_javascript
 from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook
 
-from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues, getParam,
-                      getUserEDKeys, execute_sql, execute_sql_and_commit,
-                      qianfan_AI, qianfan_AI_GenerQues, updateActionUser,
-                      updatePyFileinfo, xunfei_xh_AI, xunfei_xh_AI_fib)
+from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
+                      execute_sql, execute_sql_and_commit, getParam,
+                      getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
+                      updateActionUser, updatePyFileinfo, xunfei_xh_AI,
+                      xunfei_xh_AI_fib)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
