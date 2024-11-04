@@ -4,6 +4,8 @@ import os
 import random
 import sqlite3
 import time
+import logging
+
 from hashlib import md5
 
 import qianfan
@@ -16,55 +18,92 @@ from openai import OpenAI
 
 
 def pad(data):
+    # 计算需要填充的字节数
     length = 16 - (len(data) % 16)
 
+    # 将数据编码为utf-8格式
+    # 并将填充字符（长度为length）重复length次后编码为utf-8格式
+    # 最后将编码后的数据和填充数据拼接返回
     return data.encode(encoding="utf-8") + (chr(length) * length).encode(encoding="utf-8")
 
 
 def unpad(data):
+    # 判断data的最后一个元素是否为整数
+    # 如果是整数，则直接作为填充长度
+    # 如果不是整数，则通过ord函数获取其ASCII码值作为填充长度
     return data[:-(data[-1] if type(data[-1]) == int else ord(data[-1]))]
 
 
 def bytes_to_key(data, salt, output=48):
+    # 将输入数据编码为utf-8格式
     data = data.encode(encoding="utf-8")
+    # 断言盐的长度为8
     assert len(salt) == 8, len(salt)
+    # 将盐附加到数据后面
     data += salt
+    # 使用MD5算法对数据进行哈希处理，并获取哈希值的二进制表示
     key = md5(data).digest()
     final_key = key
+    # 当生成的密钥长度小于指定输出长度时，继续生成密钥
     while len(final_key) < output:
+        # 使用MD5算法对密钥和数据再次进行哈希处理，并获取哈希值的二进制表示
         key = md5(key + data).digest()
+        # 将新生成的密钥附加到最终密钥后面
         final_key += key
 
+    # 返回指定长度的最终密钥
     return final_key[:output]
 
 
 def encrypt(message, passphrase):
+    # 生成一个随机的8字节的盐
     salt = Random.new().read(8)
+
+    # 使用bytes_to_key函数生成密钥和IV
     key_iv = bytes_to_key(passphrase, salt, 32 + 16)
+
+    # 分离密钥和IV
     key = key_iv[:32]
     iv = key_iv[32:]
+
+    # 创建一个AES对象，使用CBC模式
     aes = AES.new(key, AES.MODE_CBC, iv)
 
+    # 对消息进行加密，并在加密前添加"Salted__"前缀和盐
+    # 加密后，使用base64编码返回结果
     return base64.b64encode(b"Salted__" + salt + aes.encrypt(pad(message)))
 
 
 def decrypt(encrypted, passphrase):
+    # 对加密数据进行base64解码
     encrypted = base64.b64decode(encrypted)
+
+    # 断言加密数据的前8个字节是否为"Salted__"
     assert encrypted[0:8] == b"Salted__"
+
+    # 提取盐值，盐值位于"Salted__"之后，长度为8字节
     salt = encrypted[8:16]
+
+    # 使用bytes_to_key函数生成密钥和IV
     key_iv = bytes_to_key(passphrase, salt, 32 + 16)
+
+    # 分离密钥和IV
     key = key_iv[:32]
     iv = key_iv[32:]
+
+    # 创建一个AES对象，使用CBC模式
     aes = AES.new(key, AES.MODE_CBC, iv)
 
+    # 对加密数据进行解密，并去除前16个字节（包括"Salted__"和盐值）
+    # 然后对解密后的数据进行去填充处理
     return unpad(aes.decrypt(encrypted[16:]))
 
 
 def getEncryptKeys(keyname):
-    SQL = "SELECT aikey from aikeys where keyname = 'key_text'"
-    key = mdb_sel(cur2, SQL)[0][0]
-    SQL = f"SELECT aikey from aikeys where keyname = '{keyname}'"
-    encrypt_data = mdb_sel(cur2, SQL)[0][0]
+    sql = "SELECT aikey from aikeys where keyname = 'key_text'"
+    key = execute_sql(cur2, sql)[0][0]
+    sql = f"SELECT aikey from aikeys where keyname = '{keyname}'"
+    encrypt_data = execute_sql(cur2, sql)[0][0]
     #encrypt_data = encrypt(data, key).decode("utf-8")
     decrypt_data = decrypt(encrypt_data, key).decode("utf-8")
 
@@ -73,8 +112,8 @@ def getEncryptKeys(keyname):
 
 def getUserEDKeys(userStr, edType):
     strED = ""
-    SQL = "SELECT aikey from aikeys where keyname = 'key_text'"
-    key = mdb_sel(cur2, SQL)[0][0]
+    sql = "SELECT aikey from aikeys where keyname = 'key_text'"
+    key = execute_sql(cur2, sql)[0][0]
     if edType == "enc":
         strED = encrypt(userStr, key).decode("utf-8")
     elif edType == "dec":
@@ -84,8 +123,8 @@ def getUserEDKeys(userStr, edType):
 
 
 def getKeys(keyname):
-    SQL = f"SELECT aikey from aikeys where keyname = '{keyname}'"
-    ai_key = mdb_sel(cur2, SQL)[0][0]
+    sql = f"SELECT aikey from aikeys where keyname = '{keyname}'"
+    ai_key = execute_sql(cur2, sql)[0][0]
 
     return ai_key
 
@@ -228,16 +267,12 @@ def qianfan_AI_GenerQues(reference, quesType, quesCount, AImodel):
     return resp["body"]["result"]
 
 
-def outputErrorInfo(SQL):
-    print(f"SQL:[{SQL}] ERROR! Please Check It!")
-
-
 def CreateExamTable(tablename, examRandom):
-    SQL = "SELECT * from sqlite_master where type = 'table' and name = '" + tablename + "'"
-    tempTable = mdb_sel(cur2, SQL)
+    sql = "SELECT * from sqlite_master where type = 'table' and name = '" + tablename + "'"
+    tempTable = execute_sql(cur2, sql)
     if tempTable:
         if tablename.find("exam_final_") != -1 or examRandom:
-            mdb_del(conn2, cur2, SQL=f"DROP TABLE {tablename}")
+            execute_sql_and_commit(conn2, cur2, sql=f"DROP TABLE {tablename}")
             flagTableExist = False
         else:
             flagTableExist = True
@@ -245,7 +280,7 @@ def CreateExamTable(tablename, examRandom):
         flagTableExist = False
     if not flagTableExist:
         if tablename.find("exam_final_") != -1:
-            SQL = """CREATE TABLE exampleTable (
+            sql = """CREATE TABLE exampleTable (
                         ID integer not null primary key autoincrement,
                         Question text not null,
                         qOption text default '',
@@ -257,7 +292,7 @@ def CreateExamTable(tablename, examRandom):
                         SourceType text default '人工'
                     );"""
         elif tablename.find("exam_") != -1:
-            SQL = """CREATE TABLE exampleTable (
+            sql = """CREATE TABLE exampleTable (
                         ID integer not null primary key autoincrement,
                         Question text not null,
                         qOption text default '',
@@ -267,58 +302,47 @@ def CreateExamTable(tablename, examRandom):
                         randomID integer not null,
                         SourceType text default '人工'
                     );"""
-        SQL = SQL.replace("exampleTable", tablename)
-        cur2.execute(SQL)
+        sql = sql.replace("exampleTable", tablename)
+        cur2.execute(sql)
         conn2.commit()
 
     return flagTableExist
 
 
 # noinspection PyBroadException
-def mdb_sel(cur, SQL):
+def execute_sql(cur, sql, params=None):
     try:
-        cur.execute(SQL)
+        # 参数化查询以预防SQL注入
+        if params:
+            cur.execute(sql, params)
+        else:
+            # 如果sql是外部输入的，请确保它是安全的，或者使用其他方法来避免SQL注入
+            cur.execute(sql)
         return cur.fetchall()
-    except:
+    except Exception as e:
+        logging.error(f"An error occurred while executing SQL: {sql}, Error: {e}")
         return []
 
 
 # noinspection PyBroadException
-def mdb_ins(conn, cur, SQL):
+def execute_sql_and_commit(conn, cur, sql, params=None):
     try:
-        cur.execute(SQL)
+        # 参数化查询以预防SQL注入
+        if params:
+            cur.execute(sql, params)
+        else:
+            # 如果sql是外部输入的，请确保它是安全的，或者使用其他方法来避免SQL注入
+            cur.execute(sql)
         conn.commit()
         return True
-    except:
-        outputErrorInfo(SQL)
-        return False
-
-
-# noinspection PyBroadException
-def mdb_modi(conn, cur, SQL):
-    try:
-        cur.execute(SQL)
-        conn.commit()
-        return True
-    except:
-        outputErrorInfo(SQL)
-        return False
-
-
-# noinspection PyBroadException
-def mdb_del(conn, cur, SQL):
-    try:
-        cur.execute(SQL)
-        conn.commit()
-        return True
-    except:
-        outputErrorInfo(SQL)
+    except Exception as e:
+        logging.error(f"An error occurred while executing SQL: {sql}, Error: {e}")
         return False
 
 
 def getParam(paramName, StationCN):
-    SQL = f"SELECT param from Setup_{StationCN} where paramName = '{paramName}'"
-    cur2.execute(SQL)
+    sql = f"SELECT param from Setup_{StationCN} where paramName = '{paramName}'"
+    cur2.execute(sql)
     table = cur2.fetchone()
     if table:
         param = table[0]
@@ -330,10 +354,10 @@ def getParam(paramName, StationCN):
 
 def getChapterRatio(StationCN, qAff, examType):
     if examType == "training":
-        SQL = "SELECT chapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
+        sql = "SELECT chapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
     else:
-        SQL = "SELECT examChapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
-    quesCRTable = mdb_sel(cur2, SQL)
+        sql = "SELECT examChapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
+    quesCRTable = execute_sql(cur2, sql)
     if quesCRTable:
         cr = quesCRTable[0][0]
     else:
@@ -354,58 +378,58 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
     if not flagTableExist:
         for k in quesType:
             if flagNewOnly and examType == "training":
-                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, chapterName, SourceType from questions where (ID not in (SELECT cid from studyinfo where questable = 'questions' and userName = {userName}) and StationCN = '{StationCN}' and qType = '{k[0]}') and (chapterName = '"
+                sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, chapterName, SourceType from questions where (ID not in (SELECT cid from studyinfo where questable = 'questions' and userName = {userName}) and StationCN = '{StationCN}' and qType = '{k[0]}') and (chapterName = '"
             else:
-                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, chapterName, SourceType from questions where (StationCN = '{StationCN}' and qType = '{k[0]}') and (chapterName = '"
+                sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, chapterName, SourceType from questions where (StationCN = '{StationCN}' and qType = '{k[0]}') and (chapterName = '"
             for each in qAffPack:
                 if each != "错题集" and each != "公共题库":
-                    SQL = SQL + each + "' or chapterName = '"
-            SQL = SQL[:-20] + "')"
-            rows = mdb_sel(cur2, SQL)
+                    sql = sql + each + "' or chapterName = '"
+            sql = sql[:-20] + "')"
+            rows = execute_sql(cur2, sql)
             for row in rows:
                 chapterRatio = getChapterRatio(StationCN, row[5], examType)
-                SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[6]}')"
-                mdb_ins(conn2, cur2, SQL)
+                sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[6]}')"
+                execute_sql_and_commit(conn2, cur2, sql)
         if "错题集" in qAffPack and examType == "training":
             chapterRatio = getChapterRatio(StationCN, "错题集", examType)
             for k in quesType:
-                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
-                rows = mdb_sel(cur2, SQL)
+                sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from morepractise where qType = '{k[0]}' and userName = {userName} order by WrongTime DESC"
+                rows = execute_sql(cur2, sql)
                 for row in rows:
-                    SQL = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
-                    if not mdb_sel(cur2, SQL):
-                        SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
-                        mdb_ins(conn2, cur2, SQL)
+                    sql = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
+                    if not execute_sql(cur2, sql):
+                        sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
+                        execute_sql_and_commit(conn2, cur2, sql)
         if "关注题集" in qAffPack and examType == "training":
             chapterRatio = getChapterRatio(StationCN, "关注题集", examType)
             for k in quesType:
-                SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from favques where qType = '{k[0]}' and userName = {userName} order by ID"
-                rows = mdb_sel(cur2, SQL)
+                sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from favques where qType = '{k[0]}' and userName = {userName} order by ID"
+                rows = execute_sql(cur2, sql)
                 for row in rows:
-                    SQL = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
-                    if not mdb_sel(cur2, SQL):
-                        SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
-                        mdb_ins(conn2, cur2, SQL)
+                    sql = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
+                    if not execute_sql(cur2, sql):
+                        sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
+                        execute_sql_and_commit(conn2, cur2, sql)
         if '公共题库' in qAffPack:
             chapterRatio = getChapterRatio(StationCN, "公共题库", examType)
             for k in quesType:
                 if flagNewOnly and examType == "training":
-                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where ID not in (SELECT cid from studyinfo where questable = 'commquestions' and userName = {userName}) and qType = '{k[0]}' order by ID"
+                    sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where ID not in (SELECT cid from studyinfo where questable = 'commquestions' and userName = {userName}) and qType = '{k[0]}' order by ID"
                 else:
-                    SQL = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where qType = '{k[0]}' order by ID"
-                rows = mdb_sel(cur2, SQL)
+                    sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from commquestions where qType = '{k[0]}' order by ID"
+                rows = execute_sql(cur2, sql)
                 for row in rows:
-                    SQL = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
-                    if not mdb_sel(cur2, SQL):
-                        SQL = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
-                        mdb_ins(conn2, cur2, SQL)
+                    sql = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
+                    if not execute_sql(cur2, sql):
+                        sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
+                        execute_sql_and_commit(conn2, cur2, sql)
     CreateExamTable(examFinalTable, examRandom)
     for k in quesType:
-        SQL = f"INSERT INTO {examFinalTable}(Question, qOption, qAnswer, qType, qAnalysis, SourceType) SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from {examTable} where qType = '{k[0]}' order by randomID limit 0, {k[1]}"
-        mdb_ins(conn2, cur2, SQL)
+        sql = f"INSERT INTO {examFinalTable}(Question, qOption, qAnswer, qType, qAnalysis, SourceType) SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from {examTable} where qType = '{k[0]}' order by randomID limit 0, {k[1]}"
+        execute_sql_and_commit(conn2, cur2, sql)
     quesCS = getParam("考题总数", StationCN)
-    SQL = "SELECT Count(ID) from " + examFinalTable
-    quesCount = mdb_sel(cur2, SQL)[0][0]
+    sql = "SELECT Count(ID) from " + examFinalTable
+    quesCount = execute_sql(cur2, sql)[0][0]
     if quesCount == quesCS or (examType == 'training' and quesCount > 0):
         return True, quesCount, examTable, examFinalTable
     else:
@@ -413,8 +437,8 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
 
 
 def updateActionUser(activeUser, actionUser, loginTime):
-    SQL = f"UPDATE users SET actionUser = '{actionUser}', activeTime_session = {int(time.time()) - loginTime} where userName = {activeUser}"
-    mdb_modi(conn2, cur2, SQL)
+    sql = f"UPDATE users SET actionUser = '{actionUser}', activeTime_session = {int(time.time()) - loginTime} where userName = {activeUser}"
+    execute_sql_and_commit(conn2, cur2, sql)
 
 
 def updatePyFileinfo():
@@ -424,15 +448,15 @@ def updatePyFileinfo():
                 if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
                     pathIn = os.path.join(root, file)
                     pyFile = os.path.splitext(file)[0]
-                    SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}'"
-                    if not mdb_sel(cur2, SQL):
-                        SQL = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
-                        mdb_ins(conn2, cur2, SQL)
-                    else:
-                        SQL = f"SELECT ID from verinfo where pyFile = '{pyFile}' and pyLM = {int(os.path.getmtime(pathIn))}"
-                        if not mdb_sel(cur2, SQL):
-                            SQL = f"UPDATE verinfo SET pyLM = {int(os.path.getmtime(pathIn))}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
-                            mdb_modi(conn2, cur2, SQL)
+                    file_mtime = int(os.path.getmtime(pathIn))
+                    sql = f"SELECT ID, pyLM from verinfo where pyFile = '{pyFile}'"
+                    row = execute_sql(cur2, sql)[0]
+                    if not row:
+                        sql = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
+                        execute_sql_and_commit(conn2, cur2, sql)
+                    elif row[1] != file_mtime:
+                        sql = f"UPDATE verinfo SET pyLM = {file_mtime}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
+                        execute_sql_and_commit(conn2, cur2, sql)
 
 
 dbFile = "./DB/ETest.db"
@@ -440,3 +464,4 @@ dbFile = "./DB/ETest.db"
 
 conn2 = sqlite3.Connection(dbFile, check_same_thread=False)
 cur2 = conn2.cursor()
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
