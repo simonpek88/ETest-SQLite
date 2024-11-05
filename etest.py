@@ -279,6 +279,7 @@ def aboutInfo():
     updateActionUser(st.session_state.userName, "浏览[关于]信息", st.session_state.loginTime)
 
 
+# noinspection PyBroadException,PyUnusedLocal
 def getVerInfo():
     try:
         sql = "SELECT Sum(pyMC) from verinfo"
