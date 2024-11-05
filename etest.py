@@ -631,19 +631,19 @@ def questoWord():
                                 else:
                                     fhQT = "未知"
                             pSource = quesDOC.add_paragraph()
-                            if row[5] != "AI-LLM":
+                            if not row[5].startswith("AI-LLM"):
                                 textSource = pSource.add_run(f"试题来源: [{stationCN}] 章节名称: [{fhQT}] 试题生成类别: [{row[5]}]")
                             else:
                                 textSource = pSource.add_run(f"请特别注意 试题来源: [{stationCN}] 章节名称: [{fhQT}] 试题生成类别: [{row[5]}]")
                             textSource.font.bold = True
                             textSource.font.size = Pt(answerFS)
-                            if row[5] == "AI-LLM":
+                            if row[5].startswith("AI-LLM"):
                                 textSource.font.color.rgb = RGBColor(155, 17, 30)
                                 textSource.font.underline = True
                             #textSource.font.italic = True
                             if st.session_state.sac_Analysis and row[6] != "":
                                 pAnalysis = quesDOC.add_paragraph()
-                                if row[5] != "AI-LLM":
+                                if not row[5].startswith("AI-LLM"):
                                     textAnalysis = pAnalysis.add_run(f"人工解析: [{row[6].replace(':red', '').replace('[', '').replace(']', '').replace('**', '')}]")
                                 else:
                                     textAnalysis = pAnalysis.add_run(f"请特别注意 A.I.解析: [{row[6].replace('**', '')}]")
@@ -1167,7 +1167,7 @@ def AIGenerQues():
                                     if table == "公共题库":
                                         sql = f"SELECT ID from commquestions where Question = '{quesHeader}' and qType = '{quesType}'"
                                         if not execute_sql(cur, sql):
-                                            sql = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', 'AI-LLM')"
+                                            sql = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', 'AI-LLM-{AIModelName}')"
                                             execute_sql_and_commit(conn, cur, sql)
                                             generQuesCount += 1
                                             gqc += 1
@@ -1175,7 +1175,7 @@ def AIGenerQues():
                                     elif table == "站室题库":
                                         sql = f"SELECT ID from questions where Question = '{quesHeader}' and qType = '{quesType}' and StationCN = '{chosenStationCN}' and chapterName = '{chapter}'"
                                         if not execute_sql(cur, sql):
-                                            sql = f"INSERT INTO questions(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', '{chosenStationCN}', '{chapter}', 'AI-LLM')"
+                                            sql = f"INSERT INTO questions(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType) VALUES('{quesHeader}', '{qOption}', '{qAnswer}', '{quesType}', '{qAnalysis}', '{chosenStationCN}', '{chapter}', 'AI-LLM-{AIModelName}')"
                                             execute_sql_and_commit(conn, cur, sql)
                                             generQuesCount += 1
                                             gqc += 1
