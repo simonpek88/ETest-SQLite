@@ -9,8 +9,6 @@ outputQues/*.*
 OYC/
 CacheData/
 InputQues/*_用户上传_*.xlsx
-DB/*.db-shm
-DB/*.db-wal
 DB/Keys.docx
 DB/Keys.pdf
 ~$*.*
