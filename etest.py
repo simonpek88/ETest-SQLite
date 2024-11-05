@@ -558,9 +558,9 @@ def questoWord():
                             sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' and (chapterName = "
                             for each5 in outChapterName:
                                 sql += f"'{each5}' or chapterName = "
-                            sql = sql[:-18] + ") order by ID"
+                            sql = sql[:-18] + ") order by chapterName, ID"
                         else:
-                            sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by ID"
+                            sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' and StationCN = '{stationCN}' order by chapterName, ID"
                 rows = execute_sql(cur, sql)
                 #st.write(f"{each} 共 {len(rows)}")
                 i = 1
@@ -1024,7 +1024,7 @@ def AIGenerQues():
             StationCNPack.append(row[0])
         chosenStationCN = st.select_slider("请选择要导入的站室", options=StationCNPack, value=st.session_state.StationCN)
         col1, col2 = st.columns(2)
-        sql = f"SELECT chapterName from questionaff where StationCN = '{chosenStationCN}' and chapterName <> '公共题库' and chapterName <> '错题集'"
+        sql = f"SELECT chapterName from questionaff where StationCN = '{chosenStationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集'"
         rows = execute_sql(cur, sql)
         for row in rows:
             chapterPack.append(row[0])
