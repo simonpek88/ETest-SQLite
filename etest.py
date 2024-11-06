@@ -2508,7 +2508,7 @@ def displayAppInfo():
 @st.fragment
 def changelog():
     changelogInfo = open("./CHANGELOG.md", "r", encoding="utf-8").read()
-    st.write(changelogInfo)
+    st.markdown(changelogInfo)
 
 
 @st.dialog("交卷")
@@ -3040,7 +3040,7 @@ APPNAME = "专业技能考试系统 — 离线版"
 # noinspection PyRedeclaration
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
 # noinspection PyRedeclaration
-UPDATETYPE = {"New": "🔖", "Optimize": "🍀", "Fix": "🐞"}
+UPDATETYPE = {"New": "✨", "Optimize": "🚀", "Fix": "🐞"}
 selected = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
