@@ -142,7 +142,7 @@ def get_userCName(searchUserCName=""):
 @st.fragment
 def login():
     #st.write("## :blue[专业技能考试系统 - 离线版]")
-    st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{appName}**</center></font>", unsafe_allow_html=True)
+    st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
     login = st.empty()
     with login.container(border=True):
         userName = st_keyup("请输入用户编码", placeholder="请输入用户编码, 必填项", max_chars=8)
@@ -269,11 +269,11 @@ def aboutInfo():
     st.write("###### :violet[为了获得更好的使用体验, 请使用浅色主题]")
     verinfo, verLM, likeCM = getVerInfo()
     st.caption(f"Version: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo} Last Modified: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
-    st.caption(f"Reviews: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]")
+    st.caption(f"Reviews: {EMOJI[int(likeCM) - 1][0]} {likeCM} :orange[I feel {EMOJI[int(likeCM) - 1][1]}]")
     sac.divider(align="center", color="blue")
     stars = sac.rate(label='Please give me a star if you like it!', align='start')
     if stars > 0:
-        st.write(f"I feel {emoji[int(stars) - 1][1]} {emoji[int(stars) - 1][0]}")
+        st.write(f"I feel {EMOJI[int(stars) - 1][1]} {EMOJI[int(stars) - 1][0]}")
     sql = f"UPDATE verinfo set pyMC = pyMC + 1 where pyFile = 'thumbs-up-stars' and pyLM = {stars}"
     execute_sql_and_commit(conn, cur, sql)
     updateActionUser(st.session_state.userName, "浏览[关于]信息", st.session_state.loginTime)
@@ -2495,12 +2495,12 @@ def displayVisitCounter():
 @st.fragment
 def displayAppInfo():
     infoStr = open("./MyComponentsScript/glowintext.txt", "r", encoding="utf-8").read()
-    infoStr = infoStr.replace("软件名称", appName)
+    infoStr = infoStr.replace("软件名称", APPNAME)
     verinfo, verLM, likeCM = getVerInfo()
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
-    #infoStr = infoStr.replace("用户评价", f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} I feel {emoji[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {updateType['Optimize']} 查询结构优化, 避免SQL注入风险; 规范变量命名")
+    #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 查询结构优化, 避免SQL注入风险; 规范变量命名")
 
     components.html(infoStr, height=300)
 
@@ -3019,22 +3019,22 @@ def ls_set(key, value):
     return st_javascript(f"localStorage.setItem('{key}', JSON.stringify('{value}');")
 
 
-global appName, emoji, updateType
+global APPNAME, EMOJI, UPDATETYPE
 
-dbFile = "./DB/ETest.db"
-#dbFile = "./DB/ETest_enc.db"
+DBFILE = "./DB/ETest.db"
+#DBFILE = "./DB/ETest_enc.db"
 
-conn = sqlite3.Connection(dbFile, check_same_thread=False)
+conn = sqlite3.Connection(DBFILE, check_same_thread=False)
 cur = conn.cursor()
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
 # noinspection PyRedeclaration
-appName = "专业技能考试系统 — 离线版"
+APPNAME = "专业技能考试系统 — 离线版"
 # noinspection PyRedeclaration
-emoji = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
+EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
 # noinspection PyRedeclaration
-updateType = {"New": "🔖", "Optimize": "🍀", "Fix": "🐞"}
+UPDATETYPE = {"New": "🔖", "Optimize": "🍀", "Fix": "🐞"}
 selected = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -3123,16 +3123,16 @@ if st.session_state.logged_in:
     if selected == "主页":
         #displayBigTime()
         displayBigTimeCircle()
-        #st.markdown(f"<font face='微软雅黑' color=purple size=8><center>**{appName}**</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"<font face='微软雅黑' color=purple size=8><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
         #verinfo, verLM, likeCM = getVerInfo()
         #st.subheader(f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
         #st.subheader(f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
-        #st.subheader(f"用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]")
+        #st.subheader(f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} :orange[I feel {EMOJI[int(likeCM) - 1][1]}]")
 
         #st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
         #st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
-        #st.markdown(f"<font size=5><center>**用户评价: {emoji[int(likeCM) - 1][0]} {likeCM} :orange[I feel {emoji[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
-        #st.markdown(f"<font size=4><center>**更新内容: {updateType['New']}/{updateType['Optimize']} 练习模式为每个用户增加单独的题型设置并简化操作**</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"<font size=5><center>**用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} :orange[I feel {EMOJI[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
+        #st.markdown(f"<font size=4><center>**更新内容: {UPDATETYPE['New']}/{UPDATETYPE['Optimize']} 练习模式为每个用户增加单独的题型设置并简化操作**</center></font>", unsafe_allow_html=True)
 
         displayAppInfo()
         displayVisitCounter()
