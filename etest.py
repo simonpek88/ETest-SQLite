@@ -2500,9 +2500,15 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 查询结构优化, 避免SQL注入风险; 规范变量命名")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 规范化常量变量名, 新增CHANGELOG.md")
 
     components.html(infoStr, height=300)
+
+
+@st.fragment
+def changelog():
+    changelogInfo = open("./CHANGELOG.md", "r", encoding="utf-8").read()
+    st.write(changelogInfo)
 
 
 @st.dialog("交卷")
@@ -3058,6 +3064,7 @@ if st.session_state.logged_in:
                     sac.MenuItem('登出', icon='box-arrow-right'),
                 ]),
                 sac.MenuItem('关于', icon='layout-wtf', children=[
+                    sac.MenuItem('Changelog', icon='view-list', disabled=True),
                     sac.MenuItem('Readme', icon='github', disabled=True),
                     sac.MenuItem('关于...', icon='link-45deg', disabled=True),
                 ], disabled=True),
@@ -3090,6 +3097,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('登出', icon='box-arrow-right'),
                     ]),
                     sac.MenuItem('关于', icon='layout-wtf', children=[
+                        sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
@@ -3110,6 +3118,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('登出', icon='box-arrow-right'),
                     ]),
                     sac.MenuItem('关于', icon='layout-wtf', children=[
+                        sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
@@ -3415,6 +3424,8 @@ if st.session_state.logged_in:
         resetPassword()
     elif selected == "登出":
         logout()
+    elif selected == "Changelog":
+        changelog()
     elif selected == "Readme":
         aboutReadme()
     elif selected == "关于...":
