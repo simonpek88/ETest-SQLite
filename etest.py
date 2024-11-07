@@ -1163,6 +1163,8 @@ def AIGenerQues():
                                         flagSuccess = False
                                     if st.session_state.debug:
                                         print(f"debug: 题目:[{quesHeader}] 选项:[{qOption}], 标准答案:[{qAnswer}] 答题解析:[{qAnalysis}]")
+                                    if quesType == "填空题":
+                                        quesHeader = quesHeader.replace("选项未给出，需要学生在横线上填写正确答案。", "").replace("选项:", "")
                                 if qAnswer != "" and quesHeader != "" and len(str(qAnswer)) < 200 and len(quesHeader) < 200 and flagSuccess:
                                     if table == "公共题库":
                                         sql = f"SELECT ID from commquestions where Question = '{quesHeader}' and qType = '{quesType}'"
