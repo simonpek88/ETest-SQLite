@@ -2200,17 +2200,20 @@ def exam(row):
     if st.session_state.examType != "exam":
         updateStudyInfo(row)
     st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
-    acol1, acol2 = st.columns(2)
-    if st.session_state.userType == "admin" and st.session_state.examType != "exam":
-        buttonConfirm = acol1.button("⚠️ 从所有题库中删除此题", type="primary")
+    acol = st.columns(2)
+    if st.session_state.userType == "admin" and st.session_state.examType != "exam" and st.session_state.debug:
+        addFavIndex = 1
+        buttonConfirm = acol[0].button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
+    else:
+        addFavIndex = 0
     if st.session_state.examType == "training":
         sql = f"SELECT ID from favques where Question = '{row[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
         if execute_sql(cur, sql):
-            acol2.button(label="", icon=":material/heart_minus:", on_click=delFavQues, args=(row,), help="从关注题集中删除")
+            acol[addFavIndex].button(label="", icon=":material/heart_minus:", on_click=delFavQues, args=(row,), help="从关注题集中删除")
         else:
-            acol2.button(label="", icon=":material/heart_plus:", on_click=addFavQues, args=(row,), help="添加到关注题集")
+            acol[addFavIndex].button(label="", icon=":material/heart_plus:", on_click=addFavQues, args=(row,), help="添加到关注题集")
     st.write(f":red[本题为{row[4]}]:")
     if row[4] == '单选题':
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
@@ -3036,7 +3039,7 @@ cur = conn.cursor()
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
 # noinspection PyRedeclaration
-APPNAME = "专业技能考试系统 — 离线版"
+APPNAME = "专业技能考试系统"
 # noinspection PyRedeclaration
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
 # noinspection PyRedeclaration
@@ -3313,7 +3316,10 @@ if st.session_state.logged_in:
                 elif row[0] == "考题总数":
                     col6.number_input(row[0], min_value=10, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help="仅对考试有效, 练习模式不受限制")
                 elif row[0] == "合格分数线":
-                    st.slider(row[0], min_value=60, max_value=120, value=row[1], step=10, key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
+                    if st.session_state.StationCN != "调控中心":
+                        st.slider(row[0], min_value=60, max_value=120, value=row[1], step=10, key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
+                    else:
+                        st.slider(row[0], min_value=10, max_value=120, value=row[1], step=10, key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
                 elif row[0] == "同场考试次数限制":
                     col7.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="最多5次")
                 elif row[0] == "考试题库每次随机生成":
