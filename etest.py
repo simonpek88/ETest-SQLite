@@ -2503,7 +2503,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 规范化常量变量名, 新增CHANGELOG.md")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 优化考试及练习中加入关注题集的显示功能")
 
     components.html(infoStr, height=300)
 
