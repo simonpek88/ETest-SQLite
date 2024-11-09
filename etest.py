@@ -1686,7 +1686,10 @@ def actionUserStatus():
 @st.fragment
 def actionQuesModify(row):
     option = []
-    qQuestion, qOption, qAnswer, qType, qAnalysis = row
+    if len(row) == 8:
+        qQuestion, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType = row
+    else:
+        qQuestion, qOption, qAnswer, qType, qAnalysis, SourceType = row
     st.session_state.qModifyQues_qType = qType
     st.write(f"**此题为{qType}**")
     st.text_area(":blue[**题目**]", value=qQuestion, key="qModifyQues_Question")
@@ -1729,19 +1732,34 @@ def quesModify():
             tablename = "commquestions"
         else:
             tablename = ""
-        col3, col4, col5 = st.columns(3)
+        col3, col4, col5, col6 = st.columns(4)
         buttonDisplayQues = col3.button("显示试题", icon=":material/dvr:")
         if buttonDisplayQues:
-            sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis from {tablename} where ID = {quesID}"
+            if chosenTable == "站室题库":
+                sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName, SourceType from {tablename} where ID = {quesID}"
+            else:
+                sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, SourceType from {tablename} where ID = {quesID}"
             rows = execute_sql(cur, sql)
             if rows:
+                if chosenTable == "站室题库":
+                    st.write(f":green[站室: {rows[0][5]} 章节: {rows[0][6]}]")
                 col4.button("更新试题", on_click=actionQM, args=(quesID, tablename, rows[0]), icon=":material/published_with_changes:")
                 col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename, rows[0]), icon=":material/delete:")
+                if chosenTable == "站室题库":
+                    col6.button("移至公共题库", on_click=moveQM, args=(quesID, tablename, rows[0]), icon=":material/move_item:")
                 actionQuesModify(rows[0])
             else:
                 st.error("未找到该题目, 请检查题库名称及题目ID是否正确")
     else:
         st.error("请选择题库")
+
+
+def moveQM(quesID, tablename, mRow):
+    sql = f"DELETE from {tablename} where ID = {quesID}"
+    execute_sql_and_commit(conn, cur, sql)
+    sql = f"INSERT INTO commquestions(Question, qOption, qAnswer, qType, qAnalysis, SourceType) VALUES('{mRow[0]}', '{mRow[1]}', '{mRow[2]}', '{mRow[3]}', '{mRow[4]}', '{mRow[7]}')"
+    execute_sql_and_commit(conn, cur, sql)
+    st.toast("试题移至公共题库成功")
 
 
 def actionQM(quesID, tablename, mRow):
@@ -2142,9 +2160,9 @@ def updateMOptionAnswer(row):
 
 
 def delQuestion(delQuesRow):
-    delTablePack = ["questions", "commquestions", "morepractise"]
+    delTablePack = ["questions", "commquestions", "morepractise", "favques"]
     for delTable in delTablePack:
-        sql = f"DELETE from {delTable} where Question = '{delQuesRow[1]}' and qType = '{delQuesRow[4]}'"
+        sql = f"DELETE from {delTable} where Question = '{delQuesRow[1]}' and qOption = '{delQuesRow[2]}' and qType = '{delQuesRow[4]}'"
         execute_sql_and_commit(conn, cur, sql)
     updateKeyAction(f"删除试题: {delQuesRow[1]}")
 
@@ -2505,7 +2523,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 优化考试及练习中加入关注题集的显示功能")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 优化试题修改及删除功能; 增加试题转移功能")
 
     components.html(infoStr, height=300)
 
