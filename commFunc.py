@@ -167,7 +167,7 @@ def deepseek_AI(ques, option, quesType):
 
 def deepseek_AI_GenerQues(reference, quesType, quesCount):
     aikey = getEncryptKeys("deepseek")
-    prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是特定题型的试题"
+    prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是{quesType}题型\n8. 题干中不显示选项"
     prompt = prompt + "\n请按照以下格式出题\n题型: \n试题: \n选项: \n标准答案: \n试题解析: \n\n按以下内容出题\n参考资料:\n"
     client = OpenAI(api_key=aikey, base_url="https://api.deepseek.com")
     response = client.chat.completions.create(
@@ -231,6 +231,26 @@ def xunfei_xh_AI(ques, option, quesType):
         return ""
 
 
+def xunfei_xh_AI_GenerQues(reference, quesType, quesCount):
+    aikey = getEncryptKeys("xfxh")
+    prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是{quesType}题型\n8. 题干中不显示选项\n9. 选项中不要加强调符号"
+    prompt = prompt + "\n请按照以下格式出题\n题型: \n试题: \n选项: \n标准答案: \n试题解析: \n\n按以下内容出题\n参考资料:\n"
+    client = OpenAI(api_key=aikey, base_url='https://spark-api-open.xf-yun.com/v1')
+    completion = client.chat.completions.create(
+        model='4.0Ultra',
+        messages=[
+            {
+                "role": "user",
+                "content": f"{prompt}{reference}"
+            }
+        ]
+    )
+    if completion.code == 0:
+        return completion.choices[0].message.content
+    else:
+        return ""
+
+
 def xunfei_xh_AI_fib(ques, ques2):
     aikey = getEncryptKeys("xfxh")
     prompt = "我给你一行话，请根据我给你的参考资料判断提供的答案替换参考资料中括号内的内容后是否正确，不做推导过程，只输出正确还是错误，格式如下:<参考资料>:\n\n<答案>:\n\n"
@@ -255,7 +275,7 @@ def qianfan_AI_GenerQues(reference, quesType, quesCount, AImodel):
     aikeySK = getEncryptKeys("qianfan_sk")
     os.environ["QIANFAN_ACCESS_KEY"] = aikeyAK
     os.environ["QIANFAN_SECRET_KEY"] = aikeySK
-    prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是特定题型的试题"
+    prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是{quesType}题型\n8. 题干中不显示选项"
     prompt = prompt + "\n请按照以下格式出题\n题型: \n试题: \n选项: \n标准答案: \n试题解析: \n\n按以下内容出题\n参考资料:\n"
     chat_comp = qianfan.ChatCompletion()
     resp = chat_comp.do(model=f"{AImodel}", messages=[{

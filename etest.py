@@ -31,7 +31,7 @@ from xlsxwriter.workbook import Workbook
 from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       execute_sql, execute_sql_and_commit, getParam,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
-                      updateActionUser, updatePyFileinfo, xunfei_xh_AI,
+                      updateActionUser, updatePyFileinfo, xunfei_xh_AI, xunfei_xh_AI_GenerQues,
                       xunfei_xh_AI_fib)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
@@ -1038,8 +1038,8 @@ def AIGenerQues():
     quesRefer = st.text_area("请输入参考资料")
     AIModelNamePack = st.multiselect(
         "可选LLM大模型",
-        ["DeepSeek", "文心千帆"],
-        ["DeepSeek", "文心千帆"],
+        ["DeepSeek", "文心千帆", "讯飞星火"],
+        ["DeepSeek", "文心千帆", "讯飞星火"],
     )
     quesTypePack = st.multiselect(
         "请选择要生成的题型",
@@ -1071,6 +1071,8 @@ def AIGenerQues():
                             ques = qianfan_AI_GenerQues(quesRefer, quesType, quesCount, "ERNIE-Speed-8K")
                         elif AIModelName == "DeepSeek":
                             ques = deepseek_AI_GenerQues(quesRefer, quesType, quesCount)
+                        elif AIModelName == "讯飞星火":
+                            ques = xunfei_xh_AI_GenerQues(quesRefer, quesType, quesCount)
                         else:
                             ques = ""
                         quesPack = ques.split("题型")
@@ -1105,8 +1107,17 @@ def AIGenerQues():
                                                     for each3 in chars:
                                                         each2 = each2.replace(f"{each3}.", "").strip()
                                                     qOption = qOption + each2 + ";"
+                                                if AIModelName == "讯飞星火" and len(Option) == 1:
+                                                    qOption = qOption[:-1]
+                                                    qOption = qOption.replace("  ", ";")
+                                                    revDisplayOption = str(displayOption)
+                                                    revDisplayOption = revDisplayOption.replace("A. ", "\n\nA. ").replace("B. ", "\nB. ").replace("C. ", "\nC. ").replace("D. ", "\nD. ").replace("E. ", "\nE. ").replace("F. ", "\nF. ").replace("G. ", "\nG. ").replace("H. ", "\nH. ")
+                                                    displayOption = revDisplayOption
+                                                qOption = qOption.replace("；", ";")
                                                 if qOption.endswith(";"):
                                                     qOption = qOption[:-1]
+                                                if st.session_state.debug:
+                                                    print(f"Option:{Option} qOption:{qOption}")
                                                 b4 = each.find("试题解析")
                                                 if b4 != -1:
                                                     qAnswer = each[b3 + 5:b4].replace("\n", "").replace("*", "").strip()
@@ -1153,6 +1164,8 @@ def AIGenerQues():
                                                 if quesHeader.find("_" * i) != -1:
                                                     quesHeader = quesHeader.replace("_" * i, "()")
                                                 i -= 1
+                                    if quesHeader.startswith(":"):
+                                        quesHeader = quesHeader[1:].strip()
                                     if qAnalysis.startswith(":"):
                                         qAnalysis = qAnalysis[1:].strip()
                                     if qAnalysis.endswith("---"):
@@ -1742,7 +1755,9 @@ def quesModify():
             rows = execute_sql(cur, sql)
             if rows:
                 if chosenTable == "站室题库":
-                    st.write(f":green[站室: {rows[0][5]} 章节: {rows[0][6]}]")
+                    st.write(f":green[站室: {rows[0][5]} 章节: {rows[0][6]} 试题来源: {rows[0][7]}]")
+                else:
+                    st.write(f":green[公共题库 试题来源: {rows[0][5]}]")
                 col4.button("更新试题", on_click=actionQM, args=(quesID, tablename, rows[0]), icon=":material/published_with_changes:")
                 col5.button("删除试题", on_click=actionDelQM, args=(quesID, tablename, rows[0]), icon=":material/delete:")
                 if chosenTable == "站室题库":
@@ -2523,7 +2538,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 优化试题修改及删除功能; 增加试题转移功能")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} A.I.出题增加讯飞星火大模型")
 
     components.html(infoStr, height=300)
 
