@@ -55,7 +55,7 @@ def bytes_to_key(data, salt, output=48):
 
 
 def encrypt(message, passphrase):
-    # 生成一个随机的8字节的盐
+    # 生成一个随机的8个字节的盐
     salt = Random.new().read(8)
 
     # 使用bytes_to_key函数生成密钥和IV
@@ -77,10 +77,10 @@ def decrypt(encrypted, passphrase):
     # 对加密数据进行base64解码
     encrypted = base64.b64decode(encrypted)
 
-    # 断言加密数据的前8个字节是否为"Salted__"
+    # 判断加密数据前8个字节是否为"Salted__"
     assert encrypted[0:8] == b"Salted__"
 
-    # 提取盐值，盐值位于"Salted__"之后，长度为8字节
+    # 提取盐值，盐值位于"Salted__"之后，长度为8个字节
     salt = encrypted[8:16]
 
     # 使用bytes_to_key函数生成密钥和IV
