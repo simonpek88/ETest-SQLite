@@ -2473,6 +2473,8 @@ def displayTimeCountdown():
                 examEndTimeText = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(examEndTime))
             elif countdownType == "Circle":
                 examEndTimeText = str(examTimeLimit - int(time.time() - st.session_state.examStartTime))
+            else:
+                examEndTimeText = ""
             remindTimeText = remindTimeText.replace("remindTime", f'"{examEndTimeText}"')
             remainingTime = examTimeLimit - (int(time.time() - st.session_state.examStartTime))
             if remainingTime < 0:
