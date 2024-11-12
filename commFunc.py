@@ -98,33 +98,42 @@ def decrypt(encrypted, passphrase):
 
 
 def getEncryptKeys(keyname):
+    # 从数据库中查询键名为'key_text'的加密密钥
     sql = "SELECT aikey from aikeys where keyname = 'key_text'"
+    # 执行SQL查询并获取结果中的第一个值作为密钥
     key = execute_sql(cur2, sql)[0][0]
+
+    # 构建SQL查询语句，用于查询指定键名的加密数据
     sql = f"SELECT aikey from aikeys where keyname = '{keyname}'"
+    # 执行SQL查询并获取结果中的第一个值作为加密数据
     encrypt_data = execute_sql(cur2, sql)[0][0]
+
+    # 使用密钥对加密数据进行解密
     #encrypt_data = encrypt(data, key).decode("utf-8")
     decrypt_data = decrypt(encrypt_data, key).decode("utf-8")
 
+    # 返回解密后的数据
     return decrypt_data
 
 
 def getUserEDKeys(userStr, edType):
+    # 初始化加密后的字符串为空
     strED = ""
+    # 构建SQL查询语句，从数据库中获取密钥
     sql = "SELECT aikey from aikeys where keyname = 'key_text'"
+    # 执行SQL查询语句，获取密钥
     key = execute_sql(cur2, sql)[0][0]
+    # 判断加密类型是否为"enc"（加密）
     if edType == "enc":
+        # 对用户输入字符串进行加密，并将加密后的字符串解码为UTF-8格式
         strED = encrypt(userStr, key).decode("utf-8")
+    # 判断加密类型是否为"dec"（解密）
     elif edType == "dec":
+        # 对用户输入字符串进行解密，并将解密后的字符串解码为UTF-8格式
         strED = decrypt(userStr, key).decode("utf-8")
 
+    # 返回加密或解密后的字符串
     return strED
-
-
-def getKeys(keyname):
-    sql = f"SELECT aikey from aikeys where keyname = '{keyname}'"
-    ai_key = execute_sql(cur2, sql)[0][0]
-
-    return ai_key
 
 
 def generContent(ques, option, quesType):
@@ -286,18 +295,29 @@ def qianfan_AI_GenerQues(reference, quesType, quesCount, AImodel):
 
 
 def CreateExamTable(tablename, examRandom):
+    # 查询数据库，判断表是否存在
     sql = "SELECT * from sqlite_master where type = 'table' and name = '" + tablename + "'"
     tempTable = execute_sql(cur2, sql)
+
+    # 如果表存在
     if tempTable:
+        # 如果表名包含 "exam_final_" 或 examRandom 为真
         if tablename.find("exam_final_") != -1 or examRandom:
+            # 删除表
             execute_sql_and_commit(conn2, cur2, sql=f"DROP TABLE {tablename}")
             flagTableExist = False
         else:
+            # 表存在，flagTableExist 设置为 True
             flagTableExist = True
     else:
+        # 如果表不存在，flagTableExist 设置为 False
         flagTableExist = False
+
+    # 如果表不存在
     if not flagTableExist:
+        # 如果表名包含 "exam_final_"
         if tablename.find("exam_final_") != -1:
+            # 创建包含 ID, Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, SourceType 的表
             sql = """CREATE TABLE exampleTable (
                         ID integer not null primary key autoincrement,
                         Question text not null,
@@ -309,7 +329,9 @@ def CreateExamTable(tablename, examRandom):
                         userName integer default 0,
                         SourceType text default '人工'
                     );"""
+        # 如果表名包含 "exam_"
         elif tablename.find("exam_") != -1:
+            # 创建包含 ID, Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType 的表
             sql = """CREATE TABLE exampleTable (
                         ID integer not null primary key autoincrement,
                         Question text not null,
@@ -320,8 +342,11 @@ def CreateExamTable(tablename, examRandom):
                         randomID integer not null,
                         SourceType text default '人工'
                     );"""
+        # 将表名从 exampleTable 替换为实际的表名
         sql = sql.replace("exampleTable", tablename)
+        # 执行 SQL 语句创建表
         cur2.execute(sql)
+        # 提交事务
         conn2.commit()
 
     return flagTableExist
@@ -359,28 +384,43 @@ def execute_sql_and_commit(conn, cur, sql, params=None):
 
 
 def getParam(paramName, StationCN):
+    # 构造SQL查询语句
     sql = f"SELECT param from Setup_{StationCN} where paramName = '{paramName}'"
+    # 执行SQL查询语句
     cur2.execute(sql)
+    # 获取查询结果
     table = cur2.fetchone()
+    # 判断查询结果是否为空
     if table:
+        # 如果不为空，则取查询结果的第一个值作为参数
         param = table[0]
     else:
+        # 如果为空，则参数值为0
         param = 0
 
+    # 返回参数值
     return param
 
 
 def getChapterRatio(StationCN, qAff, examType):
+    # 判断考试类型
     if examType == "training":
+        # 如果是练习类型，则选择chapterRatio字段
         sql = "SELECT chapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
     else:
+        # 如果是其他类型，则选择examChapterRatio字段
         sql = "SELECT examChapterRatio from questionAff where StationCN = '" + StationCN + "' and chapterName = '" + qAff + "'"
+    # 执行SQL查询
     quesCRTable = execute_sql(cur2, sql)
+    # 判断查询结果是否为空
     if quesCRTable:
+        # 如果不为空，获取第一个结果的第一列值
         cr = quesCRTable[0][0]
     else:
+        # 如果为空，则默认比率为5
         cr = 5
 
+    # 返回比率值
     return cr
 
 
@@ -461,19 +501,32 @@ def updateActionUser(activeUser, actionUser, loginTime):
 
 def updatePyFileinfo():
     for root, dirs, files in os.walk("./"):
+        # 当遍历到根目录时
         if root == "./":
             for file in files:
+                # 判断文件后缀是否为.py且文件名不以"test-"开头
                 if os.path.splitext(file)[1].lower() == '.py' and not os.path.splitext(file)[0].lower().startswith("test-"):
+                    # 获取文件的完整路径
                     pathIn = os.path.join(root, file)
+                    # 获取文件名（不含后缀）
                     pyFile = os.path.splitext(file)[0]
+                    # 获取文件的最后修改时间（时间戳）
                     file_mtime = int(os.path.getmtime(pathIn))
+                    # 构造SQL查询语句，从verinfo表中查询当前文件的信息
                     sql = f"SELECT ID, pyLM from verinfo where pyFile = '{pyFile}'"
+                    # 执行SQL查询语句
                     row = execute_sql(cur2, sql)[0]
+                    # 如果查询结果为空，表示该文件在verinfo表中没有记录
                     if not row:
+                        # 构造SQL插入语句，将文件信息插入到verinfo表中
                         sql = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
+                        # 执行SQL插入语句并提交事务
                         execute_sql_and_commit(conn2, cur2, sql)
+                    # 如果查询结果不为空，但文件的最后修改时间与verinfo表中记录的时间不一致
                     elif row[1] != file_mtime:
+                        # 构造SQL更新语句，更新verinfo表中该文件的信息
                         sql = f"UPDATE verinfo SET pyLM = {file_mtime}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
+                        # 执行SQL更新语句并提交事务
                         execute_sql_and_commit(conn2, cur2, sql)
 
 

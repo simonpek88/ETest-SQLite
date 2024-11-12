@@ -1311,8 +1311,6 @@ def displayUserRanking():
                 pdk.Deck(
                     map_style="road",
                     initial_view_state=pdk.ViewState(
-                        #latitude=39.12,
-                        #longitude=117.34,
                         latitude=data[0][0],
                         longitude=data[0][1],
                         zoom=10,
