@@ -52,6 +52,7 @@ maxid
 mcol
 mktime
 mmcq
+Monokai
 moption
 morepractise
 Neue
@@ -59,6 +60,7 @@ Objs
 openpyxl
 oxml
 pickable
+pylint
 qcol
 qianfan
 QIANFAN
