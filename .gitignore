@@ -4,6 +4,9 @@ __pycache__/
 *$py.class
 
 # user defined ignore files
+node_modules
+package-lock.json
+package.json
 ExamResult/*.*
 outputQues/*.*
 OYC/
