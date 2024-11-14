@@ -180,42 +180,46 @@ def login():
             verifyUPW = verifyUserPW(userName, userPassword)
             if verifyUPW[0]:
                 userPassword = verifyUPW[1]
-            sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
-            result = execute_sql(cur, sql)
-            if result:
-                st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
-                login.empty()
-                st.session_state.logged_in = True
-                st.session_state.userPwRecheck = False
-                st.session_state.userName = result[0][0]
-                st.session_state.userCName = result[0][1].replace(" ", "")
-                st.session_state.userType = result[0][2]
-                st.session_state.StationCN = result[0][3]
-                st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
-                st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
-                st.session_state.clockType = bool(getParam("时钟样式", st.session_state.StationCN))
-                st.session_state.curQues = 0
-                st.session_state.examChosen = False
-                st.session_state.tooltipColor = "#ed872d"
-                st.session_state.loginTime = int(time.time())
-                sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
-                execute_sql_and_commit(conn, cur, sql)
-                sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
-                execute_sql_and_commit(conn, cur, sql)
-                ClearTables()
-                if examType == "练习":
-                    st.session_state.examType = "training"
-                    st.session_state.examName = "练习题库"
-                    st.session_state.examRandom = True
-                elif examType == "考试":
-                    st.session_state.examType = "exam"
-                    st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
-                st.rerun()
+            if examType == "练习":
+                st.session_state.examType = "training"
+                st.session_state.examName = "练习题库"
+                st.session_state.examRandom = True
+                sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}'"
+            elif examType == "考试":
+                st.session_state.examType = "exam"
+                st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
+                sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
             else:
-                if verifyUPW[0]:
-                    st.error("登录失败, 用户已经在别处登录, 请联系管理员解决")
+                sql = ""
+            if sql != "":
+                result = execute_sql(cur, sql)
+                if result:
+                    st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
+                    login.empty()
+                    st.session_state.logged_in = True
+                    st.session_state.userPwRecheck = False
+                    st.session_state.userName = result[0][0]
+                    st.session_state.userCName = result[0][1].replace(" ", "")
+                    st.session_state.userType = result[0][2]
+                    st.session_state.StationCN = result[0][3]
+                    st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
+                    st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
+                    st.session_state.clockType = bool(getParam("时钟样式", st.session_state.StationCN))
+                    st.session_state.curQues = 0
+                    st.session_state.examChosen = False
+                    st.session_state.tooltipColor = "#ed872d"
+                    st.session_state.loginTime = int(time.time())
+                    sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
+                    execute_sql_and_commit(conn, cur, sql)
+                    sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
+                    execute_sql_and_commit(conn, cur, sql)
+                    ClearTables()
+                    st.rerun()
                 else:
-                    st.error("登录失败, 请检查用户名和密码, 若忘记密码请联系管理员重置")
+                    if verifyUPW[0]:
+                        st.error("登录失败, 用户已经在别处登录, 请联系管理员解决")
+                    else:
+                        st.error("登录失败, 请检查用户名和密码, 若忘记密码请联系管理员重置")
         else:
             st.warning("请输入用户编码和密码")
 
@@ -1225,10 +1229,10 @@ def ClearMP():
 
 
 def ClearMPAction(bcArea):
-    execute_sql_and_commit(conn, cur, sql="DELETE from morepractise where ID > 0")
+    execute_sql_and_commit(conn, cur, sql=f"DELETE from morepractise where userName = {st.session_state.userName}")
     bcArea.empty()
-    st.success("错题集已重置")
-    updateKeyAction("清空错题集所有记录")
+    st.success("当前用户错题集已重置")
+    updateKeyAction("重置当前用户错题集")
 
 
 def studyinfo():
@@ -2535,9 +2539,9 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug及增加登录时用户编码的提示信息")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug及增加登录时用户编码的提示信息并优化登录逻辑")
 
-    components.html(infoStr, height=300)
+    components.html(infoStr, height=340)
 
 
 @st.fragment
@@ -3071,7 +3075,7 @@ cur = conn.cursor()
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
 # noinspection PyRedeclaration
-APPNAME = "专业技能考试系统"
+APPNAME = "调控中心安全生产业务考试系统"
 # noinspection PyRedeclaration
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
 # noinspection PyRedeclaration
@@ -3160,7 +3164,7 @@ if st.session_state.logged_in:
                 ], open_index=[1, 2, 3, 4, 5, 6], open_all=False)
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
-        st.caption("**请使用 :red[[登出]] 功能退出页面, 否则会影响下次登录**")
+        #st.caption("**请使用 :red[[登出]] 功能退出页面, 否则会影响下次登录**")
     updatePyFileinfo()
     if selected != "密码重置" and selected != "用户状态" and selected != "操作日志":
         st.session_state.userPwRecheck = False
