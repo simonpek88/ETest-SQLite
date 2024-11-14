@@ -1985,6 +1985,7 @@ def training():
                 st.session_state.goto = False
                 st.session_state.radioCompleted = False
                 st.session_state.calcScore = False
+                st.session_state.trainingID = str(time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time()))))
                 if st.session_state.examType != "training":
                     st.session_state.examChosen = True
                     updateActionUser(st.session_state.userName, "生成考试试题", st.session_state.loginTime)
@@ -2042,10 +2043,10 @@ def updateAnswer(userQuesID):
     else:
         sql = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
         if execute_sql(cur, sql):
-            sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{judTable[3]}' where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
+            sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{judTable[3]}' where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]} and trainingID != '{st.session_state.trainingID}'"
             execute_sql_and_commit(conn, cur, sql)
         else:
-            sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}')"
+            sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType, trainingID) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}', '{st.session_state.trainingID}')"
             execute_sql_and_commit(conn, cur, sql)
         #st.session_state.tooltipColor = "#8581d9"
     execute_sql_and_commit(conn, cur, sql="DELETE from morepractise where WrongTime < 1")
@@ -2132,10 +2133,10 @@ def calcScore():
             if not flagAIScore:
                 sql = f"SELECT ID from morepractise where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
                 if not execute_sql(cur, sql):
-                    sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType) VALUES('{row[3]}', '{row[4]}', '{row[0]}', '{row[1]}', '{row[5]}', '{row[2]}', {row[6]}, 1, '{st.session_state.StationCN}', '{row[7]}')"
+                    sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType, trainingID) VALUES('{row[3]}', '{row[4]}', '{row[0]}', '{row[1]}', '{row[5]}', '{row[2]}', {row[6]}, 1, '{st.session_state.StationCN}', '{row[7]}', '{st.session_state.trainingID}')"
                     execute_sql_and_commit(conn, cur, sql)
                 else:
-                    sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{row[2]}' where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]}"
+                    sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{row[2]}' where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]} and trainingID != '{st.session_state.trainingID}'"
                     execute_sql_and_commit(conn, cur, sql)
     if st.session_state.calcScore:
         score_dialog(userScore, passScore)
@@ -2549,7 +2550,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug; 增加登录时用户编码的提示信息; 优化登录逻辑; 取消数据库连接加密, 仅保留在数据库内对敏感数据进行加密")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug; 增加登录时用户编码的提示信息; 优化登录逻辑; 取消数据库连接加密, 仅保留在数据库内对敏感数据进行加密; 优化错题集的添加逻辑")
 
     components.html(infoStr, height=340)
 
