@@ -2276,12 +2276,9 @@ def exam(row):
         radioArea = st.empty()
         with radioArea.container():
             option = ["A. 正确", "B. 错误"]
-            if row[6] == "":
-                st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
-            else:
-                chosen = st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
-                if chosen is None:
-                    st.write(f":red[**你已选择:** ] :blue[[**{option[int(row[6]) ^ 1][0]}**]]")
+            st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
+            if row[6] != "":
+                st.write(f":red[**你已选择:** ] :blue[[**{option[int(row[6]) ^ 1][0]}**]]")
         if st.session_state.radioCompleted:
             radioArea.empty()
             st.session_state.radioCompleted = False
@@ -2538,7 +2535,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} A.I.出题增加讯飞星火大模型")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug及增加登录时用户编码的提示信息")
 
     components.html(infoStr, height=300)
 
