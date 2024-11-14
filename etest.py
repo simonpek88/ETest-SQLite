@@ -49,11 +49,19 @@ def updateKeyAction(keyAction):
 # noinspection PyShadowingNames
 @st.fragment
 def getUserCName(sUserName, sType="Digit"):
-    sql = ""
+    errorInfo = ""
     if sType.capitalize() == "Digit":
-        sql = f"SELECT userCName, StationCN from users where userName = {sUserName}"
+        cop = re.compile('[^0-9^.]')
+        inputStr = cop.sub('', sUserName)
+        if len(sUserName) == len(inputStr):
+            sql = f"SELECT userCName, StationCN from users where userName = {sUserName}"
+        else:
+            sql = ""
+            errorInfo = "请输入纯数字用户编码"
     elif sType.capitalize() == "Str":
         sql = f"SELECT userCName, StationCN from users where userCName = '{sUserName}'"
+    else:
+        sql = ""
     if sql != "":
         rows = execute_sql(cur, sql)
         if rows:
@@ -63,8 +71,10 @@ def getUserCName(sUserName, sType="Digit"):
             st.session_state.userCName = "未找到"
             st.session_state.StationCN = "未找到"
     else:
-        st.session_state.userCName = "未找到"
-        st.session_state.StationCN = "未找到"
+        if errorInfo != "":
+            st.error(errorInfo)
+        st.session_state.userCName = ""
+        st.session_state.StationCN = ""
 
 
 def delOutdatedTable():
@@ -2539,7 +2549,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug及增加登录时用户编码的提示信息并优化登录逻辑")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug; 增加登录时用户编码的提示信息; 优化登录逻辑; 取消数据库连接加密, 仅保留在数据库内对敏感数据进行加密")
 
     components.html(infoStr, height=340)
 
