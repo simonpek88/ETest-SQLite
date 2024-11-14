@@ -364,7 +364,7 @@ def execute_sql(cur, sql, params=None):
             cur.execute(sql)
         return cur.fetchall()
     except Exception as e:
-        #logging.error(f"An error occurred while executing SQL: {sql}, Error: {e}")
+        logging.error(f"An error occurred while executing SQL: {sql}, Error: {e}")
         return []
 
 
