@@ -2043,7 +2043,7 @@ def updateAnswer(userQuesID):
     else:
         sql = f"SELECT ID from morepractise where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]}"
         if execute_sql(cur, sql):
-            sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{judTable[3]}' where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]} and trainingID != '{st.session_state.trainingID}'"
+            sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{judTable[3]}' where Question = '{judTable[0]}' and qType = '{judTable[2]}' and userName = {judTable[4]} and trainingID <> '{st.session_state.trainingID}'"
             execute_sql_and_commit(conn, cur, sql)
         else:
             sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType, trainingID) VALUES('{judTable[0]}', '{judTable[5]}', '{judTable[1]}', '{judTable[2]}', '{judTable[6]}', '{judTable[3]}', {judTable[4]}, 1, '{st.session_state.StationCN}', '{judTable[7]}', '{st.session_state.trainingID}')"
@@ -2136,7 +2136,7 @@ def calcScore():
                     sql = f"INSERT INTO morepractise(Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, WrongTime, StationCN, SourceType, trainingID) VALUES('{row[3]}', '{row[4]}', '{row[0]}', '{row[1]}', '{row[5]}', '{row[2]}', {row[6]}, 1, '{st.session_state.StationCN}', '{row[7]}', '{st.session_state.trainingID}')"
                     execute_sql_and_commit(conn, cur, sql)
                 else:
-                    sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{row[2]}' where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]} and trainingID != '{st.session_state.trainingID}'"
+                    sql = f"UPDATE morepractise set WrongTime = WrongTime + 1, userAnswer = '{row[2]}' where Question = '{row[3]}' and qType = '{row[1]}' and userName = {row[6]} and trainingID <> '{st.session_state.trainingID}'"
                     execute_sql_and_commit(conn, cur, sql)
     if st.session_state.calcScore:
         score_dialog(userScore, passScore)
@@ -2550,7 +2550,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修改练习/考试中判断题选项结果不刷新的bug; 增加登录时用户编码的提示信息; 优化登录逻辑; 取消数据库连接加密, 仅保留在数据库内对敏感数据进行加密; 优化错题集的添加逻辑")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 增加supervisor账户类型")
 
     components.html(infoStr, height=340)
 
@@ -2939,12 +2939,12 @@ def queryExamResultUsers():
         if options:
             tab1, tab2 = st.tabs(["简报", "详情"])
             if len(options) == 2:
-                sql = "SELECT userName, userCName, StationCN from users where StationCN = '" + st.session_state.StationCN + "' order by ID"
+                sql = "SELECT userName, userCName, StationCN from users where StationCN = '" + st.session_state.StationCN + "' and userType <> 'supervisor' order by ID"
             elif len(options) == 1:
                 if options[0] == "已参加考试":
-                    sql = "SELECT users.userName, users.userCName, users.StationCN from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName and users.StationCN = '" + st.session_state.StationCN + "'"
+                    sql = "SELECT users.userName, users.userCName, users.StationCN from users, examresult where users.userType <> 'supervisor' and examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName and users.StationCN = '" + st.session_state.StationCN + "'"
                 elif options[0] == "未参加考试":
-                    sql = "SELECT userName, userCName, StationCN from users where userName not in (SELECT users.userName from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName) and StationCN = '" + st.session_state.StationCN + "'"
+                    sql = "SELECT userName, userCName, StationCN from users where userType <> 'supervisor' and userName not in (SELECT users.userName from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName) and StationCN = '" + st.session_state.StationCN + "'"
             rows = execute_sql(cur, sql)
             if rows:
                 df = pd.DataFrame(rows)
@@ -3075,7 +3075,19 @@ def ls_set(key, value):
     return st_javascript(f"localStorage.setItem('{key}', JSON.stringify('{value}');")
 
 
-global APPNAME, EMOJI, UPDATETYPE
+def getAllStations():
+    STATIONPACK, stationIndex = [], 0
+    sql = "SELECT Station from stations where Station <> '调控中心' order by ID"
+    rows = execute_sql(cur, sql)
+    for row in rows:
+        STATIONPACK.append(row[0])
+        if st.session_state.StationCN == row[0]:
+            stationIndex = rows.index(row)
+
+    return STATIONPACK, stationIndex
+
+
+global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
 
 DBFILE = "./DB/ETest.db"
 #DBFILE = "./DB/ETest_enc.db"
@@ -3120,7 +3132,7 @@ if st.session_state.logged_in:
                 ], disabled=True),
             ], open_all=True)
         elif st.session_state.examType == "training":
-            if st.session_state.userType == "admin":
+            if st.session_state.userType == "admin" or st.session_state.userType == 'supervisor':
                 selected = sac.menu([
                     sac.MenuItem('主页', icon='house'),
                     sac.MenuItem('功能', icon='grid-3x3-gap', children=[
@@ -3173,6 +3185,11 @@ if st.session_state.logged_in:
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1, 2, 3, 4, 5, 6], open_all=False)
+        if st.session_state.userType == "supervisor":
+            spv = getAllStations()
+            st.session_state.StationCN = st.selectbox("请选择站室", options=spv[0], index=spv[1])
+            sql = f"UPDATE users set StationCN = '{st.session_state.StationCN}' where userName = {st.session_state.userName}"
+            execute_sql_and_commit(conn, cur, sql)
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
         #st.caption("**请使用 :red[[登出]] 功能退出页面, 否则会影响下次登录**")
@@ -3363,10 +3380,7 @@ if st.session_state.logged_in:
                 elif row[0] == "考题总数":
                     col6.number_input(row[0], min_value=10, max_value=120, value=row[1], key=f"dasetup_{row[2]}", help="仅对考试有效, 练习模式不受限制")
                 elif row[0] == "合格分数线":
-                    if st.session_state.StationCN != "调控中心":
-                        st.slider(row[0], min_value=60, max_value=120, value=row[1], step=10, key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
-                    else:
-                        st.slider(row[0], min_value=10, max_value=120, value=row[1], step=10, key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
+                    st.slider(row[0], min_value=60, max_value=120, value=row[1], step=10, key=f"dasetup_{row[2]}", help=f"建议为{int(quesScore * quesTotal * 0.8)}分")
                 elif row[0] == "同场考试次数限制":
                     col7.number_input(row[0], min_value=1, max_value=5, value=row[1], key=f"dasetup_{row[2]}", help="最多5次")
                 elif row[0] == "考试题库每次随机生成":
