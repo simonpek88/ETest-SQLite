@@ -145,7 +145,7 @@ def login():
     st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
     login = st.empty()
     with login.container(border=True):
-        userName = st_keyup("请输入用户编码", placeholder="请输入用户编码, 必填项", max_chars=8)
+        userName = st_keyup("请输入用户编码", placeholder="请输入纯数字用户编码, 非站室名称, 如果不知编码, 请在下方输入姓名查询", max_chars=8)
         st.session_state.userCName = ""
         if userName:
             filtered = get_userName(userName)
@@ -2486,7 +2486,7 @@ def displayTimeCountdown():
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
             with info1:
                 if remindTimeText != "":
-                    components.html(remindTimeText, height=92)
+                    components.html(remindTimeText, height=94)
         sql = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
         acAnswer1 = execute_sql(cur, sql)[0][0]
         sql = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
