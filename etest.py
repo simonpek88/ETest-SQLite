@@ -846,7 +846,7 @@ def dbfunc():
                 #sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
                 sac.SegmentedItem(label="错题集重置", icon="journal-x"),
                 sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot"),
-            ], align="start", color="red"
+            ], align="center", color="red"
         )
     else:
         bc = sac.segmented(
@@ -856,8 +856,7 @@ def dbfunc():
                 sac.SegmentedItem(label="删除试卷", icon="trash3"),
                 sac.SegmentedItem(label="删除静态题库", icon="trash3"),
                 #sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
-                sac.SegmentedItem(label="错题集重置", icon="journal-x"),
-            ], align="start", color="red"
+            ], align="center", color="red"
         )
     if bc == "A.I.出题":
         AIGenerQues()
@@ -865,8 +864,6 @@ def dbfunc():
         dbinput()
     elif bc == "Word文件导入":
         inputWord()
-    elif bc == "错题集重置":
-        ClearMP()
     elif bc == "删除试卷":
         delExamTable()
     elif bc == "删除静态题库":
@@ -1231,7 +1228,7 @@ def AIGenerQues():
 
 
 def ClearMP():
-    buttonSubmit = st.button("清空错题集所有记录", type="primary")
+    buttonSubmit = st.button(f"清空 {st.session_state.userCName} 错题集", type="primary")
     if buttonSubmit:
         bcArea = st.empty()
         with bcArea.container():
@@ -1252,6 +1249,7 @@ def studyinfo():
             sac.SegmentedItem(label="错题集", icon="list-stars"),
             sac.SegmentedItem(label="章节时间线", icon="clock-history"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
+            sac.SegmentedItem(label="错题集重置", icon="journal-x"),
         ], align="center", color="red"
     )
     if study == "学习进度":
@@ -1262,6 +1260,8 @@ def studyinfo():
         generTimeline()
     elif study == "学习记录重置":
         studyReset()
+    elif study == "错题集重置":
+        ClearMP()
     if study is not None:
         updateActionUser(st.session_state.userName, f"查看信息-{study}", st.session_state.loginTime)
 
@@ -3190,6 +3190,19 @@ if st.session_state.logged_in:
             st.session_state.StationCN = st.selectbox("请选择站室", options=spv[0], index=spv[1])
             sql = f"UPDATE users set StationCN = '{st.session_state.StationCN}' where userName = {st.session_state.userName}"
             execute_sql_and_commit(conn, cur, sql)
+            preExamTypeIndex = 0
+            if st.session_state.examType == "training":
+                preExamTypeIndex = 0
+            elif st.session_state.examType == "exam":
+                preExamTypeIndex = 1
+            tmpExamType = st.selectbox("请选择模式类型", options=["练习", "考试"], index=preExamTypeIndex)
+            if tmpExamType == "练习":
+                st.session_state.examType = "training"
+                st.session_state.examName = "练习题库"
+                st.session_state.examRandom = True
+            elif tmpExamType == "考试":
+                st.session_state.examType = "exam"
+                st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
         #st.caption("**请使用 :red[[登出]] 功能退出页面, 否则会影响下次登录**")
