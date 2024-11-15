@@ -1294,9 +1294,9 @@ def displayUserRanking():
     markertype = col3.radio("标记", options=["默认", "公司Logo"], index=1, horizontal=True)
     maptype = "高德"
     if boardType == "个人榜":
-        sql = "SELECT userCName, StationCN, userRanking from users order by userRanking DESC, ID limit 0, 5"
+        sql = "SELECT userCName, StationCN, userRanking from users where userRanking > 0 order by userRanking DESC, ID limit 0, 5"
     elif boardType == "站室榜":
-        sql = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN order by Count DESC"
+        sql = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN having Count > 0 order by Count DESC"
     else:
         sql = ""
     rows = execute_sql(cur, sql)
@@ -1355,7 +1355,7 @@ def displayUserRanking():
             )
         elif heatmap == "Folium":
             heatData = []
-            sql = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN order by Ranking DESC"
+            sql = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN having Ranking > 0 order by Ranking DESC"
             rows = execute_sql(cur, sql)
             sql = f"SELECT lat, lng, Station from stations where Station == '{rows[0][0]}'"
             row = execute_sql(cur, sql)[0]
