@@ -1,4 +1,5 @@
 # coding utf-8
+import base64
 import datetime
 import json
 import os
@@ -31,8 +32,8 @@ from xlsxwriter.workbook import Workbook
 from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       execute_sql, execute_sql_and_commit, getParam,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
-                      updateActionUser, updatePyFileinfo, xunfei_xh_AI, xunfei_xh_AI_GenerQues,
-                      xunfei_xh_AI_fib)
+                      updateActionUser, updatePyFileinfo, xunfei_xh_AI,
+                      xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -2550,7 +2551,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 增加supervisor账户类型")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 增加supervisor账户类型; 修改错题集重置归属功能; 添加使用手册")
 
     components.html(infoStr, height=340)
 
@@ -3087,6 +3088,15 @@ def getAllStations():
     return STATIONPACK, stationIndex
 
 
+@st.cache_data
+def displayUserManual():
+    pdfFile = "./Demo/ETest使用手册.pdf"
+    with open(pdfFile, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+    pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1000" type="application/pdf">'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
+
 global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
 
 DBFILE = "./DB/ETest.db"
@@ -3128,6 +3138,7 @@ if st.session_state.logged_in:
                 sac.MenuItem('关于', icon='layout-wtf', children=[
                     sac.MenuItem('Changelog', icon='view-list', disabled=True),
                     sac.MenuItem('Readme', icon='github', disabled=True),
+                    sac.MenuItem('使用手册', icon='question-diamond', disabled=True),
                     sac.MenuItem('关于...', icon='link-45deg', disabled=True),
                 ], disabled=True),
             ], open_all=True)
@@ -3161,6 +3172,7 @@ if st.session_state.logged_in:
                     sac.MenuItem('关于', icon='layout-wtf', children=[
                         sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
+                        sac.MenuItem('使用手册', icon='question-diamond'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1], open_all=False)
@@ -3182,6 +3194,7 @@ if st.session_state.logged_in:
                     sac.MenuItem('关于', icon='layout-wtf', children=[
                         sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
+                        sac.MenuItem('使用手册', icon='question-diamond'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1, 2, 3, 4, 5, 6], open_all=False)
@@ -3508,5 +3521,7 @@ if st.session_state.logged_in:
         changelog()
     elif selected == "Readme":
         aboutReadme()
+    elif selected == "使用手册":
+        displayUserManual()
     elif selected == "关于...":
         aboutInfo()
