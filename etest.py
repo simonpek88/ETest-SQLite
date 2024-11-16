@@ -3088,7 +3088,6 @@ def getAllStations():
     return STATIONPACK, stationIndex
 
 
-@st.cache_data
 def displayUserManual():
     pdfFile = "./Demo/ETest使用手册.pdf"
     with open(pdfFile, "rb") as f:
