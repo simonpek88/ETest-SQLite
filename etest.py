@@ -836,7 +836,7 @@ def dbinput():
 
 
 def dbfunc():
-    if st.session_state.debug:
+    if st.session_state.debug and int(st.session_state.userName) < 10:
         bc = sac.segmented(
             items=[
                 sac.SegmentedItem(label="A.I.出题", icon="robot"),
