@@ -1682,7 +1682,7 @@ def userStatus():
 
 
 def actionUserStatus():
-    sql = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from users where activeUser = 1 order by ID"
+    sql = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from users where activeUser = 1 order by loginTime desc, activeTime_session desc, activeTime desc, ID"
     rows = execute_sql(cur, sql)
     df = pd.DataFrame(rows, dtype=str)
     df.columns = ["姓名", "类型", "站室", "用户操作", "登录时间", "活动时间", "累计活动时间"]
