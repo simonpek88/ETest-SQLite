@@ -218,6 +218,7 @@ def login():
                     st.session_state.clockType = bool(getParam("时钟样式", st.session_state.StationCN))
                     st.session_state.curQues = 0
                     st.session_state.examChosen = False
+                    st.session_state.delExam = True
                     st.session_state.tooltipColor = "#ed872d"
                     st.session_state.loginTime = int(time.time())
                     sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
@@ -737,7 +738,13 @@ def delExamTable():
                 st.checkbox(f"{row[0]}", key=f"delExamTable_{row[0]}")
                 flagExistTable = True
     if flagExistTable:
-        st.button("确认删除", on_click=actDelExamTable)
+        if st.session_state.userType == "supervisor":
+            if st.session_state.delExam:
+                st.button("确认删除", on_click=actDelExamTable)
+            else:
+                st.error("试卷正在使用, 无法删除, 请先完成考试或练习后删除")
+        else:
+            st.error("仅Supervisor可进行此操作")
     else:
         st.info("暂无试卷")
 
@@ -1986,6 +1993,7 @@ def training():
                 st.session_state.goto = False
                 st.session_state.radioCompleted = False
                 st.session_state.calcScore = False
+                st.session_state.delExam = False
                 st.session_state.trainingID = str(time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time()))))
                 if st.session_state.examType != "training":
                     st.session_state.examChosen = True
@@ -2078,6 +2086,7 @@ def score_dialog(userScore, passScore):
     st.session_state.calcScore = False
     buttonScore = st.button("确定")
     if buttonScore:
+        st.session_state.delExam = True
         st.rerun()
 
 
@@ -2551,7 +2560,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 增加supervisor账户类型; 修改错题集重置归属功能; 添加使用手册")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 适配手机端显示, PC版和手机版数据互通, 访问地址一样, 端口分别为8501/8502, 欢迎测试")
 
     components.html(infoStr, height=340)
 
