@@ -323,7 +323,6 @@ def display_pypi():
         badge(type="pypi", name="folium")
     with pypi5:
         badge(type="pypi", name="qianfan")
-    #badge(type="github", name="simonpek88/ETest-SQLite ")
 
 
 def aboutLicense():
