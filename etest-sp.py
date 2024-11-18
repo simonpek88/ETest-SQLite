@@ -425,7 +425,7 @@ def examResulttoExcel():
                         content = file.read()
                     file.close()
                     buttonDL = st.download_button("点击下载", content, file_name=f"考试成绩_{outputFile[outputFile.rfind('/') + 1:]}", icon=":material/download:", type="secondary")
-                    st.success(f":green[[{searchExamName}]] :gray[考试成绩成功导出至程序目录外] :orange[{outputFile[3:]}]")
+                    st.success(f":green[[{searchExamName}]] :gray[考试成绩成功导出至程序目录内] :orange[{outputFile[2:]}]")
                     if buttonDL:
                         st.toast("文件已下载至你的默认目录")
                         updateKeyAction("导出考试成绩")
@@ -669,7 +669,7 @@ def questoWord():
                         content = file.read()
                     file.close()
                     buttonDL = st.download_button("点击下载", content, file_name=outputFile[outputFile.rfind("/") + 1:], icon=":material/download:", type="secondary")
-                    st.success(f":green[[{quesTable}]] :gray[题库成功导出至程序目录外] :orange[{outputFile[3:]}]")
+                    st.success(f":green[[{quesTable}]] :gray[题库成功导出至程序目录内] :orange[{outputFile[2:]}]")
                     if buttonDL:
                         st.toast("文件已下载至你的默认目录")
             else:
@@ -1326,7 +1326,7 @@ def displayCertificate():
         if rows2:
             flagGener = True
             if flagGener and flagInfo:
-                st.write(":orange[如需打印, 请打开 :green[程序目录下Image/Certificate] 或者点击下载证书]")
+                st.write(":orange[如需打印, 请打开 :green[程序目录内Image/Certificate] 或者点击下载证书]")
                 flagInfo = False
             examDetail = rows2[0]
             with st.expander(label=f"{row[0]}", expanded=False):
