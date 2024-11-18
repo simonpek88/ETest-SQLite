@@ -516,15 +516,15 @@ def updatePyFileinfo():
                     # 构造SQL查询语句，从verinfo表中查询当前文件的信息
                     sql = f"SELECT ID, pyLM from verinfo where pyFile = '{pyFile}'"
                     # 执行SQL查询语句
-                    row = execute_sql(cur2, sql)[0]
+                    rows = execute_sql(cur2, sql)
                     # 如果查询结果为空，表示该文件在verinfo表中没有记录
-                    if not row:
+                    if not rows:
                         # 构造SQL插入语句，将文件信息插入到verinfo表中
                         sql = f"INSERT INTO verinfo(pyFile, pyLM, pyMC) VALUES('{pyFile}', {int(time.time())}, 1)"
                         # 执行SQL插入语句并提交事务
                         execute_sql_and_commit(conn2, cur2, sql)
                     # 如果查询结果不为空，但文件的最后修改时间与verinfo表中记录的时间不一致
-                    elif row[1] != file_mtime:
+                    elif rows[0][1] != file_mtime:
                         # 构造SQL更新语句，更新verinfo表中该文件的信息
                         sql = f"UPDATE verinfo SET pyLM = {file_mtime}, pyMC = pyMC + 1 where pyFile = '{pyFile}'"
                         # 执行SQL更新语句并提交事务
@@ -532,7 +532,6 @@ def updatePyFileinfo():
 
 
 DBFILE = "./DB/ETest.db"
-#DBFILE = "./DB/ETest_enc.db"
 
 conn2 = sqlite3.Connection(DBFILE, check_same_thread=False)
 cur2 = conn2.cursor()
