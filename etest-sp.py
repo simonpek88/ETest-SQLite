@@ -183,8 +183,12 @@ def login():
                 if userName and filtered == "":
                     promptArea.empty()
         userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
-        #examType = st.selectbox("请选择模式类型", ("练习", "考试"), index=0, help="各站管理员如需修改设置及查询请选择练习模式, 考试模式仅限考试")
-        examType = st.selectbox("请选择模式类型", ("练习"), index=0)
+        examType = sac.segmented(
+            items=[
+                sac.SegmentedItem(label="练习", icon="pen"),
+                sac.SegmentedItem(label="考试", icon="card-list", disabled=True),
+            ], align="start", size="sm"
+        )
         buttonLogin = st.button("登录")
     if buttonLogin:
         if userName != "" and userPassword != "":
