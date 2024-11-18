@@ -184,7 +184,7 @@ def login():
                     promptArea.empty()
         userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
         #examType = st.selectbox("请选择模式类型", ("练习", "考试"), index=0, help="各站管理员如需修改设置及查询请选择练习模式, 考试模式仅限考试")
-        examType = st.selectbox("请选择模式类型", ("练习"), index=0)
+        examType = st.selectbox("请选择模式类型", "练习", index=0)
         buttonLogin = st.button("登录")
     if buttonLogin:
         if userName != "" and userPassword != "":
@@ -307,7 +307,6 @@ def display_pypi():
     badge(type="pypi", name="streamlit_antd_components")
     badge(type="pypi", name="folium")
     badge(type="pypi", name="qianfan")
-    #badge(type="github", name="simonpek88/ETest-SQLite ")
 
 
 def aboutLicense():
@@ -2111,8 +2110,6 @@ def exam(row):
         buttonConfirm = st.button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:
             st.button("确认删除", type="secondary", on_click=delQuestion, args=(row,))
-    else:
-        addFavIndex = 0
     if st.session_state.examType == "training":
         sql = f"SELECT ID from favques where Question = '{row[1]}' and userName = {st.session_state.userName} and StationCN = '{st.session_state.StationCN}'"
         if execute_sql(cur, sql):
@@ -2345,10 +2342,6 @@ def displayTimeCountdown():
                 st.warning(f"⚠️ :red[考试剩余时间已不足{int(remainingTime / 60) + 1}分钟, 请抓紧时间完成考试!]")
             if remindTimeText != "":
                 components.html(remindTimeText, height=94)
-        sql = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer <> ''"
-        acAnswer1 = execute_sql(cur, sql)[0][0]
-        sql = f"SELECT count(ID) from {st.session_state.examFinalTable} where userAnswer = ''"
-        acAnswer2 = execute_sql(cur, sql)[0][0]
 
 
 @st.fragment
