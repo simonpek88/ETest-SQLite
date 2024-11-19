@@ -7,11 +7,9 @@ import re
 import sqlite3
 import time
 
-import folium
 import openpyxl
 import pandas as pd
 import Play_mp3
-import pydeck as pdk
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
@@ -20,11 +18,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
-from folium.plugins import HeatMap, MiniMap
 from PIL import Image, ImageDraw, ImageFont
 from st_keyup import st_keyup
 from streamlit_extras.badges import badge
-from streamlit_folium import st_folium
 from streamlit_javascript import st_javascript
 from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook

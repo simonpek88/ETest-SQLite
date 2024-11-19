@@ -247,19 +247,26 @@ def login():
 
 def logout():
     try:
+        # 更新用户状态为未激活，并更新会话时间
         sql = f"UPDATE users set activeUser = 0, activeTime = activeTime + activeTime_session, activeTime_session = 0 where userName = {st.session_state.userName}"
         execute_sql_and_commit(conn, cur, sql)
+        # 删除过时的表
         delOutdatedTable()
 
     finally:
+        # 关闭游标
         cur.close()
+        # 关闭数据库连接
         conn.close()
 
+    # 清除会话状态中的所有键值对
     for key in st.session_state.keys():
         del st.session_state[key]
 
+    # 如果当前时间在8点到22点之间，播放登出音效
     if datetime.datetime.now().hour in range(8, 22):
         Play_mp3.play('./Audio/logout.mp3')
+    # 重新运行当前脚本
     st.rerun()
 
 
