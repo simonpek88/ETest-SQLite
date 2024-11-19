@@ -21,6 +21,7 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 from folium.plugins import HeatMap, MiniMap
 from PIL import Image, ImageDraw, ImageFont
+from playsound import playsound
 from st_keyup import st_keyup
 from streamlit_extras.badges import badge
 from streamlit_extras.metric_cards import style_metric_cards
@@ -232,6 +233,8 @@ def login():
                     sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
                     execute_sql_and_commit(conn, cur, sql)
                     ClearTables()
+                    if datetime.datetime.now().hour in range(8, 22):
+                        playsound('./Audio/login.mp3')
                     st.rerun()
                 else:
                     if verifyUPW[0]:
@@ -255,6 +258,8 @@ def logout():
     for key in st.session_state.keys():
         del st.session_state[key]
 
+    if datetime.datetime.now().hour in range(8, 22):
+        playsound('./Audio/logout.mp3')
     st.rerun()
 
 
@@ -2565,7 +2570,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 适配手机端显示, PC版和手机版数据互通, 访问地址一样, 端口分别为8501/8502, 欢迎测试")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 适配手机端显示, 电脑平板请用PC版, 手机请用SP版, 两者数据互通, 访问地址一样, 端口分别为8501/8502, 欢迎测试")
 
     components.html(infoStr, height=340)
 
