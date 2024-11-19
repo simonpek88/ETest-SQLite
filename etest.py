@@ -15,6 +15,7 @@ import pydeck as pdk
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
+import plotly.graph_objects as go
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -1319,7 +1320,7 @@ def displayUserRanking():
     markertype = col3.radio("标记", options=["默认", "公司Logo"], index=1, horizontal=True)
     maptype = "高德"
     if boardType == "个人榜":
-        sql = "SELECT userCName, StationCN, userRanking from users where userRanking > 0 order by userRanking DESC, ID limit 0, 5"
+        sql = "SELECT userCName, StationCN, userRanking from users where userRanking > 0 order by userRanking DESC, ID limit 0, 10"
     elif boardType == "站室榜":
         sql = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN having Count > 0 order by Count DESC"
     else:
@@ -1335,8 +1336,13 @@ def displayUserRanking():
         else:
             boardInfo = ""
     itemArea = st.empty()
+    colors = ["lightslategray",] * len(rows)
+    colors[0] = "crimson"
+    fig = go.Figure(data=[go.Bar(x=xData, y=yData, marker_color=colors)])
+    fig.update_layout(title_text=f"{boardType[:-1]}刷题榜")
     with itemArea.container(border=True):
-        st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", color=(155, 17, 30))
+        st.plotly_chart(fig, theme="streamlit")
+        #st.bar_chart(data=pd.DataFrame({"用户": xData, "试题数": yData}), x="用户", y="试题数", color=(155, 17, 30))
     if boardType == "站室榜" and int(rows[0][2]) > 0:
         if heatmap == "Pydeck":
             data = []
@@ -2577,7 +2583,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 适配手机端显示, 电脑平板请用PC版, 手机请用SP版, 两者数据互通, 访问地址一样, 端口分别为8501/8502, 欢迎测试")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 适配手机端显示; 图表由streamlit自带库改为Plotly库, 优化图表显示效果")
 
     components.html(infoStr, height=340)
 
