@@ -10,6 +10,7 @@ import time
 import openpyxl
 import pandas as pd
 import Play_mp3
+import folium
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
@@ -22,6 +23,8 @@ from docx.shared import Pt, RGBColor
 from PIL import Image, ImageDraw, ImageFont
 from st_keyup import st_keyup
 from streamlit_extras.badges import badge
+from folium.plugins import HeatMap, MiniMap
+from streamlit_folium import st_folium
 from streamlit_javascript import st_javascript
 from streamlit_timeline import st_timeline
 from xlsxwriter.workbook import Workbook
@@ -1291,6 +1294,45 @@ def displayUserRanking():
     fig.update_layout(title_text=f"{boardType[:-1]}刷题榜")
     with itemArea.container(border=True):
         st.plotly_chart(fig, theme="streamlit")
+    if boardType == "站室榜" and int(rows[0][2]) > 0:
+        heatData = []
+        sql = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN having Ranking > 0 order by Ranking DESC"
+        rows = execute_sql(cur, sql)
+        sql = f"SELECT lat, lng, Station from stations where Station == '{rows[0][0]}'"
+        row = execute_sql(cur, sql)[0]
+        lat = round(row[0] / 100, 2)
+        lng = round(row[1] / 100, 2)
+        m = folium.Map(
+            location=[lat, lng],
+            tiles="https://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7",
+            attr='高德-路网图',
+            zoom_start=11,
+            control_scale=True,
+            )
+        for row in rows:
+            sql = f"SELECT lat, lng from stations where Station = '{row[0]}'"
+            row2 = execute_sql(cur, sql)[0]
+            lat = round(row2[0] / 100, 2)
+            lng = round(row2[1] / 100, 2)
+            iframe = folium.IFrame(f"{row[0]} 刷题{row[1]}道")
+            popup = folium.Popup(iframe, min_width=120, max_width=300)
+            icon = folium.features.CustomIcon(
+                "./Images/logos/cnaf-logo.png",
+                icon_size=(40, 40),
+                icon_anchor=(20, 40),
+                popup_anchor=(0, -40),
+            )
+            folium.Marker([lat, lng], icon=icon, popup=popup).add_to(m)
+            heatData.append([lat, lng, int(row[1])])
+        HeatMap(heatData).add_to(m)
+        minimap = MiniMap(
+            toggle_display=True,
+            width=120,
+            height=120,
+            minimized=True,
+            )
+        m.add_child(minimap)
+        st_folium(m, use_container_width=True, height=430)
     st.subheader(boardInfo)
 
 
