@@ -1339,6 +1339,7 @@ def displayUserRanking():
     colors = ["lightslategray",] * len(rows)
     colors[0] = "crimson"
     fig = go.Figure(data=[go.Bar(x=xData, y=yData, marker_color=colors)])
+    #fig.update_layout(font=dict(family="Courier New, monospace", size=18))
     fig.update_layout(title_text=f"{boardType[:-1]}刷题榜")
     with itemArea.container(border=True):
         st.plotly_chart(fig, theme="streamlit")

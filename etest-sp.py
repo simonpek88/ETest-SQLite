@@ -13,6 +13,7 @@ import Play_mp3
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
+import plotly.graph_objects as go
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -1264,22 +1265,32 @@ def userRanking():
 
 # noinspection PyShadowingNames
 def displayUserRanking():
-    boardInfo = ""
+    boardInfo, xData, yData = "", [], []
     boardType = st.radio("榜单", options=["个人榜", "站室榜"], index=0, horizontal=True)
     if boardType == "个人榜":
-        sql = "SELECT userCName, StationCN, userRanking from users where userRanking > 0 order by userRanking DESC, ID limit 0, 5"
+        sql = "SELECT userCName, StationCN, userRanking from users where userRanking > 0 order by userRanking DESC, ID limit 0, 10"
     elif boardType == "站室榜":
         sql = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN having Count > 0 order by Count DESC"
     else:
         sql = ""
     rows = execute_sql(cur, sql)
     for index, row in enumerate(rows):
+        xData.append(row[0])
+        yData.append(row[2])
         if boardType == "个人榜":
             boardInfo = boardInfo + f"第 {index + 1} 名: {row[0]} 站室: {row[1]} 刷题数: {row[2]}\n\n"
         elif boardType == "站室榜":
             boardInfo = boardInfo + f"第 {index + 1} 名: {row[0]} 刷题数: {row[2]}\n\n"
         else:
             boardInfo = ""
+    itemArea = st.empty()
+    colors = ["lightslategray",] * len(rows)
+    colors[0] = "crimson"
+    fig = go.Figure(data=[go.Bar(x=xData, y=yData, marker_color=colors)])
+    #fig.update_layout(font=dict(family="Courier New, monospace", size=18))
+    fig.update_layout(title_text=f"{boardType[:-1]}刷题榜")
+    with itemArea.container(border=True):
+        st.plotly_chart(fig, theme="streamlit")
     st.subheader(boardInfo)
 
 
