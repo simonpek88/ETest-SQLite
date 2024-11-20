@@ -1332,7 +1332,7 @@ def displayUserRanking():
             minimized=True,
             )
         m.add_child(minimap)
-        st_folium(m, use_container_width=True, height=430)
+        st_folium(m, use_container_width=True, height=300)
     st.subheader(boardInfo)
 
 
