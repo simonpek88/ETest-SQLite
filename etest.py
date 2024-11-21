@@ -36,6 +36,7 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
+from word2picture import generate_image
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -2584,7 +2585,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 适配手机端显示; 图表由streamlit自带库改为Plotly库, 优化图表显示效果")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 图表由streamlit自带库改为Plotly库, 优化图表显示效果; 增加彩蛋: A.I.一键生图")
 
     components.html(infoStr, height=340)
 
@@ -3205,6 +3206,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('使用手册', icon='question-diamond'),
+                        sac.MenuItem('彩蛋', icon='images'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1], open_all=False)
@@ -3227,6 +3229,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('使用手册', icon='question-diamond'),
+                        sac.MenuItem('彩蛋', icon='images'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1, 2, 3, 4, 5, 6], open_all=False)
@@ -3555,5 +3558,17 @@ if st.session_state.logged_in:
         aboutReadme()
     elif selected == "使用手册":
         displayUserManual()
+    elif selected == "彩蛋":
+        st.subheader(":green[A.I.一键生图]", divider="rainbow")
+        st.markdown("严禁使用敏感词汇, 包括但不限于： \n\t:red[**涉及国家安全的信息;\n\t涉及政治与宗教类的信息;\n\t涉及暴力与恐怖主义的信息;\n\t涉及黄赌毒类的信息;\n\t涉及不文明的信息等**]")
+        txt_generate_image = st.text_input("输入文字，点击按钮即可生成图片")
+        btn_generate_image = st.button("生成图片")
+        if btn_generate_image and txt_generate_image != "":
+            st.spinner("正在生成图片...")
+            result = generate_image(txt_generate_image.strip())
+            if result[0]:
+                st.image(result[1])
+            else:
+                st.error(f"生成失败: {result[1]}")
     elif selected == "关于...":
         aboutInfo()

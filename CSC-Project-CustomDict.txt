@@ -5,6 +5,7 @@ aikeys
 ampm
 animationend
 antd
+APIKEY
 apsw
 backface
 backpng
