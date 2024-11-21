@@ -22,6 +22,7 @@ class AssembleHeaderException(Exception):
 
 
 class Url:
+    # noinspection PyMethodParameters
     def __init__(this, host, path, schema):
         this.host = host
         this.path = path
