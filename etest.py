@@ -36,7 +36,7 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
-from word2picture import generate_image
+from word2picture import xfxh_generate_image, tywx_generate_image
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -235,6 +235,8 @@ def login():
                     sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
                     execute_sql_and_commit(conn, cur, sql)
                     ClearTables()
+                    # transform Key to Encrypt(temporary)
+                    #print(getUserEDKeys("", "enc"))
                     if datetime.datetime.now().hour in range(8, 22):
                         Play_mp3.play('./Audio/login.mp3')
                     st.rerun()
@@ -2585,7 +2587,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 图表由streamlit自带库改为Plotly库, 优化图表显示效果; 增加彩蛋: A.I.一键生图")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 增加彩蛋: A.I.一键生图; 一键生图增加通义万象模型")
 
     components.html(infoStr, height=340)
 
@@ -3130,6 +3132,38 @@ def displayUserManual():
     st.markdown(pdf_display, unsafe_allow_html=True)
 
 
+def aiGenerate_Image():
+    st.subheader(":green[A.I.一键生图]", divider="rainbow")
+    st.markdown("严禁使用敏感词汇, 包括但不限于： \n\t:red[**涉及国家安全的信息；\n\t涉及政治与宗教类的信息；\n\t涉及暴力与恐怖主义的信息；\n\t涉及黄赌毒类的信息；\n\t涉及不文明的信息等**]")
+    genImageMode = sac.segmented(
+        items=[
+            sac.SegmentedItem(label="通义万相"),
+            sac.SegmentedItem(label="讯飞星火"),
+        ], label="可选LLM大模型", index=0, align="start", color="red"
+    )
+    txt_generate_image = st.text_input("输入文字，点击按钮即可生成图片", placeholder="一只坐着的橘黄色的猫，表情愉悦，活泼可爱，逼真准确，请勿包含敏感词汇")
+    if genImageMode == "通义万相":
+        txt_generate_image_neg = st.text_input("用来描述不希望在画面中看到的内容", placeholder="低分辨率、错误、最差质量、低质量、残缺、多余的手指、比例不良等")
+    else:
+        txt_generate_image_neg = ""
+    btn_generate_image = st.button("生成图片")
+    if btn_generate_image and txt_generate_image != "":
+        result = [False, ""]
+        AIGMInfo = st.empty()
+        with AIGMInfo.container():
+            st.info(f"正在使用 :green[{genImageMode}] 生成图片, 请稍等...")
+        if genImageMode == "通义万相":
+            result = tywx_generate_image(txt_generate_image.strip(), txt_generate_image_neg.strip())
+
+        elif genImageMode == "讯飞星火":
+            result = xfxh_generate_image(txt_generate_image.strip())
+        if result[0]:
+            st.image(result[1])
+        else:
+            st.error(f"生成失败: {result[1]}")
+        AIGMInfo.empty()
+
+
 global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
 
 DBFILE = "./DB/ETest.db"
@@ -3169,11 +3203,10 @@ if st.session_state.logged_in:
                     sac.MenuItem('登出', icon='box-arrow-right'),
                 ]),
                 sac.MenuItem('关于', icon='layout-wtf', children=[
-                    sac.MenuItem('Changelog', icon='view-list', disabled=True),
-                    sac.MenuItem('Readme', icon='github', disabled=True),
-                    sac.MenuItem('使用手册', icon='question-diamond', disabled=True),
-                    sac.MenuItem('关于...', icon='link-45deg', disabled=True),
-                ], disabled=True),
+                    #sac.MenuItem('Readme', icon='github'),
+                    sac.MenuItem('使用手册', icon='question-diamond'),
+                    sac.MenuItem('关于...', icon='link-45deg'),
+                ]),
             ], open_all=True)
         elif st.session_state.examType == "training":
             if st.session_state.userType == "admin" or st.session_state.userType == 'supervisor':
@@ -3559,16 +3592,6 @@ if st.session_state.logged_in:
     elif selected == "使用手册":
         displayUserManual()
     elif selected == "彩蛋":
-        st.subheader(":green[A.I.一键生图]", divider="rainbow")
-        st.markdown("严禁使用敏感词汇, 包括但不限于： \n\t:red[**涉及国家安全的信息;\n\t涉及政治与宗教类的信息;\n\t涉及暴力与恐怖主义的信息;\n\t涉及黄赌毒类的信息;\n\t涉及不文明的信息等**]")
-        txt_generate_image = st.text_input("输入文字，点击按钮即可生成图片")
-        btn_generate_image = st.button("生成图片")
-        if btn_generate_image and txt_generate_image != "":
-            st.spinner("正在生成图片...")
-            result = generate_image(txt_generate_image.strip())
-            if result[0]:
-                st.image(result[1])
-            else:
-                st.error(f"生成失败: {result[1]}")
+        aiGenerate_Image()
     elif selected == "关于...":
         aboutInfo()

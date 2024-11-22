@@ -3,14 +3,16 @@ import base64
 import hashlib
 import hmac
 import json
-import time
 from datetime import datetime
+from http import HTTPStatus
 from io import BytesIO
+from pathlib import PurePosixPath
 from time import mktime
-from urllib.parse import urlencode
+from urllib.parse import unquote, urlencode, urlparse
 from wsgiref.handlers import format_date_time
 
 import requests
+from dashscope import ImageSynthesis
 from PIL import Image
 
 from commFunc import getEncryptKeys
@@ -149,7 +151,7 @@ def parser_Message(message):
         return True, savePath
 
 
-def generate_image(image_desc):
+def xfxh_generate_image(image_desc):
     #运行前请配置以下鉴权三要素，获取途径：https://console.xfyun.cn/services/tti
     APPID = getEncryptKeys("xfxh_APPID")
     APISecret = getEncryptKeys("xfxh_APISecret")
@@ -157,3 +159,17 @@ def generate_image(image_desc):
     res = main(f"生成一张图：{image_desc}", appid=APPID, apikey=APIKEY, apisecret=APISecret)
     #保存到指定位置
     return parser_Message(res)
+
+
+def tywx_generate_image(image_desc, image_desc_neg):
+    #rsp = ImageSynthesis.call(api_key=getEncryptKeys("tywx_APIKey"), model=ImageSynthesis.Models.wanx_v1, prompt=prompt, n=1, style='<watercolor>', size='1024*1024')
+    rsp = ImageSynthesis.call(api_key=getEncryptKeys("tywx_APIKey"), model=ImageSynthesis.Models.wanx_v1, prompt=image_desc, negative_prompt=image_desc_neg, n=1, style='<auto>', size='1280*720')
+    #print('response: %s' % rsp)
+    if rsp.status_code == HTTPStatus.OK:
+        for result in rsp.output.results:
+            file_name = f"./word2pic/{PurePosixPath(unquote(urlparse(result.url).path)).parts[-1]}"
+            with open(file_name, "wb+") as f:
+                f.write(requests.get(result.url).content)
+        return True, file_name
+    else:
+        return False, rsp.message
