@@ -12,6 +12,7 @@ outputQues/*.*
 OYC/
 CacheData/
 word2pic/*.jpg
+word2pic/*.jpeg
 word2pic/*.png
 InputQues/*_用户上传_*.xlsx
 DB/Keys.docx
