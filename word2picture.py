@@ -166,6 +166,7 @@ def tywx_generate_image(image_desc, image_desc_neg):
     rsp = ImageSynthesis.call(api_key=getEncryptKeys("tywx_APIKey"), model=ImageSynthesis.Models.wanx_v1, prompt=image_desc, negative_prompt=image_desc_neg, n=1, style='<auto>', size='1280*720')
     #print('response: %s' % rsp)
     if rsp.status_code == HTTPStatus.OK:
+        file_name = None
         for result in rsp.output.results:
             file_name = f"./word2pic/{PurePosixPath(unquote(urlparse(result.url).path)).parts[-1]}"
             with open(file_name, "wb+") as f:
