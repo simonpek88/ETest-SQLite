@@ -117,4 +117,4 @@ watchdog==5.0.3
 wcwidth==0.2.13
 xlsxwriter==3.2.0
 xyzservices==2024.9.0
-yarl==1.18.1
+yarl==1.18.0
