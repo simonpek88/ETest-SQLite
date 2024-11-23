@@ -52,7 +52,7 @@ multidict==6.1.0
 multiprocess==0.70.17
 narwhals==1.12.1
 numpy==2.1.3
-openai==1.54.3
+openai==1.55.0
 openpyxl==3.1.5
 packaging==24.1
 pandas==2.2.3
@@ -77,7 +77,7 @@ python-docx==1.1.2
 python-dotenv==1.0.1
 pytz==2024.2
 pyyaml==6.0.2
-qianfan==0.4.12
+qianfan==0.4.12.1
 redis==5.2.0
 referencing==0.35.1
 requests==2.32.3
@@ -97,8 +97,8 @@ streamlit-card==1.0.2
 streamlit-embedcode==0.1.2
 streamlit-extras==0.5.0
 streamlit-faker==0.0.3
-streamlit-folium==0.23.1
-streamlit-image-coordinates==0.1.9
+streamlit-folium==0.23.2
+streamlit-image-coordinates==0.2.0
 streamlit-javascript==0.1.5
 streamlit-keyup==0.2.4
 streamlit-toggle-switch==1.0.2
@@ -106,8 +106,8 @@ streamlit-vertical-slider==2.5.5
 streamlit-vis-timeline==0.3.0
 tenacity==8.5.0
 toml==0.10.2
-tornado==6.4.1
-tqdm==4.66.6
+tornado==6.4.2
+tqdm==4.67.0
 typer==0.12.5
 typing-extensions==4.12.2
 tzdata==2024.2
@@ -117,4 +117,4 @@ watchdog==5.0.3
 wcwidth==0.2.13
 xlsxwriter==3.2.0
 xyzservices==2024.9.0
-yarl==1.17.1
+yarl==1.18.1
