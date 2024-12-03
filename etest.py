@@ -303,6 +303,9 @@ def aboutInfo():
     with logo9:
         st.caption("DeepSeek")
         st.image("./Images/logos/deepseek.png")
+    with logo10:
+        st.caption("通义万相")
+        st.image("./Images/logos/tywx.png")
     display_pypi()
     st.write("###### :violet[为了获得更好的使用体验, 请使用浅色主题]")
     verinfo, verLM, likeCM = getVerInfo()
