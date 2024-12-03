@@ -238,7 +238,8 @@ def login():
                     # transform Key to Encrypt(temporary)
                     #print(getUserEDKeys("", "enc"))
                     if datetime.datetime.now().hour in range(8, 22):
-                        Play_mp3.play('./Audio/login.mp3')
+                        #Play_mp3.play('./Audio/login.mp3')
+                        pass
                     st.rerun()
                 else:
                     if verifyUPW[0]:
@@ -269,7 +270,8 @@ def logout():
 
     # 如果当前时间在8点到22点之间，播放登出音效
     if datetime.datetime.now().hour in range(8, 22):
-        Play_mp3.play('./Audio/logout.mp3')
+        #Play_mp3.play('./Audio/logout.mp3')
+        pass
     # 重新运行当前脚本
     st.rerun()
 
