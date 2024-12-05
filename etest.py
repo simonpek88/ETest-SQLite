@@ -589,6 +589,12 @@ def questoWord():
             textHeader.font.size = Pt(headerFS)
             textHeader.font.bold = True
             textHeader.font.color.rgb = RGBColor(40, 106, 205)
+            if quesTable == "试卷" and not st.session_state.sac_recheck and not st.session_state.sac_Analysis:
+                pScore = quesDOC.add_paragraph()
+                pScore.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                textScore = pScore.add_run("姓名:  _________                       分数:  _________", 0)
+                textScore.font.size = Pt(optionFS)
+                textScore.font.bold = True
             for each in quesType:
                 if stationCN == "全站" or quesTable == "试卷":
                     sql = f"SELECT Question, qOption, qAnswer, qType, ID, SourceType, qAnalysis from {tablename} where qType = '{each}' order by ID"
