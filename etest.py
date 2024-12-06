@@ -3050,7 +3050,7 @@ def resetPassword():
                 rCol2.write(f"用户姓名: **{rows[0][0]}**")
                 with rCol3:
                     rUserType = False
-                    if rows[0][1] == "admin":
+                    if rows[0][1] == "admin" or rows[0][1] == "supervisor":
                         rUserType = sac.switch(label="管理员", value=True, on_label="On", align='start', size='md')
                     elif rows[0][1] == "user":
                         rUserType = sac.switch(label="管理员", value=False, on_label="On", align='start', size='md')
