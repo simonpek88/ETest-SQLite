@@ -37,6 +37,7 @@ favques
 fibq
 Fileinfo
 flipcountdown
+Flytek
 fontsize
 gener
 glowintext

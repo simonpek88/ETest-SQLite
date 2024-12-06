@@ -36,7 +36,7 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
-from word2picture import xfxh_generate_image, tywx_generate_image
+from word2picture import tywx_generate_image, xfxh_generate_image
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -44,9 +44,14 @@ from word2picture import xfxh_generate_image, tywx_generate_image
 
 @st.fragment
 def updateKeyAction(keyAction):
+    # 构建查询SQL语句
     sql = f"SELECT ID from keyactionlog where userName = {st.session_state.userName} and userCName = '{st.session_state.userCName}' and userAction = '{keyAction}' and actionDate = {int(time.time())}"
+    # 执行SQL查询
     if not execute_sql(cur, sql):
+        # 如果查询结果为空，则执行插入操作
+        # 构建插入SQL语句
         sql = f"INSERT INTO keyactionlog(userName, userCName, StationCN, userAction, actionDate) VALUES({st.session_state.userName}, '{st.session_state.userCName}', '{st.session_state.StationCN}', '{keyAction}', {int(time.time())})"
+        # 执行SQL插入并提交事务
         execute_sql_and_commit(conn, cur, sql)
 
 
@@ -54,18 +59,28 @@ def updateKeyAction(keyAction):
 @st.fragment
 def getUserCName(sUserName, sType="Digit"):
     errorInfo = ""
+
+    # 判断sType是否为"Digit"
     if sType.capitalize() == "Digit":
+        # 使用正则表达式去除非数字和小数点字符
         cop = re.compile('[^0-9^.]')
         inputStr = cop.sub('', sUserName)
+        # 如果原字符串长度与过滤后的字符串长度相等，说明原字符串只包含数字和小数点
         if len(sUserName) == len(inputStr):
             sql = f"SELECT userCName, StationCN from users where userName = {sUserName}"
         else:
             sql = ""
             errorInfo = "请输入纯数字用户编码"
+
+    # 判断sType是否为"Str"
     elif sType.capitalize() == "Str":
         sql = f"SELECT userCName, StationCN from users where userCName = '{sUserName}'"
+
+    # 其他情况
     else:
         sql = ""
+
+    # 如果sql不为空
     if sql != "":
         rows = execute_sql(cur, sql)
         if rows:
@@ -74,6 +89,8 @@ def getUserCName(sUserName, sType="Digit"):
         else:
             st.session_state.userCName = "未找到"
             st.session_state.StationCN = "未找到"
+
+    # 如果sql为空
     else:
         if errorInfo != "":
             st.error(errorInfo)
@@ -90,36 +107,60 @@ def delOutdatedTable():
 
 # noinspection PyShadowingNames
 def changePassword():
+    # 显示密码修改页面标题
     st.write("### :red[密码修改]")
+    # 创建一个带有边框的容器
     changePW = st.empty()
     with changePW.container(border=True):
+        # 输入原密码
         oldPassword = st.text_input("请输入原密码", max_chars=8, type="password", autocomplete="off")
+        # 输入新密码
         newPassword = st.text_input("请输入新密码", max_chars=8, type="password", autocomplete="off")
+        # 再次输入新密码以确认
         confirmPassword = st.text_input("请再次输入新密码", max_chars=8, placeholder="请与上一步输入的密码一致", type="password", autocomplete="new-password")
+        # 确认修改按钮
         buttonSubmit = st.button("确认修改")
+
+    # 检查原密码是否为空
     if oldPassword:
+        # 验证用户原密码
         verifyUPW = verifyUserPW(st.session_state.userName, oldPassword)
         if verifyUPW[0]:
             oldPassword = verifyUPW[1]
+        # 构造SQL查询语句，验证用户名和密码是否匹配
         sql = f"SELECT ID from users where userName = {st.session_state.userName} and userPassword = '{oldPassword}'"
         if execute_sql(cur, sql):
+            # 检查新密码和确认密码是否填写且一致
             if newPassword and confirmPassword and newPassword != "":
                 if newPassword == confirmPassword:
+                    # 确认修改按钮是否被点击
                     if buttonSubmit:
+                        # 加密新密码
                         newPassword = getUserEDKeys(newPassword, "enc")
+                        # 构造SQL更新语句，更新用户密码
                         sql = f"UPDATE users set userPassword = '{newPassword}' where userName = {st.session_state.userName}"
+                        # 执行SQL语句并提交
                         execute_sql_and_commit(conn, cur, sql)
+                        # 记录用户密码修改操作
                         updateKeyAction("用户密码修改")
+                        # 显示密码修改成功提示，并要求重新登录
                         st.toast("密码修改成功, 请重新登录")
+                        # 登出用户
                         logout()
                 else:
+                    # 显示密码不一致的错误信息
                     st.error("两次输入的密码不一致")
             else:
+                # 显示新密码未填写的警告信息
                 st.warning("请检查新密码")
         else:
+            # 显示原密码错误的错误信息
             st.error("原密码不正确")
     else:
+        # 显示原密码不能为空的警告信息
         st.warning("原密码不能为空")
+
+    # 记录用户密码修改操作及时间
     updateActionUser(st.session_state.userName, "密码修改", st.session_state.loginTime)
 
 
@@ -155,38 +196,67 @@ def get_userCName(searchUserCName=""):
 
 @st.fragment
 def login():
+    # 显示应用名称
     #st.write("## :blue[专业技能考试系统 - 离线版]")
     st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
+
+    # 登录表单容器
     login = st.empty()
     with login.container(border=True):
+        # 用户编码输入框
         userName = st_keyup("请输入用户编码", placeholder="请输入纯数字用户编码, 非站室名称, 如果不知编码, 请在下方输入姓名查询", max_chars=8)
+        # 初始化用户姓名
         st.session_state.userCName = ""
+
+        # 如果输入了用户编码
         if userName:
             filtered = get_userName(userName)
+            # 如果未找到对应的用户
             if filtered == "":
+                # 根据用户编码获取用户姓名和站室
                 getUserCName(userName, "Digit")
+                # 显示用户姓名和站室
                 st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         else:
             filtered = ""
+
+        # 如果用户姓名未找到或存在过滤结果
         if st.session_state.userCName == "未找到" or filtered:
             st.caption(filtered)
+
+        # 如果用户编码为空或用户姓名未找到
         if userName == "" or st.session_state.userCName == "未找到":
+            # 用户姓名输入框
             userCName = st_keyup("请输入用户姓名", placeholder="请输入用户姓名, 至少2个字, 用于查询, 非必填项", max_chars=8)
             st.session_state.userCName = ""
+
+            # 如果输入了用户姓名
             if userCName:
                 filtered = get_userCName(userCName)
+                # 如果未找到对应的用户
                 if filtered == "":
+                    # 根据用户姓名获取用户姓名和站室
                     getUserCName(userCName, "Str")
+                    # 显示用户姓名和站室
                     st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
             else:
                 filtered = ""
+
+            # 如果用户姓名未找到或存在过滤结果
             if st.session_state.userCName == "未找到" or filtered:
+                # 提示区域容器
                 promptArea = st.empty()
                 with promptArea.container():
+                    # 显示过滤结果
                     st.caption(filtered)
+                # 如果用户编码存在但过滤结果为空
                 if userName and filtered == "":
                     promptArea.empty()
+
+        # 用户密码输入框
         userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
+
+        # 模式选择
         examType = sac.segmented(
             items=[
                 sac.SegmentedItem(label="练习", icon="pen"),
@@ -194,12 +264,21 @@ def login():
             ], align="start"
         )
         #examType = st.selectbox("请选择模式类型", ("练习", "考试"), index=0, help="各站管理员如需修改设置及查询请选择练习模式, 考试模式仅限考试")
+
+        # 登录按钮
         buttonLogin = st.button("登录")
+
+    # 如果点击了登录按钮
     if buttonLogin:
+        # 如果用户编码和密码不为空
         if userName != "" and userPassword != "":
+            # 验证用户密码
             verifyUPW = verifyUserPW(userName, userPassword)
+            # 如果密码验证成功
             if verifyUPW[0]:
                 userPassword = verifyUPW[1]
+
+            # 根据选择的模式类型执行不同的逻辑
             if examType == "练习":
                 st.session_state.examType = "training"
                 st.session_state.examName = "练习题库"
@@ -211,8 +290,11 @@ def login():
                 sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
             else:
                 sql = ""
+
+            # 如果SQL语句不为空
             if sql != "":
                 result = execute_sql(cur, sql)
+                # 如果查询结果存在
                 if result:
                     st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
                     login.empty()
@@ -242,11 +324,13 @@ def login():
                         pass
                     st.rerun()
                 else:
+                    # 如果密码验证成功但登录失败
                     if verifyUPW[0]:
                         st.error("登录失败, 用户已经在别处登录, 请联系管理员解决")
                     else:
                         st.error("登录失败, 请检查用户名和密码, 若忘记密码请联系管理员重置")
         else:
+            # 如果用户编码或密码为空
             st.warning("请输入用户编码和密码")
 
 
@@ -384,109 +468,198 @@ def delStaticExamTable():
 
 
 def resultExcel():
+    # 设置子标题，并添加蓝色分割线
     st.subheader("试卷导出", divider="blue")
+    # 初始化两个空列表，用于存储试卷结果
     examResultPack, examResultPack2 = [], []
+    # 构造SQL查询语句，查询所有以"exam_final_"开头的表名
     sql = "SELECT name from sqlite_master where type = 'table' and name like 'exam_final_%'"
+    # 执行SQL查询，获取结果
     tempTable = execute_sql(cur, sql)
+    # 如果查询结果不为空
     if tempTable:
         for row in tempTable:
+            # 将表名添加到examResultPack2列表中
             examResultPack2.append(row[0])
+            # 提取表名中的用户信息部分
             tmp = row[0][:row[0].rfind("_")]
             tmp = tmp[tmp.rfind("_") + 1:]
+            # 构造SQL查询语句，查询用户名
             sql = "SELECT userCName from users where userName = " + str(tmp)
+            # 执行SQL查询，获取结果
             tempTable = execute_sql(cur, sql)
+            # 如果查询结果不为空
             if tempTable:
+                # 获取用户名，并替换表名中的用户信息部分，然后添加到examResultPack列表中
                 tempUserCName = tempTable[0][0]
                 examResultPack.append(row[0].replace("exam_final_", "").replace(tmp, tempUserCName))
             else:
+                # 如果查询结果为空，则直接替换表名中的"exam_final_"部分，然后添加到examResultPack列表中
                 examResultPack.append(row[0].replace("exam_final_", ""))
+        # 使用st.selectbox创建一个下拉选择框，让用户选择试卷
         examResult = st.selectbox(" ", examResultPack, index=None, label_visibility="collapsed")
 
+        # 如果用户选择了试卷
         if examResult:
             for index, value in enumerate(examResultPack):
+                # 如果当前值等于用户选择的试卷名
                 if value == examResult:
+                    # 获取对应的表名，并跳出循环
                     examResult = examResultPack2[index]
                     break
+            # 构造SQL查询语句，查询试卷内容
             sql = f"SELECT Question, qOption, qAnswer, qType, qAnalysis, userAnswer from {examResult} order by ID"
+            # 执行SQL查询，获取结果
             rows = execute_sql(cur, sql)
+            # 如果查询结果不为空
             if rows:
+                # 将查询结果转换为DataFrame
                 df = pd.DataFrame(rows)
+                # 重命名列名
                 df.columns = ["题目", "选项", "标准答案", "类型", "解析", "你的答案"]
+                # 使用st.dataframe显示DataFrame
                 st.dataframe(df)
     else:
+        # 如果查询结果为空，则显示提示信息
         st.info("暂无试卷")
 
 
 def examResulttoExcel():
+    # 显示子标题
     st.subheader("考试成绩导出", divider="blue")
+
+    # 初始化搜索选项列表
     searchOption = []
+
+    # 构造SQL查询语句
     sql = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
+
+    # 执行SQL查询并获取结果
     rows = execute_sql(cur, sql)
+
+    # 遍历查询结果，将考试名称添加到搜索选项列表中
     for row in rows:
         searchOption.append(row[1])
+
+    # 显示考试名称选择框
     searchExamName = st.selectbox("请选择考试场次", searchOption, index=None)
+
+    # 显示查询类型选择框
     options = st.multiselect("查询类型", ["通过", "未通过"], default=["通过", "未通过"])
+
+    # 如果选择了考试场次
     if searchExamName:
+        # 显示导出按钮
         searchButton = st.button("导出为Excel文件", type="primary")
+
+        # 如果点击了导出按钮且选择了考试场次
         if searchButton and searchExamName:
+            # 如果选择了查询类型
             if options:
+                # 构造SQL查询语句
                 sql = f"SELECT ID, userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
+
+                # 遍历查询类型，构造SQL查询条件
                 for each in options:
                     if each == "通过":
                         sql = sql + " examPass = 1 or "
                     elif each == "未通过":
                         sql = sql + " examPass = 0 or "
+
+                # 去除SQL语句末尾的“ or ”
                 if sql.endswith(" or "):
                     sql = sql[:-4] + ") order by ID"
+
+                # 执行SQL查询并获取结果
                 rows = execute_sql(cur, sql)
+
+                # 构造输出文件名
                 outputFile = f"./ExamResult/{searchExamName}_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.xlsx"
+
+                # 如果文件已存在，则删除
                 if os.path.exists(outputFile):
                     os.remove(outputFile)
+
+                # 创建Excel工作簿和工作表
                 workbook = Workbook(outputFile)
                 worksheet = workbook.add_worksheet(f"{searchExamName}考试成绩")
+
+                # 设置表头
                 title = ["ID", "编码", "姓名", "成绩", "考试时间", "考试结果"]
                 for index, value in enumerate(title):
                     worksheet.write(0, index, value)
+
+                # 设置行计数器
                 k = 1
+
+                # 遍历查询结果，写入Excel表格
                 for i, row in enumerate(rows):
                     for j, value in enumerate(row):
                         if j == 0:
                             value = k
-                        if j == 4:
+                        elif j == 4:
                             value = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(value)))
                         elif j == 5:
                             value = "通过" if value == 1 else "未通过"
                         worksheet.write(i + 1, j, value)
                     k = k + 1
+
+                # 关闭工作簿
                 workbook.close()
+
+                # 如果文件存在
                 if os.path.exists(outputFile):
+                    # 读取文件内容
                     with open(outputFile, "rb") as file:
                         content = file.read()
                     file.close()
+
+                    # 显示下载按钮
                     buttonDL = st.download_button("点击下载", content, file_name=f"考试成绩_{outputFile[outputFile.rfind('/') + 1:]}", icon=":material/download:", type="secondary")
+
+                    # 显示成功消息
                     st.success(f":green[[{searchExamName}]] :gray[考试成绩成功导出至程序目录下] :orange[{outputFile[2:]}]")
+
+                    # 如果点击了下载按钮
                     if buttonDL:
                         st.toast("文件已下载至你的默认目录")
                         updateKeyAction("导出考试成绩")
                 else:
+                    # 显示错误消息
                     st.error(f":red[[{searchExamName}]] 考试成绩导出失败")
 
 
 def ClearTables():
+    # 删除 questions 表中不是每个问题、题型、站点中文名称、章节名称组合的最小 rowid 的记录
     sql = "DELETE from questions where rowid NOT IN (SELECT Min(rowid) from questions GROUP BY Question, qType, StationCN, chapterName)"
     execute_sql_and_commit(conn, cur, sql)
+
+    # 删除 commquestions 表中不是每个问题、题型组合的最小 rowid 的记录
     sql = "DELETE from commquestions where rowid NOT IN (SELECT Min(rowid) from commquestions GROUP BY Question, qType)"
     execute_sql_and_commit(conn, cur, sql)
+
+    # 删除 morepractise 表中不是每个问题、题型、用户名组合的最小 rowid 的记录
     sql = "DELETE from morepractise where rowid NOT IN (SELECT Min(rowid) from morepractise GROUP BY Question, qType, userName)"
     execute_sql_and_commit(conn, cur, sql)
+
+    # 删除 questionaff 表中不是每个章节名称、站点中文名称组合的最小 rowid 的记录
     sql = "DELETE from questionaff where rowid NOT IN (SELECT Min(rowid) from questionaff GROUP BY chapterName, StationCN)"
     execute_sql_and_commit(conn, cur, sql)
+
+    # 删除 questionaff 表中章节名称不是 '公共题库'、'错题集'、'关注题集' 且不在 questions 表中出现的记录
     sql = "DELETE from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' and chapterName not in (SELECT DISTINCT(chapterName) from questions)"
     execute_sql_and_commit(conn, cur, sql)
+
+    # 更新 users 表中用户中文名称，去除其中的空格
     sql = "UPDATE users set userCName = replace(userCName, ' ', '') where userCName like '% %'"
     execute_sql_and_commit(conn, cur, sql)
+
+    # 遍历每个表，更新问题字段，去除其中的换行符
     for each in ["questions", "commquestions", "morepractise"]:
+        # 更新指定表的 Question 字段，去除其中的换行符
         execute_sql_and_commit(conn, cur, sql=f"update {each} set Question = REPLACE(Question,'\n', '') where Question like '%\n%'")
+
+    # 弹出提示信息，表示站室题库/公共题库/错题集/章节信息库记录清理完成
     #st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
 
 
@@ -784,6 +957,8 @@ def delExamTable():
 # noinspection PyUnboundLocalVariable
 def dbinputSubmit(tarTable, orgTable):
     tmpTable, sql, maxcol = "", "", 0
+
+    # 根据目标表名设置不同的表名和SQL语句
     if tarTable == "站室题库":
         tablename = "questions"
         sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName) VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -792,36 +967,59 @@ def dbinputSubmit(tarTable, orgTable):
         tablename = "commquestions"
         sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis) VALUES (?, ?, ?, ?, ?)"
         maxcol = 5
+
+    # 如果SQL语句不为空，则执行以下操作
     if sql != "":
         st.spinner(f"正在向 [{tarTable}] 导入题库...")
         sql2 = f"SELECT Max(ID) from {tablename}"
         maxid = execute_sql(cur, sql2)[0][0]
         if maxid is None:
             maxid = 0
+
+        # 遍历源表列表
         for each in orgTable:
+            # 加载Excel文件
             listinsheet = openpyxl.load_workbook(f"./InputQues/{each}.xlsx")
             datainlist = listinsheet.active
+
+            # 遍历Excel文件中的每一行数据
             for row in datainlist.iter_rows(min_row=2, max_col=maxcol, max_row=datainlist.max_row):
                 singleQues = [cell.value for cell in row]
                 if singleQues[0] is not None:
                     cur.execute(sql, singleQues)
                     conn.commit()
+
+            # 关闭Excel文件
             listinsheet.close()
+
+            # 如果文件名包含"_用户上传_"，则删除该文件
             if each.find("_用户上传_") != -1:
                 os.remove(f"./InputQues/{each}.xlsx")
+
+            # 拼接已处理的文件名
             tmpTable = tmpTable + each + ", "
+
+        # 更新数据库中的空字段
         sql = f"UPDATE {tablename} set qOption = '' where qOption is Null"
         execute_sql_and_commit(conn, cur, sql)
         sql = f"UPDATE {tablename} set qAnalysis = '' where qAnalysis is Null"
         execute_sql_and_commit(conn, cur, sql)
         sql = f"UPDATE {tablename} set SourceType = '人工' where SourceType is Null"
         execute_sql_and_commit(conn, cur, sql)
+
+        # 替换分号
         sql = f"UPDATE {tablename} set qOption = replace(qOption, '；', ';'), qAnswer = replace(qAnswer, '；', ';') where (qOption like '%；%' or qAnswer like '%；%') and (qType = '单选题' or qType = '多选题' or qType = '填空题')"
         execute_sql_and_commit(conn, cur, sql)
+
+        # 更新题型
         sql = f"UPDATE {tablename} set qType = '单选题' where qType = '选择题' and ID > {maxid}"
         execute_sql_and_commit(conn, cur, sql)
+
+        # 查询新添加的题目
         sql = f"SELECT ID, qOption, qAnswer, qType, Question from {tablename} where ID > {maxid} and (qType = '单选题' or qType = '多选题' or qType = '判断题')"
         rows = execute_sql(cur, sql)
+
+        # 遍历查询结果，检查选项和答案序号是否相符
         for row in rows:
             sql = ""
             if row[3] == "单选题" or row[3] == "多选题":
@@ -831,46 +1029,80 @@ def dbinputSubmit(tarTable, orgTable):
             elif row[3] == "判断题":
                 if int(row[2]) < 0 or int(row[2]) > 1:
                     sql = f"DELETE from {tablename} where ID = {row[0]}"
+
+            # 如果SQL语句不为空，则执行删除操作并显示警告
             if sql != "":
                 execute_sql_and_commit(conn, cur, sql)
                 st.warning(f"试题: [{row[4]}] 题型: [{row[3]}] 选项: [{row[1]}] 答案: [{row[2]}] 因为选项及答案序号不相符, 没有导入")
+
+        # 插入章节信息
         sql = "INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) SELECT DISTINCT chapterName, StationCN, 5, 5 FROM questions"
         execute_sql_and_commit(conn, cur, sql)
+
+        # 清除临时表
         ClearTables()
+
+        # 显示成功信息
         st.success(f":green[{tmpTable[:-2]}.xlsx] 向 :red[{tarTable}] :gray[导入成功]")
+
+        # 更新操作日志
         updateKeyAction(f"Excel文件导入试题至{tarTable}")
 
 
 def dbinput():
+    # 初始化输入选项列表
     inputOption = []
+
+    # 从Streamlit获取用户选择的目标表
     targetTable = st.radio("导入至:", ("站室题库", "公共题库"), index=0, horizontal=True)
+
+    # 从Streamlit获取用户选择的输入类型
     inputType = st.radio("文件来源:", ("服务器中文件", "上传文件"), index=0, horizontal=True)
+
     if targetTable:
+        # 如果用户选择了“服务器中文件”作为输入类型
         if inputType == "服务器中文件":
+            # 遍历"./InputQues"目录下的所有文件和文件夹
             for root, dirs, files in os.walk("./InputQues"):
                 for file in files:
+                    # 判断文件是否为.xlsx格式，且文件名中包含目标表名和站点名，且不是临时文件
                     if os.path.splitext(file)[1].lower() == '.xlsx' and f"{st.session_state.StationCN}_{targetTable}" in os.path.splitext(file)[0] and not os.path.splitext(file)[0].startswith("~$"):
+                        # 将符合条件的文件名添加到输入选项列表中
                         inputOption.append(os.path.splitext(file)[0])
+
             if inputOption:
+                # 如果存在可导入的文件，则显示文件选择框
                 orgTable = st.multiselect("请选择导入文件", inputOption, default=None)
                 if orgTable:
+                    # 如果用户选择了文件，则显示导入按钮，并绑定点击事件
                     st.button("导入", on_click=dbinputSubmit, args=(targetTable, orgTable))
                 else:
+                    # 如果用户未选择文件，则显示提示信息
                     st.info("请选择要导入的文件")
             else:
+                # 如果没有可导入的文件，则显示提示信息
                 st.info("没有可导入的本站文件")
+
+        # 如果用户选择了“上传文件”作为输入类型
         elif inputType == "上传文件":
+            # 从Streamlit获取用户上传的文件
             uploaded_file = st.file_uploader("**请选择Excel文件**", type=["xlsx"])
             if uploaded_file is not None:
+                # 读取文件内容
                 bytes_data = uploaded_file.getvalue()
+                # 生成上传文件的保存路径
                 outFile = f"./InputQues/{st.session_state.StationCN}_{targetTable}_用户上传_{time.strftime('%Y%m%d%H%M%S', time.localtime(int(time.time())))}.xlsx"
+                # 如果文件已存在，则删除旧文件
                 if os.path.exists(outFile):
                     os.remove(outFile)
+                # 将文件内容写入新文件
                 with open(outFile, 'wb') as output_file:
                     output_file.write(bytes_data)
+                # 如果文件成功保存，则调用dbinputSubmit函数进行导入
                 if os.path.exists(outFile):
                     dbinputSubmit(targetTable, [outFile[12:-5]])
     else:
+        # 如果用户未选择目标表，则显示提示信息
         st.write("请选择要导入的题库")
 
 
@@ -1449,135 +1681,209 @@ def displayUserRanking():
 
 
 def generTimeline():
-    timelineData, i = [], 1
+    timelineData, i = [], 1  # 初始化时间线数据和计数器
+    # 构造SQL查询语句，获取指定站点和章节名的题目
     sql = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' order by ID"
-    rows = execute_sql(cur, sql)
+    rows = execute_sql(cur, sql)  # 执行SQL查询，获取章节名列表
     for row in rows:
+        # 判断章节名是否为"公共题库"，若不是则查询该章节的题目数量
         if row[0] != "公共题库":
             sql = f"SELECT Count(ID) from questions where chapterName = '{row[0]}'"
             quesCount = execute_sql(cur, sql)[0][0]
         else:
+            # 若章节名为"公共题库"，则查询公共题库的题目数量
             sql = "SELECT Count(ID) from commquestions"
             quesCount = execute_sql(cur, sql)[0][0]
+        # 构造SQL查询语句，获取指定用户名和章节名的学习时间信息
         sql = f"SELECT startTime from studyinfo where userName = '{st.session_state.userName}' and chapterName = '{row[0]}' order by startTime"
-        rows2 = execute_sql(cur, sql)
+        rows2 = execute_sql(cur, sql)  # 执行SQL查询，获取学习时间信息列表
         if rows2:
+            # 格式化学习开始和结束时间
             trainingDate = time.strftime("%Y-%m-%d", time.localtime(rows2[0][0]))
             trainingDate2 = time.strftime("%Y-%m-%d", time.localtime(rows2[-1][0]))
+            # 判断学习时间信息数量是否等于题目数量
             if len(rows2) == quesCount:
-                temp = {"id": i, "content": row[0], "start": trainingDate, "end": trainingDate2}
+                temp = {"id": i, "content": row[0], "start": trainingDate, "end": trainingDate2}  # 记录完整学习时间范围
             else:
-                temp = {"id": i, "content": row[0], "start": trainingDate, "type": "point"}
-            timelineData.append(temp)
-            i += 1
+                temp = {"id": i, "content": row[0], "start": trainingDate, "type": "point"}  # 记录学习开始时间
+            timelineData.append(temp)  # 将学习记录添加到时间线数据中
+            i += 1  # 计数器自增
     #st.write(timelineData)
     if timelineData:
-        timeline = st_timeline(timelineData, groups=[], options={}, height="300px")
+        timeline = st_timeline(timelineData, groups=[], options={}, height="300px")  # 构造时间线组件
         if timeline is not None:
             if "end" in timeline:
-                st.write(f"章节: :green[{timeline['content']}] 练习开始时间: :blue[{timeline['start']}] 完成时间: :orange[{timeline['end']}]")
+                st.write(f"章节: :green[{timeline['content']}] 练习开始时间: :blue[{timeline['start']}] 完成时间: :orange[{timeline['end']}]")  # 输出包含完成时间的章节学习记录
             else:
-                st.write(f"章节: :green[{timeline['content']}] 练习开始时间: :blue[{timeline['start']}]")
+                st.write(f"章节: :green[{timeline['content']}] 练习开始时间: :blue[{timeline['start']}]")  # 输出仅包含开始时间的章节学习记录
     else:
-        st.write(":red[暂无学习记录]")
+        st.write(":red[暂无学习记录]")  # 输出无学习记录提示
 
 
 def displayCertificate():
     flagGener, flagInfo = False, True
+
+    # 查询考试名称
     sql = f"SELECT examName from examidd where StationCN = '{st.session_state.StationCN}' and examName <> '练习题库' order by ID"
     rows = execute_sql(cur, sql)
+
     for row in rows:
+        # 查询考试结果
         sql = f"SELECT userCName, examScore, examDate, CertificateNum, ID from examresult where userName = '{st.session_state.userName}' and examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 1"
         rows2 = execute_sql(cur, sql)
+
         if rows2:
             flagGener = True
+
+            # 显示打印证书提示
             if flagGener and flagInfo:
                 st.write(":orange[如需打印, 请打开 :green[程序目录下Image/Certificate] 或者点击下载证书]")
                 flagInfo = False
+
             examDetail = rows2[0]
+
             with st.expander(label=f"{row[0]}", expanded=False):
+                # 格式化考试日期
                 examDateDetail = time.strftime("%Y%m%d%H%M%S", time.localtime(examDetail[2]))
+
+                # 获取最大证书编号
                 if examDetail[3] == 0:
                     sql = "SELECT Max(CertificateNum) from examresult"
                     maxCertNum = execute_sql(cur, sql)[0][0] + 1
                 else:
                     maxCertNum = examDetail[3]
+
+                # 生成证书文件路径
                 certFile = f"./Images/Certificate/Cert-Num.{str(maxCertNum).rjust(5, '0')}-{st.session_state.userName}-{examDetail[0]}-{row[0]}_{examDateDetail}.png"
+
+                # 如果证书文件不存在
                 if not os.path.exists(certFile):
+                    # 根据成绩选择奖牌
                     if examDetail[1] >= 100:
                         medal = "./Images/gold-award.png"
                     elif examDetail[1] >= 90:
                         medal = "./Images/silver-award.png"
                     else:
                         medal = "./Images/bronze-award.png"
+
+                    # 格式化考试日期
                     examDate = time.strftime("%Y-%m-%d", time.localtime(examDetail[2]))
+
+                    # 生成证书
                     generCertificate(certFile, medal, st.session_state.userCName, row[0], examDate, maxCertNum)
+
+                # 如果证书文件存在
                 if os.path.exists(certFile):
+                    # 更新考试结果中的证书编号
                     sql = f"UPDATE examresult set CertificateNum = {maxCertNum} where ID = {examDetail[4]}"
                     execute_sql_and_commit(conn, cur, sql)
+
+                    # 显示证书图片
                     st.image(certFile)
-                with open(certFile, "rb") as file:
-                    st.download_button(
-                        label="下载证书",
-                        data=file,
-                        file_name=certFile[certFile.rfind("/") + 1:].replace("Cert", "证书"),
-                        mime="image/png",
-                        icon=":material/download:"
-                    )
-                file.close()
+
+                    # 提供证书下载按钮
+                    with open(certFile, "rb") as file:
+                        st.download_button(
+                            label="下载证书",
+                            data=file,
+                            file_name=certFile[certFile.rfind("/") + 1:].replace("Cert", "证书"),
+                            mime="image/png",
+                            icon=":material/download:"
+                        )
+                    file.close()
+
+    # 如果没有通过任何考试
     if not flagGener:
         st.info("您没有通过任何考试, 无法生成证书")
 
 
 def generCertificate(certFile, medal, userCName, examName, examDate, maxCertNum):
+    # 姓名位置数组
     namePosX = [866, 821, 796, 760, 726, 696]
+
+    # 如果用户中文名的长度为2，则在其间添加空格
     if len(userCName) == 2:
         userCName = userCName[0] + " " + userCName[-1]
+
+    # 加载字体文件
     font = ImageFont.truetype("./Fonts/msyhbd.ttf", 70)
     font2 = ImageFont.truetype("./Fonts/msyhbd.ttf", 30)
     font3 = ImageFont.truetype("./Fonts/msyhbd.ttf", 36)
     font4 = ImageFont.truetype("./Fonts/renaissance.ttf", 46)
+
+    # 加载背景图片
     backpng = './Images/Certificate-bg.png'
     im = Image.open(backpng)
+
+    # 加载奖牌图片
     imMedal = Image.open(medal)
+    # 将奖牌图片粘贴到背景图片的指定位置
     im.paste(imMedal, (784, 860), imMedal)
     imMedal.close()
+
+    # 创建绘图对象
     dr = ImageDraw.Draw(im)
+
+    # 在指定位置绘制证书编号
     dr.text((160, 132), f"No.{str(maxCertNum).rjust(5, '0')}", font=font4, fill='grey')
+
+    # 根据用户中文名的长度确定姓名的绘制位置
     if 0 <= len(userCName.replace(" ", "")) - 1 <= 5:
         dr.text((namePosX[len(userCName.replace(" ", "")) - 1], 460), userCName, font=font, fill='grey')
     else:
         dr.text((460, 460), userCName, font=font, fill='grey')
+
+    # 在指定位置绘制考试名称
     dr.text((900 - int(len(examName) * 15), 710), examName, font=font2, fill='grey')
+
+    # 在指定位置绘制考试日期
     dr.text((410, 940), examDate, font=font3, fill='grey')
+
+    # 保存生成的证书图片
     im.save(certFile)
     im.close()
 
 
 def displayMedals():
+    # 从数据库中查询考试名称，排除练习题库，按ID排序
     sql = "SELECT examName from examidd where examName <> '练习题库' order by ID"
+    # 执行SQL查询并获取结果
     rows = execute_sql(cur, sql)
     for row in rows:
+        # 使用st.expander创建可折叠区域，默认不展开
         with st.expander(label=f"{row[0]}", expanded=False):
+            # 创建6个等宽的列
             mcol1, mcol2, mcol3, mcol4, mcol5, mcol6 = st.columns(6)
+            # 构建SQL查询语句，获取考试成绩前三名的用户信息
             sql = f"SELECT userCName, examScore, examDate from examresult where examName = '{row[0]}' and examPass = 1 order by examScore DESC limit 0, 3"
+            # 执行SQL查询并获取结果
             rows2 = execute_sql(cur, sql)
             if rows2:
+                # 如果查询结果不为空
                 if len(rows2) > 0:
+                    # 格式化日期
                     examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[0][2]))
+                    # 在第一列显示金牌图片
                     mcol3.image("./Images/gold-medal.png")
+                    # 在第二列显示第一名用户信息
                     mcol4.write(f"##### :red[{rows2[0][0]}]")
                     mcol4.write(f"成绩: {rows2[0][1]}分")
                     mcol4.write(f"{examDate}")
                 if len(rows2) > 1:
+                    # 格式化日期
                     examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[1][2]))
+                    # 在第三列显示银牌图片
                     mcol1.image("./Images/silver-medal.png")
+                    # 在第四列显示第二名用户信息
                     mcol2.write(f"##### :grey[{rows2[1][0]}]")
                     mcol2.write(f"成绩: {rows2[1][1]}分")
                     mcol2.write(f"{examDate}")
                 if len(rows2) > 2:
+                    # 格式化日期
                     examDate = time.strftime("%Y-%m-%d", time.localtime(rows2[2][2]))
+                    # 在第五列显示铜牌图片
                     mcol5.image("./Images/bronze-medal.png")
+                    # 在第六列显示第三名用户信息
                     mcol6.write(f"##### :orange[{rows2[2][0]}]")
                     mcol6.write(f"成绩: {rows2[2][1]}分")
                     mcol6.write(f"{examDate}")
@@ -1657,22 +1963,40 @@ def studyResetAction():
 
 # noinspection PyTypeChecker
 def studyinfoDetail():
+    # 创建三列布局
     scol1, scol2, scol3 = st.columns(3)
+
+    # 查询特定条件下的题目数量
     sql = f"SELECT Count(ID) from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '错题集' and chapterName <> '关注题集'"
     rows = execute_sql(cur, sql)
+    # 显示章节总计
     scol1.metric(label="章节总计", value=rows[0][0], help="包含公共题库, 不含错题集")
+
+    # 查询特定条件下的题目数量
     sql = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}'"
     ct1 = execute_sql(cur, sql)[0][0]
+    # 查询公共题库中的题目数量
     sql = "SELECT Count(ID) from commquestions"
     ct2 = execute_sql(cur, sql)[0][0]
+    # 计算总题目数量
     ct = ct1 + ct2
+    # 显示试题总计
     scol2.metric(label="试题总计", value=ct, help="包含公共题库, 不含错题集")
+
+    # 查询已学习的试题数量
     sql = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName}"
     rows = execute_sql(cur, sql)
+    # 显示已学习试题和完成率
     scol3.metric(label="已学习试题", value=f"{rows[0][0]} - {int(rows[0][0] / ct * 100)}%", help=f"总完成率: {int(rows[0][0] / ct * 100)}%")
+
+    # 设置度量卡片的样式
     style_metric_cards(border_left_color="#8581d9")
+
+    # 显示帮助信息
     helpInfo = ["点击页面⤴️右上角红圈处图标, 并选择Settings", "点击Choose app theme, colors and fonts", "选择Light或是Custom Theme"]
     st.write("###### :violet[如果上面3个标签无显示内容, 请按照以下步骤改用浅色主题]")
+
+    # 显示操作步骤
     step = sac.steps(
         items=[
             sac.StepsItem(title='页面设置'),
@@ -1682,57 +2006,94 @@ def studyinfoDetail():
     )
     if step is not None:
         st.image(f"./Images/help/themesetup{step}.png", caption=f"{helpInfo[step]}")
+
+    # 显示各章节进度详情
     with st.expander("各章节进度详情", icon=":material/format_list_bulleted:", expanded=True):
+        # 查询公共题库中的题目数量
         sql = "SELECT Count(ID) from commquestions"
         ct = execute_sql(cur, sql)[0][0]
         if ct > 0:
+            # 查询特定章节的已学习题目数量
             sql = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '公共题库'"
             cs = execute_sql(cur, sql)[0][0]
+            # 显示公共题库的完成进度
             st.progress(value=cs / ct, text=f":blue[公共题库] 已完成 :orange[{int((cs / ct) * 100)}%]")
+
+        # 查询特定条件下的章节名称
         sql = f"SELECT chapterName from questionaff where StationCN = '{st.session_state.StationCN}' and chapterName <> '公共题库' and chapterName <> '错题集' order by ID"
         rows = execute_sql(cur, sql)
         for row in rows:
+            # 查询特定章节的题目数量
             sql = f"SELECT Count(ID) from questions where StationCN = '{st.session_state.StationCN}' and chapterName = '{row[0]}'"
             ct = execute_sql(cur, sql)[0][0]
             if ct > 0:
+                # 查询特定章节的已学习题目数量
                 sql = f"SELECT Count(ID) from studyinfo where userName = {st.session_state.userName} and chapterName = '{row[0]}'"
                 cs = execute_sql(cur, sql)[0][0]
+                # 显示各章节的完成进度
                 st.progress(value=cs / ct, text=f":blue[{row[0]}] 已完成 :orange[{int((cs / ct) * 100)}%]")
 
 
 def userStatus():
+    # 设置子标题和分隔线颜色
     st.subheader(":violet[在线用户状态]", divider="green")
+
+    # 判断是否需要重新检查用户密码
     if st.session_state.userPwRecheck:
+        # 创建分段选择组件
         bc = sac.segmented(
             items=[
+                # 在线用户状态选项
                 sac.SegmentedItem(label="在线用户状态", icon="people"),
+                # 重置所有用户状态选项
                 sac.SegmentedItem(label="重置所有用户状态", icon="person-slash"),
             ], align="start", color="red"
         )
+
+        # 判断用户选择的是哪个选项
         if bc == "在线用户状态":
             actionUserStatus()
         elif bc == "重置所有用户状态":
+            # 创建重置所有用户状态的按钮
             buttonReset = st.button("重置所有用户状态", type="primary")
             if buttonReset:
+                # 确认重置按钮
                 st.button("确认重置", type="secondary", on_click=resetActiveUser)
+
+        # 如果用户选择了某个选项，则更新用户状态
         if bc is not None:
             updateActionUser(st.session_state.userName, bc, st.session_state.loginTime)
     else:
+        # 如果需要重新检查密码，则显示密码输入框
         vUserPW = st.text_input("请输入密码", max_chars=8, placeholder="请输入管理员密码, 以验证身份", type="password", autocomplete="off")
+
+        # 判断用户是否输入了密码
         if vUserPW:
+            # 验证用户输入的密码是否正确
             if verifyUserPW(st.session_state.userName, vUserPW)[0]:
+                # 如果密码正确，重新运行当前函数
                 st.rerun()
             else:
+                # 如果密码错误，显示错误信息
                 st.error("密码错误, 请重新输入")
 
 
 def actionUserStatus():
+    # SQL查询语句，获取活跃用户的信息
     sql = "SELECT userCName, userType, StationCN, actionUser, loginTime, activeTime_session, activeTime from users where activeUser = 1 order by loginTime desc, activeTime_session desc, activeTime desc, ID"
+    # 执行SQL查询
     rows = execute_sql(cur, sql)
+    # 将查询结果转换为DataFrame
     df = pd.DataFrame(rows, dtype=str)
+    # 设置DataFrame的列名
     df.columns = ["姓名", "类型", "站室", "用户操作", "登录时间", "活动时间", "累计活动时间"]
+
+    # 遍历查询结果
     for index, value in enumerate(rows):
+        # 将登录时间转换为可读格式
         df.loc[index, "登录时间"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(df["登录时间"][index])))
+
+        # 获取活动时间并转换为小时、分钟、秒格式
         activeTime = int(df.loc[index, "活动时间"])
         hTime = int(activeTime / 3600)
         mTime = int((activeTime % 3600) / 60)
@@ -1742,6 +2103,8 @@ def actionUserStatus():
         if sTime < 10:
             sTime = "0" + str(sTime)
         df.loc[index, "活动时间"] = f"{hTime}小时{mTime}分{sTime}秒"
+
+        # 获取累计活动时间并转换为小时、分钟、秒格式
         activeTime = int(df.loc[index, "累计活动时间"])
         hTime = int(activeTime / 3600)
         mTime = int((activeTime % 3600) / 60)
@@ -1751,6 +2114,8 @@ def actionUserStatus():
         if sTime < 10:
             sTime = "0" + str(sTime)
         df.loc[index, "累计活动时间"] = f"{hTime}小时{mTime}分{sTime}秒"
+
+    # 使用Streamlit显示DataFrame
     st.dataframe(df, use_container_width=True)
 
 
@@ -2245,18 +2610,31 @@ def delQuestion(delQuesRow):
 
 @st.fragment
 def updateStudyInfo(studyRow):
+    # 遍历题目和公共题目
     for each in ["questions", "commquestions"]:
+        # 如果是题目
         if each == "questions":
+            # 构建查询SQL语句
             sql = f"SELECT ID, chapterName from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}' and StationCN = '{st.session_state.StationCN}'"
+        # 如果是公共题目
         elif each == "commquestions":
+            # 构建查询SQL语句
             sql = f"SELECT ID, '公共题库' from {each} where Question = '{studyRow[1]}' and qType = '{studyRow[4]}'"
+        # 其他情况
         else:
+            # SQL语句为空
             sql = ""
+        # 执行SQL语句
         studyResult = execute_sql(cur, sql)
+        # 如果查询结果不为空
         if studyResult:
+            # 构建查询SQL语句
             sql = f"SELECT ID from studyinfo where cid = {studyResult[0][0]} and questable = '{each}' and userName = {st.session_state.userName} and chapterName = '{studyResult[0][1]}'"
+            # 如果查询结果为空
             if not execute_sql(cur, sql):
+                # 构建插入SQL语句
                 sql = f"INSERT INTO studyinfo(cid, questable, userName, userCName, chapterName, startTime) VALUES({studyResult[0][0]}, '{each}', {st.session_state.userName}, '{st.session_state.userCName}', '{studyResult[0][1]}', {int(time.time())})"
+                # 执行SQL语句并提交
                 execute_sql_and_commit(conn, cur, sql)
 
 
@@ -2631,64 +3009,97 @@ def ClearStr(strValue):
 @st.fragment
 def addExamIDD():
     flagSuccess, examDateStr = False, ""
+    # 创建一个空的itemArea
     itemArea = st.empty()
     with itemArea.container():
+        # 获取考试名称输入
         examName = st.text_input("考试名称", value="", help="名称不能设置为练习题库(此为保留题库)")
+        # 清理考试名称字符串
         examName = ClearStr(examName)
+        # 获取考试有效期输入
         examDate = st.date_input("请设置考试有效期", min_value=datetime.date.today() + datetime.timedelta(days=1), max_value=datetime.date.today() + datetime.timedelta(days=180), value=datetime.date.today() + datetime.timedelta(days=3), help="考试有效期最短1天, 最长180天, 默认3天")
+        # 检查考试名称和有效期是否有效
         if examName and examDate and examName != "练习题库":
+            # 创建添加考试场次的按钮
             buttonSubmit = st.button("添加考试场次")
             if buttonSubmit:
+                # 将考试日期转换为字符串
                 examDateStr = examDate
+                # 将考试日期转换为时间戳
                 examDate = int(time.mktime(time.strptime(f"{examDate} 23:59:59", "%Y-%m-%d %H:%M:%S")))
+                # 查询数据库中是否已经存在该考试名称和站点
                 sql = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
+                # 如果不存在，则插入新的考试场次
                 if not execute_sql(cur, sql):
                     sql = f"INSERT INTO examidd(examName, validDate, StationCN) VALUES('{examName}', {examDate}, '{st.session_state.StationCN}')"
                     execute_sql_and_commit(conn, cur, sql)
+                    # 设置操作成功标志
                     flagSuccess = True
+                    # 清空itemArea
                     itemArea.empty()
                 else:
+                    # 如果考试场次已存在，则显示错误信息
                     st.error(f"[{examName}] 考试场次已存在")
         else:
+            # 如果考试名称为空，则显示警告信息
             if not examName:
                 st.warning("请输入考试名称")
+    # 如果操作成功，则进行后续处理
     if flagSuccess:
+        # 查询数据库中是否成功添加了新的考试场次
         sql = f"SELECT ID from examidd where examName = '{examName}' and StationCN = '{st.session_state.StationCN}'"
         if execute_sql(cur, sql):
+            # 显示成功信息
             st.success(f"考试场次: [{examName}] 有效期: [{examDateStr} 23:59:59] 添加成功")
+            # 更新关键操作日志
             updateKeyAction(f"新建考试场次{examName}")
+            # 清空itemArea
             itemArea.empty()
         else:
+            # 如果添加失败，则显示错误信息
             st.error(f"考试场次 [{examName}] 添加失败")
 
 
 @st.fragment
 def addStation():
     flagSuccess = False
+    # 创建一个空的区域用于放置界面元素
     itemArea = st.empty()
     with itemArea.container():
+        # 输入站室名称
         sn = st.text_input("站室名称", value="")
+        # 清除输入字符串中的多余空格
         sn = ClearStr(sn)
         if sn:
+            # 添加按钮
             buttonSubmit = st.button("添加站室名称")
             if buttonSubmit:
+                # 查询站室名称是否已存在
                 sql = "SELECT ID from stations where Station = '" + sn + "'"
                 if not execute_sql(cur, sql):
+                    # 如果站室名称不存在，则插入新的站室记录
                     sql = f"INSERT INTO stations(Station) VALUES('{sn}')"
                     execute_sql_and_commit(conn, cur, sql)
                     flagSuccess = True
+                    # 清空区域
                     itemArea.empty()
                 else:
+                    # 如果站室名称已存在，显示错误信息
                     st.error(f"[{sn}] 已存在")
         else:
+            # 如果站室名称为空，显示警告信息
             if not sn:
                 st.warning("请输入站室名称")
+
     if flagSuccess:
+        # 查询新添加的站室记录
         sql = "SELECT ID from stations where Station = '" + sn + "'"
         if execute_sql(cur, sql):
+            # 查询是否存在以站室名称命名的临时表
             sql = f"SELECT * from sqlite_master where type = 'table' and name = 'setup_{sn}'"
             tempTable = execute_sql(cur, sql)
             if not tempTable:
+                # 如果不存在，则创建临时表
                 sql = """CREATE TABLE exampleTable (
                             ID integer not null primary key autoincrement,
                             paramName text not null,
@@ -2698,69 +3109,109 @@ def addStation():
                 sql = sql.replace("exampleTable", f"setup_{sn}")
                 cur.execute(sql)
                 conn.commit()
+                # 将默认表的数据插入到新创建的临时表中
                 sql = f"INSERT INTO setup_{sn}(paramName, param, paramType) SELECT paramName, param, paramType from setup_默认"
                 execute_sql_and_commit(conn, cur, sql)
+
+            # 遍历每个章节名称，并检查是否存在对应的章节记录
             for each in ["公共题库", "错题集", "关注题集"]:
                 sql = f"SELECT ID from questionaff where chapterName = '{each}' and StationCN = '{sn}'"
                 if not execute_sql(cur, sql):
+                    # 如果不存在，则插入新的章节记录
                     sql = f"INSERT INTO questionaff(chapterName, StationCN, chapterRatio, examChapterRatio) VALUES('{each}', '{sn}', 10, 10)"
                     execute_sql_and_commit(conn, cur, sql)
+
+            # 显示添加成功的消息
             st.success(f"[{sn}] 站室添加成功")
+            # 更新关键操作记录
             updateKeyAction(f"新建站室{sn}")
+            # 清空区域
             itemArea.empty()
         else:
+            # 如果添加站室失败，显示错误信息
             st.error(f"[{sn}] 添加站室失败")
 
 
 @st.fragment
 def addUser():
     flagSuccess = False
+    # 获取所有站室的中文名称
     stationCName = getStationCNALL()
+    # 创建一个空的容器用于放置元素
     itemArea = st.empty()
     with itemArea.container():
+        # 创建两列布局
         col1, col2 = st.columns(2)
+        # 在第一列中创建一个数字输入框，用于输入用户编码
         userName = col1.number_input("用户编码", min_value=1, max_value=999999, value=1, help="建议使用员工编码, 姓名和站室可以有重复, 但是编码必须具有唯一性")
+        # 在第二列中创建一个文本输入框，用于输入用户姓名
         userCName = col2.text_input("用户姓名", max_chars=10, autocomplete="name", help="请输入用户中文姓名")
+        # 创建一个滑动选择器，用于选择站室
         station = st.select_slider("站室", stationCName, value=st.session_state.StationCN)
+        # 创建一个密码输入框，用于输入密码
         userPassword1 = st.text_input("设置密码", max_chars=8, type="password", autocomplete="off", help="设置用户密码")
+        # 再次创建一个密码输入框，用于确认密码
         userPassword2 = st.text_input("请再次输入密码", max_chars=8, type="password", placeholder="请与上一步输入的密码一致", autocomplete="off")
+        # 创建一个开关，用于选择用户类型（管理员/普通用户）
         userType = sac.switch(label="管理员", on_label="On", align='start', size='md', value=False)
+        # 清除用户姓名中的多余空格
         userCName = ClearStr(userCName)
+        # 检查所有必填项是否都已填写
         if userName and userCName and userPassword1 and userPassword2 and userPassword1 != "" and userPassword2 != "":
+            # 创建一个提交按钮
             buttonSubmit = st.button("添加用户")
             if buttonSubmit:
+                # 检查两次输入的密码是否一致
                 if userPassword1 == userPassword2:
+                    # 将用户编码转换为整数
                     un = int(userName)
+                    # 根据用户类型设置用户类型字符串
                     if userType:
                         ut = "admin"
                     else:
                         ut = "user"
+                    # 输出选择的站室
                     st.write(station)
+                    # 检查用户是否已存在
                     sql = "SELECT ID from users where userName = " + str(un)
                     if not execute_sql(cur, sql):
+                        # 加密密码
                         userPassword1 = getUserEDKeys(userPassword1, "enc")
+                        # 插入新用户数据
                         sql = f"INSERT INTO users(userName, userCName, userType, StationCN, userPassword) VALUES({un}, '{userCName}', '{ut}', '{station}', '{userPassword1}')"
                         execute_sql_and_commit(conn, cur, sql)
+                        # 设置操作成功标志
                         flagSuccess = True
+                        # 清空容器
                         itemArea.empty()
                     else:
+                        # 输出错误信息
                         st.error(f"ID: [{userName}] 姓名: [{userCName}] 用户已存在或用户编码重复")
                 else:
+                    # 输出密码不一致的错误信息
                     st.error("两次输入密码不一致")
         else:
+            # 检查哪些必填项未填写，并输出相应的警告信息
             if not userCName:
                 st.warning("请输入用户姓名")
             elif not userPassword1:
                 st.warning("请输入密码")
             elif not userPassword2:
                 st.warning("请确认密码")
+
+    # 如果操作成功，则更新用户信息
     if flagSuccess:
+        # 查询新用户数据
         sql = "SELECT ID from users where userName = " + str(un) + " and StationCN = '" + station + "' and userCName = '" + userCName + "'"
         if execute_sql(cur, sql):
+            # 输出操作成功的提示信息
             st.success(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加成功")
+            # 记录操作日志
             updateKeyAction(f"新建用户: {userName} 姓名: {userCName} 类型: {ut} 站室: {station}")
+            # 清空容器
             itemArea.empty()
         else:
+            # 输出操作失败的错误信息
             st.error(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加失败")
 
 
@@ -2920,24 +3371,41 @@ def queryExamAnswer(tablename):
 
 # noinspection PyTypeChecker
 def queryExamResult():
+    # 初始化查询选项列表
     searchOption = []
+
+    # 构建SQL查询语句
     sql = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
+    # 执行SQL查询
     rows = execute_sql(cur, sql)
+
+    # 遍历查询结果，将考试名称添加到查询选项列表中
     for row in rows:
         searchOption.append(row[1])
+
+    # 创建下拉选择框，供用户选择考试场次
     searchExamName = st.selectbox("请选择考试场次", searchOption, index=None)
+
+    # 创建多选框，供用户选择查询类型
     options = st.multiselect(
         "查询类型",
         ["通过", "未通过"],
-        ["通过", "未通过"],
+        ["未通过"],
     )
+
+    # 根据用户是否选择了考试场次，设置查询按钮的可用状态
     if searchExamName:
         searchButton = st.button("查询")
     else:
         searchButton = st.button("查询", disabled=True)
+
+    # 当用户点击查询按钮且选择了考试场次时，执行查询逻辑
     if searchButton and searchExamName:
         if options:
+            # 创建标签页
             tab1, tab2 = st.tabs(["简报", "详情"])
+
+            # 构建SQL查询语句
             sql = f"SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '{searchExamName}' and ("
             for each in options:
                 if each == "通过":
@@ -2946,14 +3414,22 @@ def queryExamResult():
                     sql = sql + " examPass = 0 or "
             if sql.endswith(" or "):
                 sql = sql[:-4] + ") order by ID DESC"
+
+            # 执行SQL查询
             rows = execute_sql(cur, sql)
+
+            # 处理查询结果
             if rows:
                 df = pd.DataFrame(rows, dtype=str)
                 df.columns = ["编号", "姓名", "成绩", "考试日期", "考试结果"]
                 for index, value in enumerate(rows):
                     df.loc[index, "考试日期"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(df["考试日期"][index])))
                     df.loc[index, "考试结果"] = "通过" if int(df["考试结果"][index]) == 1 else "未通过"
+
+                # 在详情标签页中显示查询结果
                 tab2.dataframe(df.style.apply(highlight_max, backcolor='yellow', subset=["成绩", "考试结果"]))
+
+            # 在简报标签页中显示查询结果的摘要信息
             if rows:
                 for row in rows:
                     tab1.markdown(f"考生ID:  :red[{row[0]}] 考生姓名: :red[{row[1]}] 考试时间: :red[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(row[3]))}]")
@@ -2971,21 +3447,38 @@ def queryExamResult():
 
 
 def queryExamResultUsers():
+    # 初始化一个空列表，用于存储考试名称
     ExamNamePack = []
+
+    # 构建SQL查询语句，获取指定站室的考试名称
     sql = f"SELECT ID, examName from examidd where StationCN = '{st.session_state.StationCN}' order by ID"
+    # 执行SQL查询，获取考试名称
     rows = execute_sql(cur, sql)
+
+    # 遍历查询结果，将考试名称添加到ExamNamePack列表中
     for row in rows:
         ExamNamePack.append(row[1])
+
+    # 使用streamlit的selectbox组件，让用户选择考试场次
     searchExamName = st.selectbox("请选择考试场次", ExamNamePack, index=None)
+
+    # 使用streamlit的multiselect组件，让用户选择查询类型
     options = st.multiselect(
         "查询类型",
         ["已参加考试", "未参加考试"],
         ["未参加考试"],
     )
+
+    # 使用streamlit的button组件，让用户点击查询按钮
     searchButton = st.button("查询")
+
+    # 如果用户点击了查询按钮并选择了考试场次
     if searchButton and searchExamName:
         if options:
+            # 使用streamlit的tabs组件，创建两个标签页
             tab1, tab2 = st.tabs(["简报", "详情"])
+
+            # 根据用户选择的查询类型构建不同的SQL查询语句
             if len(options) == 2:
                 sql = "SELECT userName, userCName, StationCN from users where StationCN = '" + st.session_state.StationCN + "' and userType <> 'supervisor' order by ID"
             elif len(options) == 1:
@@ -2993,16 +3486,28 @@ def queryExamResultUsers():
                     sql = "SELECT users.userName, users.userCName, users.StationCN from users, examresult where users.userType <> 'supervisor' and examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName and users.StationCN = '" + st.session_state.StationCN + "'"
                 elif options[0] == "未参加考试":
                     sql = "SELECT userName, userCName, StationCN from users where userType <> 'supervisor' and userName not in (SELECT users.userName from users, examresult where examresult.examName = '" + searchExamName + "' and examresult.userName = users.userName) and StationCN = '" + st.session_state.StationCN + "'"
+
+            # 执行SQL查询，获取用户信息
             rows = execute_sql(cur, sql)
+
+            # 如果查询结果不为空
             if rows:
+                # 将查询结果转换为DataFrame，并设置列名
                 df = pd.DataFrame(rows)
                 df.columns = ["编号", "姓名", "站室"]
+                # 在第二个标签页中显示查询结果
                 tab2.dataframe(df)
+
+            # 再次遍历查询结果，获取每个考生的详细信息
             if rows:
                 for row in rows:
+                    # 构建SQL查询语句，获取每个考生的考试成绩
                     sql = "SELECT userName, userCName, examScore, examDate, examPass from examresult where examName = '" + searchExamName + "' and userName = " + str(row[0])
                     rows2 = execute_sql(cur, sql)
+
+                    # 如果查询到考试成绩
                     if rows2:
+                        # 在第一个标签页中显示考生的考试成绩和考试结果
                         tab1.markdown(f"考生ID:  :red[{rows2[0][0]}] 考生姓名: :red[{rows2[0][1]}] 考试时间: :red[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(rows2[0][3]))}]")
                         tab1.subheader(f"考试成绩: {rows2[0][2]} 分")
                         if rows2[0][4] == 1:
@@ -3012,11 +3517,14 @@ def queryExamResultUsers():
                             tab1.subheader("考试结果: :red[未通过] 🤪")
                             tab1.subheader("", divider="red")
                     else:
+                        # 如果未查询到考试成绩，显示未参加考试的信息
                         tab1.subheader("未参加考试", divider="red")
                         tab1.markdown(f"考生ID:  :red[{row[0]}] 考生姓名: :red[{row[1]}] 站室: :red[{row[2]}]")
             else:
+                # 如果没有查询到任何数据，显示提示信息
                 st.info("暂无数据")
         else:
+            # 如果用户未选择任何查询类型，显示警告信息
             st.warning("请设置查询类型")
 
 
@@ -3038,77 +3546,142 @@ def verifyUserPW(vUserName, vUserPW):
 
 
 def resetPassword():
+    # 显示副标题和分隔线
     st.subheader(":orange[密码重置及更改账户类型]", divider="red")
+
+    # 检查是否需要重置用户信息
     if st.session_state.userPwRecheck:
+        # 显示重置用户信息提示
         st.write(":red[**重置用户信息**]")
+
+        # 创建三列布局
         rCol1, rCol2, rCol3 = st.columns(3)
+
+        # 获取用户编码
         rUserName = rCol1.number_input("用户编码", value=0)
+
+        # 检查用户编码是否不为0
         if rUserName != 0:
+            # 执行SQL查询用户信息
             sql = f"SELECT userCName, userType from users where userName = {rUserName}"
             rows = execute_sql(cur, sql)
+
+            # 检查是否查询到用户信息
             if rows:
+                # 显示用户姓名
                 rCol2.write(f"用户姓名: **{rows[0][0]}**")
+
+                # 在第三列创建布局
                 with rCol3:
                     rUserType = False
+
+                    # 根据用户类型设置开关
                     if rows[0][1] == "admin" or rows[0][1] == "supervisor":
                         rUserType = sac.switch(label="管理员", value=True, on_label="On", align='start', size='md')
                     elif rows[0][1] == "user":
                         rUserType = sac.switch(label="管理员", value=False, on_label="On", align='start', size='md')
+
+                # 显示重置类型提示
                 st.write("重置类型")
+
+                # 创建重置类型的复选框
                 rOption1 = st.checkbox("密码", value=False)
                 rOption2 = st.checkbox("账户类型", value=False)
+
+                # 创建重置按钮
                 btnResetUserPW = st.button("重置", type="primary")
+
+                # 检查是否点击了重置按钮并选择了重置类型
                 if btnResetUserPW and (rOption1 or rOption2):
                     st.button("确认", type="secondary", on_click=actionResetUserPW, args=(rUserName, rOption1, rOption2, rUserType,))
                     st.session_state.userPwRecheck = False
+                # 如果未选择任何重置类型，显示警告
                 elif not rOption1 and not rOption2:
                     st.warning("请选择重置类型")
+            # 如果未查询到用户信息，显示错误
             else:
                 st.error("用户不存在")
+    # 如果不需要重置用户信息，显示密码输入框
     else:
         vUserPW = st.text_input("请输入密码", max_chars=8, placeholder="请输入管理员密码, 以验证身份", type="password", autocomplete="off")
+
+        # 检查是否输入了密码
         if vUserPW:
+            # 验证密码
             if verifyUserPW(st.session_state.userName, vUserPW)[0]:
                 st.rerun()
+            # 如果密码错误，显示错误提示
             else:
                 st.error("密码错误, 请重新输入")
 
 
 def actionResetUserPW(rUserName, rOption1, rOption2, rUserType):
     rInfo = ""
+
+    # 如果 rOption1 为真
     if rOption1:
+        # 获取用户加密密钥
         resetPW = getUserEDKeys("1234", "enc")
+        # 构建 SQL 更新语句
         sql = f"UPDATE users SET userPassword = '{resetPW}' where userName = {rUserName}"
+        # 执行 SQL 并提交
         execute_sql_and_commit(conn, cur, sql)
+        # 更新信息，表示密码已重置
         rInfo += "密码已重置为: 1234 / "
+        # 更新操作日志
         updateKeyAction("密码重置")
+
+    # 如果 rOption2 为真
     if rOption2:
+        # 如果 rUserType 有值
         if rUserType:
+            # 构建 SQL 更新语句，将用户类型更改为管理员
             sql = f"UPDATE users SET userType = 'admin' where userName = {rUserName}"
+            # 更新信息，表示账户类型已更改为管理员
             rInfo += "账户类型已更改为: 管理员 / "
+            # 更新操作日志
             updateKeyAction("更改账户类型为管理员")
         else:
+            # 构建 SQL 更新语句，将用户类型更改为普通用户
             sql = f"UPDATE users SET userType = 'user' where userName = {rUserName}"
+            # 更新信息，表示账户类型已更改为用户
             rInfo += "账户类型已更改为: 用户 / "
+            # 更新操作日志
             updateKeyAction("更改账户类型为用户")
+        # 执行 SQL 并提交
         execute_sql_and_commit(conn, cur, sql)
+
+    # 显示操作结果
     st.success(f"**{rInfo[:-3]}**")
 
 
 def displayKeyAction():
+    # 显示标题和操作日志分隔线
     st.subheader(":violet[操作日志]", divider="red")
+
+    # 检查会话状态中的用户密码是否已重新检查
     if st.session_state.userPwRecheck:
+        # 构造SQL查询语句，从keyactionlog表中查询操作日志
         sql = "SELECT userName, userCName, StationCN, userAction, datetime(actionDate, 'unixepoch', 'localtime') from keyactionlog order by actionDate DESC"
+        # 执行SQL查询
         rows = execute_sql(cur, sql)
+        # 如果查询结果不为空
         if rows:
+            # 将查询结果转换为DataFrame，并设置列名
             df = pd.DataFrame(rows, columns=["用户编码", "用户姓名", "所属站室", "操作内容", "操作时间"])
+            # 显示DataFrame
             st.write(df)
     else:
+        # 提示用户输入密码
         vUserPW = st.text_input("请输入密码", max_chars=8, placeholder="请输入管理员密码, 以验证身份", type="password", autocomplete="off")
+        # 如果用户输入密码
         if vUserPW:
+            # 验证用户密码
             if verifyUserPW(st.session_state.userName, vUserPW)[0]:
+                # 密码验证成功，重新运行函数
                 st.rerun()
             else:
+                # 密码验证失败，显示错误信息
                 st.error("密码错误, 请重新输入")
 
 
