@@ -24,6 +24,7 @@ from docx.shared import Pt, RGBColor
 from folium.plugins import HeatMap, MiniMap
 from PIL import Image, ImageDraw, ImageFont
 from st_keyup import st_keyup
+from streamlit_elements import elements, dashboard, mui
 from streamlit_extras.badges import badge
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_folium import st_folium
@@ -3748,6 +3749,44 @@ def aiGenerate_Image():
         AIGMInfo.empty()
 
 
+def processPuzzle():
+    with elements("dashboard"):
+
+        # You can create a draggable and resizable dashboard using
+        # any element available in Streamlit Elements.
+        # First, build a default layout for every element you want to include in your dashboard
+
+        layout = [
+            # Parameters: element_identifier, x_pos, y_pos, width, height, [item properties...]
+            dashboard.Item("1_item", 0, 0, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("2_item", 1, 0, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("3_item", 2, 0, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("4_item", 3, 0, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("5_item", 0, 1, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("6_item", 1, 2, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("7_item", 2, 3, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("8_item", 3, 4, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("9_item", 0, 1, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("10_item", 1, 2, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("11_item", 2, 3, 1, 1, isResizable=False, margin=[0, 0]),
+            dashboard.Item("12_item", 3, 4, 1, 1, isResizable=False, margin=[0, 0]),
+        ]
+
+        with dashboard.Grid(layout):
+            mui.Paper("1", key="1_item")
+            mui.Paper("2", key="2_item")
+            mui.Paper("3", key="3_item")
+            mui.Paper("4", key="4_item")
+            mui.Paper("5", key="5_item")
+            mui.Paper("6", key="6_item")
+            mui.Paper("7", key="7_item")
+            mui.Paper("8", key="8_item")
+            mui.Paper("9", key="9_item")
+            mui.Paper("10", key="10_item")
+            mui.Paper("11", key="11_item")
+            mui.Paper("12", key="12_item")
+
+
 global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
 
 DBFILE = "./DB/ETest.db"
@@ -3824,6 +3863,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('使用手册', icon='question-diamond'),
                         sac.MenuItem('彩蛋', icon='images'),
+                        sac.MenuItem('流程拼图', icon='puzzle'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1], open_all=False)
@@ -4177,5 +4217,7 @@ if st.session_state.logged_in:
         displayUserManual()
     elif selected == "彩蛋":
         aiGenerate_Image()
+    elif selected == "流程拼图":
+        processPuzzle()
     elif selected == "关于...":
         aboutInfo()
