@@ -35,7 +35,7 @@
     - a. 打开命令行工具cmd或Cmder
     - b. 进入程序目录
     - c. 运行
-      - `streamlit run etest.py`
+      - `streamlit run etest.py/etest-sp.py(SP版)`
 
 ## Construction
 

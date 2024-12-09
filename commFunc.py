@@ -447,7 +447,10 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
             rows = execute_sql(cur2, sql)
             for row in rows:
                 chapterRatio = getChapterRatio(StationCN, row[5], examType)
-                sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[6]}')"
+                if examType == "training":
+                    sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[6]}')"
+                else:
+                    sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(1, 1100)}, '{row[6]}')"
                 execute_sql_and_commit(conn2, cur2, sql)
         if "错题集" in qAffPack and examType == "training":
             chapterRatio = getChapterRatio(StationCN, "错题集", examType)
@@ -480,7 +483,10 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
                 for row in rows:
                     sql = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
                     if not execute_sql(cur2, sql):
-                        sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
+                        if examType == "training":
+                            sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
+                        else:
+                            sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(1, 1100)}, '{row[5]}')"
                         execute_sql_and_commit(conn2, cur2, sql)
     CreateExamTable(examFinalTable, examRandom)
     for k in quesType:

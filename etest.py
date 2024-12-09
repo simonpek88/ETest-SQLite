@@ -2977,7 +2977,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 增加彩蛋: A.I.一键生图; 一键生图增加通义万象模型")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修复考试题库生成中本站专属试题过少的问题")
 
     components.html(infoStr, height=340)
 
@@ -3718,7 +3718,7 @@ def displayUserManual():
 
 
 def aiGenerate_Image():
-    st.subheader(":green[A.I.一键生图]", divider="rainbow")
+    st.subheader(":green[A.I.文字生图]", divider="rainbow")
     st.markdown("严禁使用敏感词汇, 包括但不限于： \n\t:red[**涉及国家安全的信息；\n\t涉及政治与宗教类的信息；\n\t涉及暴力与恐怖主义的信息；\n\t涉及黄赌毒类的信息；\n\t涉及不文明的信息等**]")
     genImageMode = sac.segmented(
         items=[
@@ -3862,8 +3862,8 @@ if st.session_state.logged_in:
                         sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('使用手册', icon='question-diamond'),
-                        sac.MenuItem('彩蛋', icon='images'),
                         sac.MenuItem('流程拼图', icon='puzzle'),
+                        sac.MenuItem('彩蛋', icon='images'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
                 ], open_index=[1], open_all=False)
@@ -3886,6 +3886,7 @@ if st.session_state.logged_in:
                         sac.MenuItem('Changelog', icon='view-list'),
                         sac.MenuItem('Readme', icon='github'),
                         sac.MenuItem('使用手册', icon='question-diamond'),
+                        sac.MenuItem('流程拼图', icon='puzzle'),
                         sac.MenuItem('彩蛋', icon='images'),
                         sac.MenuItem('关于...', icon='link-45deg'),
                     ]),
@@ -4215,9 +4216,9 @@ if st.session_state.logged_in:
         aboutReadme()
     elif selected == "使用手册":
         displayUserManual()
-    elif selected == "彩蛋":
-        aiGenerate_Image()
     elif selected == "流程拼图":
         processPuzzle()
+    elif selected == "彩蛋":
+        aiGenerate_Image()
     elif selected == "关于...":
         aboutInfo()
