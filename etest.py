@@ -2670,11 +2670,15 @@ def exam(row):
     if row[4] == "填空题":
         reviseQues = row[1].replace("(", ":red[ ( _ ]").replace(")", ":red[ _ _ ) ]").strip()
     else:
-        reviseQues = row[1].strip()
+        reviseQues = row[1].replace("( )", "").strip()
     standardAnswer = getStandardAnswer(row)
     if st.session_state.examType != "exam":
         updateStudyInfo(row)
-    st.write(f"##### 第{row[0]}题 :green[{reviseQues}]")
+    if len(reviseQues) < 160:
+        blank = "&emsp;" * (160 - len(reviseQues))
+    else:
+        blank = ""
+    st.markdown(f"##### 第{row[0]}题 :green[{reviseQues}{blank}]")
     acol = st.columns(2)
     if st.session_state.userType == "admin" and st.session_state.examType != "exam" and st.session_state.debug:
         addFavIndex = 1

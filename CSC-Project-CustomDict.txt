@@ -29,6 +29,7 @@ DBSTAT
 dcol
 deepseek
 dyna
+emsp
 etest
 examidd
 examresult
