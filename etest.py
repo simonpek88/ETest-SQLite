@@ -2718,9 +2718,13 @@ def exam(row):
         radioArea = st.empty()
         with radioArea.container():
             option = ["A. 正确", "B. 错误"]
-            st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
             if row[6] != "":
+                st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
+            else:
+                st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
+            if row[6] != "" and st.session_state.radioChosen is None:
                 st.write(f":red[**你已选择:** ] :blue[[**{option[int(row[6]) ^ 1][0]}**]]")
+            #st.write(st.session_state.radioChosen)
         if st.session_state.radioCompleted:
             radioArea.empty()
             st.session_state.radioCompleted = False
@@ -2728,6 +2732,7 @@ def exam(row):
             tempUserAnswer = execute_sql(cur, sql)[0][0]
             if tempUserAnswer != "":
                 st.radio(" ", option, index=int(tempUserAnswer) ^ 1, key="radioChosen2", on_change=updateRadioAnswer2, args=(row[0],), label_visibility="collapsed", horizontal=True)
+            radioArea.empty()
     elif row[4] == '填空题':
         orgOption = row[6].replace("；", ";").split(";")
         textAnswerArea = st.empty()
