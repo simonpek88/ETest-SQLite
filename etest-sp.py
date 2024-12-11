@@ -52,7 +52,7 @@ def updateKeyAction(keyAction):
 def getUserCName(sUserName, sType="Digit"):
     errorInfo = ""
     sql = ""
-
+    params = None
     # 检查用户名类型并构建SQL查询
     if sType.capitalize() == "Digit":
         if sUserName.isdigit():
@@ -923,6 +923,7 @@ def dbfunc():
 
 def delUserUploadFiles():
     user_files = []
+    root = ""
     for root, dirs, files in os.walk("./InputQues"):
         for file in files:
             if file.lower().endswith('.xlsx') and "_用户上传_" in file:
@@ -2318,11 +2319,7 @@ def exam(row):
     standardAnswer = getStandardAnswer(row)
     if st.session_state.examType != "exam":
         updateStudyInfo(row)
-    if len(reviseQues) < 110:
-        blank = "&emsp;" * (110 - len(reviseQues))
-    else:
-        blank = ""
-    st.markdown(f"##### 第{row[0]}题 :green[{reviseQues}{blank}]")
+    st.markdown(f"##### 第{row[0]}题 :green[{reviseQues}]")
     if st.session_state.userType == "admin" and st.session_state.examType != "exam" and st.session_state.debug:
         buttonConfirm = st.button("⚠️ 从所有题库中删除此题", type="primary")
         if buttonConfirm:

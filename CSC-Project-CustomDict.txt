@@ -8,6 +8,7 @@ animationend
 antd
 APIKEY
 apsw
+backcolor
 backface
 backpng
 breakline
@@ -28,6 +29,7 @@ dbsetup
 DBSTAT
 dcol
 deepseek
+delUserFiles_
 dyna
 emsp
 etest
@@ -40,6 +42,7 @@ Fileinfo
 flipcountdown
 Flytek
 fontsize
+forecolor
 gener
 glowintext
 hhiiss
@@ -77,6 +80,7 @@ questype
 Resultto
 retroclockbox
 rgba
+root
 rowid
 scol
 selectbox
@@ -87,6 +91,7 @@ studyinfo
 turnfunc
 turnnumber
 tywx
+unixepoch
 unpad
 verinfo
 visitcount

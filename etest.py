@@ -2673,11 +2673,7 @@ def exam(row):
     standardAnswer = getStandardAnswer(row)
     if st.session_state.examType != "exam":
         updateStudyInfo(row)
-    if len(reviseQues) < 160:
-        blank = "&emsp;" * (160 - len(reviseQues))
-    else:
-        blank = ""
-    st.markdown(f"##### 第{row[0]}题 :green[{reviseQues}{blank}]")
+    st.markdown(f"##### 第{row[0]}题 :green[{reviseQues}]")
     acol = st.columns(2)
     if st.session_state.userType == "admin" and st.session_state.examType != "exam" and st.session_state.debug:
         addFavIndex = 1
