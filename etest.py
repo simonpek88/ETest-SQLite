@@ -157,7 +157,6 @@ def changePassword():
             # 显示原密码错误的错误信息
             st.error("原密码不正确")
     else:
-        # 显示原密码不能为空的警告信息
         st.warning("原密码不能为空")
 
     # 记录用户密码修改操作及时间
@@ -3082,7 +3081,6 @@ def addStation():
                 # 查询站室名称是否已存在
                 sql = "SELECT ID from stations where Station = '" + sn + "'"
                 if not execute_sql(cur, sql):
-                    # 如果站室名称不存在，则插入新的站室记录
                     sql = f"INSERT INTO stations(Station) VALUES('{sn}')"
                     execute_sql_and_commit(conn, cur, sql)
                     flagSuccess = True
