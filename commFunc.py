@@ -156,7 +156,8 @@ def deepseek_AI(ques, option, quesType):
     if contentStr != "":
         client = OpenAI(api_key=aikey, base_url="https://api.deepseek.com")
         response = client.chat.completions.create(
-            model="deepseek-chat",
+            #model="deepseek-chat",
+            model='deepseek-reasoner',
             messages=[
                 {
                     "role": "system",
@@ -180,7 +181,8 @@ def deepseek_AI_GenerQues(reference, quesType, quesCount):
     prompt = prompt + "\n请按照以下格式出题\n题型: \n试题: \n选项: \n标准答案: \n试题解析: \n\n按以下内容出题\n参考资料:\n"
     client = OpenAI(api_key=aikey, base_url="https://api.deepseek.com")
     response = client.chat.completions.create(
-        model="deepseek-chat",
+        #model="deepseek-chat",
+        model='deepseek-reasoner',
         messages=[
             {
                 "role": "system",

@@ -2983,8 +2983,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修复刷新试题时网页频繁跳动的问题")
-
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} Deepseek模型更新至R1")
     components.html(infoStr, height=340)
 
 
