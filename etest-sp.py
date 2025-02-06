@@ -565,6 +565,9 @@ def questoWord():
     sac.switch(label="复核模式", on_label="On", align='start', size='sm', value=False, key="sac_recheck")
     if st.session_state.sac_recheck:
         sac.switch(label="附加答题解析", on_label="On", align='start', size='sm', value=False, key="sac_Analysis")
+    else:
+        if "sac_Analysis" not in st.session_state:
+            st.session_state.sac_Analysis = False
     if quesTable and quesType:
         buttonSubmit = st.button("导出为Word文件", type="primary")
         if buttonSubmit:
