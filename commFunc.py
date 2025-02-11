@@ -150,39 +150,43 @@ def generContent(ques, option, quesType):
     return content
 
 
-def deepseek_AI(ques, option, quesType):
-    aikey = getEncryptKeys("deepseek")
-    contentStr = generContent(ques, option, quesType)
-    if contentStr != "":
-        client = OpenAI(api_key=aikey, base_url="https://api.deepseek.com")
-        response = client.chat.completions.create(
-            #model="deepseek-chat",
-            model='deepseek-reasoner',
-            messages=[
-                {
-                    "role": "system",
-                    "content": "你是一个专家，我会给你<题目>和<题型>和<选项>，请依据你的行业知识和给定的选项，选择正确的答案，并给出解题推导过程。要求：\n1. 给出每个选项的对错, 判断题和填空题直接给出答案和解析过程\n2. 生成内容应清晰、精确、详尽并易于理解\n3. 输出如果有国家标准或行业规范需要提供来源出处, 若能检索到具体出处, 需要精确到是第几条, 并引用\n4. 不输出原题, 但要输出选项, 并给出每个选项的解析过程\n5. 解析内容每行不要超过40个字, 但是可以多行\n6. 着重显示正确的答案并给出一个详尽的小结"
-                },
-                {
-                    "role": "user",
-                    "content": f"{contentStr}"
-                },
-            ],
-            stream=False
-        )
-        return response.choices[0].message.content
-    else:
+def deepseek_AI(ques, option, quesType, useModel='deepseek-chat'):
+    # 模型版本可选deepseek-reasoner(R1)和deepseek-chat(V3) 默认V3
+    try:
+        aikey = getEncryptKeys("deepseek")
+        contentStr = generContent(ques, option, quesType)
+        if contentStr:
+            client = OpenAI(api_key=aikey, base_url="https://api.deepseek.com")
+            response = client.chat.completions.create(
+                model=useModel,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "你是一个专家，我会给你<题目>和<题型>和<选项>，请依据你的行业知识和给定的选项，选择正确的答案，并给出解题推导过程。要求：\n1. 给出每个选项的对错, 判断题和填空题直接给出答案和解析过程\n2. 生成内容应清晰、精确、详尽并易于理解\n3. 输出如果有国家标准或行业规范需要提供来源出处, 若能检索到具体出处, 需要精确到是第几条, 并引用\n4. 不输出原题, 但要输出选项, 并给出每个选项的解析过程\n5. 解析内容每行不要超过40个字, 但是可以多行\n6. 着重显示正确的答案并给出一个详尽的小结"
+                    },
+                    {
+                        "role": "user",
+                        "content": f"{contentStr}"
+                    },
+                ],
+                stream=False
+            )
+            return response.choices[0].message.content
+        else:
+            return ""
+    except Exception as e:
+        logging.error(f"An error occurred while calling Deepseek AI: {e}")
         return ""
 
 
-def deepseek_AI_GenerQues(reference, quesType, quesCount):
+def deepseek_AI_GenerQues(reference, quesType, quesCount, useModel='deepseek-chat'):
+    # 模型版本可选deepseek-reasoner(R1)和deepseek-chat(V3) 默认V3
     aikey = getEncryptKeys("deepseek")
     prompt = f"您是一名老师，需要出{quesCount}道{quesType}类型的试题，请按照以下要求进行：\n1. 依据参考资料给出的内容出题\n2. 基于生成的试题和标准答案逐步推导，输出相应的试题解答，尽可能简明扼要\n3. 填空题没有选项\n4. 判断题选项为A. 正确和B. 错误\n5. 结尾有分割线，同一道题内没有分割线\n6. 单选题和多选题标准答案只含选项，不含内容\n7. 必须是{quesType}题型\n8. 题干中不显示选项"
     prompt = prompt + "\n请按照以下格式出题\n题型: \n试题: \n选项: \n标准答案: \n试题解析: \n\n按以下内容出题\n参考资料:\n"
     client = OpenAI(api_key=aikey, base_url="https://api.deepseek.com")
     response = client.chat.completions.create(
-        #model="deepseek-chat",
-        model='deepseek-reasoner',
+        model=useModel,
         messages=[
             {
                 "role": "system",

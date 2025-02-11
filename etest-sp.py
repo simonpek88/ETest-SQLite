@@ -2418,16 +2418,27 @@ def exam(row):
                         AIModel = "ERNIE Speed-AppBuilder"
                     elif AIModelType == "详细":
                         AIModel = "ERNIE-Speed-8K"
+                elif AIModelName == "DeepSeek大模型":
+                    AIModelType = st.radio(label="请设置模型版本", options=("R1", "V3"), index=0, horizontal=True, help="R1推理好速度慢, V3推理快速结果尚可")
+                    if AIModelType == "R1":
+                        AIModel = "deepseek-reasoner"
+                    elif AIModelType == "V3":
+                        AIModel = "deepseek-chat"
+                else:
+                    AIModelType = ''
                 if buttonAnalysis:
                     AIAnswerInfo = st.empty()
                     with AIAnswerInfo.container():
-                        st.info(f"正在使用 :red[{AIModelName.replace('大模型', '')}] 获取答案解析, 内容不能保证正确, 仅供参考! 请稍等...")
+                        if AIModelType != '':
+                            st.info(f"正在使用 :red[{AIModelName.replace('大模型', '')} {AIModelType}] 获取答案解析, 内容不能保证正确, 仅供参考! 请稍等...")
+                        else:
+                            st.info(f"正在使用 :red[{AIModelName.replace('大模型', '')}] 获取答案解析, 内容不能保证正确, 仅供参考! 请稍等...")
                     if AIModelName == "文心千帆大模型":
                         AIAnswer = qianfan_AI(row[1], AIModel, option, row[4])
                     elif AIModelName == "讯飞星火大模型":
                         AIAnswer = xunfei_xh_AI(row[1], option, row[4])
                     elif AIModelName == "DeepSeek大模型":
-                        AIAnswer = deepseek_AI(row[1], option, row[4])
+                        AIAnswer = deepseek_AI(row[1], option, row[4], AIModel)
                     AIAnswerInfo.empty()
                     if AIAnswer != "" and AIAnswer.find("无法直接回答") == -1 and AIAnswer.find("尚未查询") == -1 and AIAnswer.find("我不确定您想要表达什么意思") == -1 and AIAnswer.find("由于信息不足，无法给出准确答案") == -1 and AIAnswer.find("无法确定正确答案") == -1 and AIAnswer.find("无法提供准确答案") == -1:
                         if AIAnswer.startswith(":"):
