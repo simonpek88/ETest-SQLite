@@ -10,7 +10,6 @@ import time
 import folium
 import openpyxl
 import pandas as pd
-import Play_mp3
 import plotly.graph_objects as go
 import streamlit as st
 import streamlit.components.v1 as components
@@ -262,9 +261,6 @@ def login():
                     sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
                     execute_sql_and_commit(conn, cur, sql)
                     ClearTables()
-                    if datetime.datetime.now().hour in range(8, 22):
-                        #Play_mp3.play('./Audio/login.mp3')
-                        pass
                     st.rerun()
                 else:
                     if verifyUPW[0]:
@@ -288,9 +284,6 @@ def logout():
     for key in st.session_state.keys():
         del st.session_state[key]
 
-    if datetime.datetime.now().hour in range(8, 22):
-        #Play_mp3.play('./Audio/logout.mp3')
-        pass
     st.rerun()
 
 

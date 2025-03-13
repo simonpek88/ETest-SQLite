@@ -10,7 +10,6 @@ import time
 import folium
 import openpyxl
 import pandas as pd
-import Play_mp3
 import plotly.graph_objects as go
 import pydeck as pdk
 import streamlit as st
@@ -318,9 +317,6 @@ def login():
                     ClearTables()
                     # transform Key to Encrypt(temporary)
                     #print(getUserEDKeys("", "enc"))
-                    if datetime.datetime.now().hour in range(8, 22):
-                        #Play_mp3.play('./Audio/login.mp3')
-                        pass
                     st.rerun()
                 else:
                     # 如果密码验证成功但登录失败
@@ -351,10 +347,6 @@ def logout():
     for key in st.session_state.keys():
         del st.session_state[key]
 
-    # 如果当前时间在8点到22点之间，播放登出音效
-    if datetime.datetime.now().hour in range(8, 22):
-        #Play_mp3.play('./Audio/logout.mp3')
-        pass
     # 重新运行当前脚本
     st.rerun()
 
