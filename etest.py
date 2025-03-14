@@ -3546,11 +3546,8 @@ def verifyUserPW(vUserName, vUserPW):
         vUserDecPW = getUserEDKeys(vUserEncPW, "dec")
         if vUserPW == vUserDecPW:
             st.session_state.userPwRecheck = True
-            return True, vUserEncPW
-        else:
-            return False, vUserEncPW
-    else:
-        return False, vUserEncPW
+
+    return st.session_state.userPwRecheck, vUserEncPW
 
 
 def resetPassword():
