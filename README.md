@@ -83,4 +83,4 @@
 
 ## License
 
-MIT © 2024 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
+MIT © 2024 Simon LAU TradeMark :rainbow[Enjoy for AP] ™
