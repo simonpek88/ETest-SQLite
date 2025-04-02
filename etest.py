@@ -369,7 +369,7 @@ def aboutInfo():
         st.caption("Pandas")
         st.image("./Images/logos/pandas.png")
     with logo5:
-        st.caption("Ant Design")
+        st.caption("Antd Components")
         st.image("./Images/logos/antd.png")
     with logo7:
         st.caption("iFlytek Spark")
