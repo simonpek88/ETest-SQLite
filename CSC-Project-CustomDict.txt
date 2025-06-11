@@ -49,6 +49,7 @@ glowintext
 hhiiss
 indiv
 indivquescount
+JAVDB
 JXQW
 keyactionlog
 keyup
