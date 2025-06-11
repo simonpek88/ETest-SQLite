@@ -1,7 +1,7 @@
 # 调控中心安全生产业务考试系统
 
-### E-Test 考试系统 是一个前端基于 Streamlit 框架，后端数据处理基于 Python 的web应用，旨在帮助用户进行自我评估和技能提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
-### 手机端请访问SP版, 此版适配手机端显示, 访问地址不变, 端口请改为8502
+#### E-Test 考试系统 是一个前端基于 Streamlit 框架，后端基于Python数据处理的web应用，旨在帮助用户进行专业技能自我评估和提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
+#### 手机端请访问SP版, 该版本适配手机端显示, 访问地址不变, 端口请改为8502
 
 ## Contents
 
@@ -16,7 +16,7 @@
 
 ## Install
 
-1. 下载并安装[Python](https://www.python.org/)(3.8及以上版本)
+1. 下载并安装[Python](https://www.python.org/)(3.9及以上版本)
 2. 下载并安装[SQLite3驱动](https://www.sqlite.org/index.html)
 3. 克隆仓库到本地或者解压提供的源代码包
 4. 配置环境变量, 将Python和Streamlit的安装路径添加到环境变量中
@@ -35,7 +35,8 @@
     - a. 打开命令行工具cmd或Cmder
     - b. 进入程序目录
     - c. 运行
-      - `streamlit run etest.py/etest-sp.py(SP版)`
+      - `streamlit run etest.py --server.port 8501`
+      - `streamlit run etest-sp.py --server.port 8502`(SP版)
 
 ## Construction
 
@@ -83,4 +84,4 @@
 
 ## License
 
-MIT © 2024 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
+MIT © 2024-2027 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
