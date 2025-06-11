@@ -14,6 +14,7 @@ backpng
 breakline
 clearex
 clocktype
+Cmder
 commquestions
 createtextfile
 crsetup
@@ -69,6 +70,8 @@ Objs
 openpyxl
 oxml
 pickable
+pycryptodome
+pydeck
 pylint
 qcol
 qianfan
