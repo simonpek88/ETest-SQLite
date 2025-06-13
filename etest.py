@@ -39,6 +39,7 @@ from word2picture import tywx_generate_image, xfxh_generate_image
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+# cSpell:ignoreRegExp /\b[A-Z]\b/g
 
 
 @st.fragment

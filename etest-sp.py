@@ -36,6 +36,7 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+# cSpell:ignoreRegExp /\b[A-Z]\b/g
 
 
 @st.fragment

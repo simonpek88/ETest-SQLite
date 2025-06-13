@@ -6,6 +6,7 @@ import random
 import sqlite3
 import time
 from hashlib import md5
+
 import qianfan  # type: ignore
 from Crypto import Random
 from Crypto.Cipher import AES
@@ -13,6 +14,7 @@ from openai import OpenAI  # type: ignore
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
+# cSpell:ignoreRegExp /\b[A-Z]\b/g
 
 
 def pad(data):
