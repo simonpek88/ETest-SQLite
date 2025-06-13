@@ -2498,7 +2498,11 @@ def calcScore():
     userScore = 0
     sql = f"SELECT qAnswer, qType, userAnswer, Question, qOption, qAnalysis, userName, SourceType from {st.session_state.examFinalTable} where userName = {st.session_state.userName} order by ID"
     rows = execute_sql(cur, sql)
+    # 练习模式按照生成试题的80%作为合格分线, 考试模式读取管理员设置的分数线
+    if st.session_state.examType == "training":
+        passScore = int(len(rows) * 0.8)
     for row in rows:
+        # [使用大模型评判错误的填空题答案] 该模块不稳定, 强制不使用
         flagAIScore = False
         if row[0].replace(" ", "").lower() == row[2].replace(" ", "").lower():
             userScore += quesScore
@@ -2986,7 +2990,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} Deepseek模型更新至R1")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 练习模式及格线强制调整为生成试题数目的80%, 此更改不涉及考试设置。(Issue提交者: 调控中心)")
     components.html(infoStr, height=340)
 
 
