@@ -8,6 +8,7 @@ cmder
 Codegeex
 Codejock
 codestral
+codz
 Connor
 coverfile
 cursorignore
