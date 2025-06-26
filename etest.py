@@ -281,11 +281,9 @@ def login():
             if examType == "练习":
                 st.session_state.examType = "training"
                 st.session_state.examName = "练习题库"
-                st.session_state.examRandom = True
                 sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}'"
             elif examType == "考试":
                 st.session_state.examType = "exam"
-                st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
                 sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
             else:
                 sql = ""
@@ -311,6 +309,10 @@ def login():
                     st.session_state.delExam = True
                     st.session_state.tooltipColor = "#ed872d"
                     st.session_state.loginTime = int(time.time())
+                    if examType == "练习":
+                        st.session_state.examRandom = True
+                    elif examType == "考试":
+                        st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
                     sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
                     execute_sql_and_commit(conn, cur, sql)
                     sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
