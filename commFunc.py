@@ -493,6 +493,7 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
         sql = f"SELECT MAX(id) from {examFinalTable}"
         auto_id = execute_sql(cur2, sql)[0][0]
         execute_sql_and_commit(conn2, cur2, f"ALTER TABLE {examFinalTable} AUTO_INCREMENT = {auto_id + 1}")
+    execute_sql_and_commit(conn2, cur2, f"UPDATE {examFinalTable} SET userAnswer = ''")
     quesCS = getParam("考题总数", StationCN)
     sql = "SELECT Count(ID) from " + examFinalTable
     quesCount = execute_sql(cur2, sql)[0][0]

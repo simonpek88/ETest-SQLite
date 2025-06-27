@@ -1255,9 +1255,6 @@ def resetActiveUser():
 
 # noinspection PyUnboundLocalVariable
 def inputWord():
-    #doc = Document("./QuesRefer/特种设备安全管理员考试题库精选全文.docx")
-    #doc = Document("./QuesRefer/(新版)特种设备安全管理人员(特种作业)考试题库.docx")
-    #doc = Document("./QuesRefer/(新版)特种设备安全管理人员资格(特种作业)考试题库(全真题库).docx")
     #doc = Document("./QuesRefer/2023年全国特种设备作业人员考试题库附答案.docx")
     doc = Document("./QuesRefer/2023年特种设备作业安全管理人员证考试题库(通用版).docx")
     chapter = "特种设备安全管理员"
@@ -1737,7 +1734,7 @@ def displayUserRanking():
             heatData = []
             sql = "SELECT StationCN, sum(userRanking) as Ranking from users GROUP BY StationCN having Ranking > 0 order by Ranking DESC"
             rows = execute_sql(cur, sql)
-            sql = f"SELECT lat, lng, Station from stations where Station == '{rows[0][0]}'"
+            sql = f"SELECT lat, lng, Station from stations where Station = '{rows[0][0]}'"
             row = execute_sql(cur, sql)[0]
             lat = round(row[0] / 100, 2)
             lng = round(row[1] / 100, 2)
@@ -2592,7 +2589,10 @@ def score_dialog(userScore, passScore):
     buttonScore = st.button("确定")
     if buttonScore:
         st.session_state.delExam = True
-        st.rerun()
+        if st.session_state.examType == "exam" and st.session_state.calcScore:
+            logout()
+        else:
+            st.rerun()
 
 
 def calcScore():
@@ -4101,7 +4101,7 @@ if st.session_state.logged_in:
                         exam(row)
                     if submitButton:
                         emptyAnswer = "你没有作答的题为:第["
-                        sql = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer == '' order by ID"
+                        sql = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer = '' order by ID"
                         rows2 = execute_sql(cur, sql)
                         for row2 in rows2:
                             emptyAnswer = emptyAnswer + str(row2[0]) + ", "
