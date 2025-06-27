@@ -4,7 +4,6 @@ import datetime
 import json
 import os
 import re
-import sqlite3
 import time
 
 import folium
@@ -12,6 +11,7 @@ import openpyxl
 import pandas as pd
 import plotly.graph_objects as go
 import pydeck as pdk
+import pymysql
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
@@ -624,35 +624,97 @@ def examResulttoExcel():
 
 
 def ClearTables():
-    # 删除 questions 表中不是每个问题、题型、站点中文名称、章节名称组合的最小 rowid 的记录
-    sql = "DELETE from questions where rowid NOT IN (SELECT Min(rowid) from questions GROUP BY Question, qType, StationCN, chapterName)"
-    execute_sql_and_commit(conn, cur, sql)
+    try:
+        # 删除 questions 表中的重复记录
+        sql_delete_questions = """
+            DELETE q1
+            FROM questions q1
+            JOIN questions q2
+            ON q1.Question = q2.Question
+            AND q1.qType = q2.qType
+            AND q1.StationCN = q2.StationCN
+            AND q1.chapterName = q2.chapterName
+            WHERE q1.id > q2.id;
+        """
+        cur.execute(sql_delete_questions)
 
-    # 删除 commquestions 表中不是每个问题、题型组合的最小 rowid 的记录
-    sql = "DELETE from commquestions where rowid NOT IN (SELECT Min(rowid) from commquestions GROUP BY Question, qType)"
-    execute_sql_and_commit(conn, cur, sql)
+        # 删除 commquestions 表中的重复记录
+        sql_delete_commquestions = """
+            DELETE c1
+            FROM commquestions c1
+            JOIN commquestions c2
+            ON c1.Question = c2.Question AND c1.qType = c2.qType
+            WHERE c1.id > c2.id;
+        """
+        cur.execute(sql_delete_commquestions)
 
-    # 删除 morepractise 表中不是每个问题、题型、用户名组合的最小 rowid 的记录
-    sql = "DELETE from morepractise where rowid NOT IN (SELECT Min(rowid) from morepractise GROUP BY Question, qType, userName)"
-    execute_sql_and_commit(conn, cur, sql)
+        # 删除 morepractise 表中的重复记录
+        sql_delete_morepractise = """
+            DELETE m1
+            FROM morepractise m1
+            JOIN morepractise m2
+            ON m1.Question = m2.Question AND m1.qType = m2.qType AND m1.userName = m2.userName
+            WHERE m1.id > m2.id;
+        """
+        cur.execute(sql_delete_morepractise)
 
-    # 删除 questionaff 表中不是每个章节名称、站点中文名称组合的最小 rowid 的记录
-    sql = "DELETE from questionaff where rowid NOT IN (SELECT Min(rowid) from questionaff GROUP BY chapterName, StationCN)"
-    execute_sql_and_commit(conn, cur, sql)
+        # 删除 questionaff 表中的重复记录
+        sql_delete_questionaff = """
+            DELETE a1
+            FROM questionaff a1
+            JOIN questionaff a2
+            ON a1.chapterName = a2.chapterName AND a1.StationCN = a2.StationCN
+            WHERE a1.id > a2.id;
+        """
+        cur.execute(sql_delete_questionaff)
 
-    # 删除 questionaff 表中章节名称不是 '公共题库'、'错题集'、'关注题集' 且不在 questions 表中出现的记录
-    sql = "DELETE from questionaff where chapterName <> '公共题库' and chapterName <> '错题集' and chapterName <> '关注题集' and chapterName not in (SELECT DISTINCT(chapterName) from questions)"
-    execute_sql_and_commit(conn, cur, sql)
+        # 删除不在 questions 表中的 chapterName
+        sql_delete_invalid_chapters = """
+            DELETE FROM questionaff
+            WHERE chapterName NOT IN ('公共题库', '错题集', '关注题集')
+            AND chapterName NOT IN (SELECT DISTINCT(chapterName) FROM questions);
+        """
+        cur.execute(sql_delete_invalid_chapters)
 
-    # 更新 users 表中用户中文名称，去除其中的空格
-    sql = "UPDATE users set userCName = replace(userCName, ' ', '') where userCName like '% %'"
-    execute_sql_and_commit(conn, cur, sql)
+        # 更新 users 表中的用户中文名，去除空格
+        sql_update_users = """
+            UPDATE users
+            SET userCName = REPLACE(userCName, ' ', '')
+            WHERE userCName LIKE '% %';
+        """
+        cur.execute(sql_update_users)
 
-    # 遍历每个表，更新问题字段，去除其中的换行符
-    for each in ["questions", "commquestions", "morepractise"]:
-        # 更新指定表的 Question 字段，去除其中的换行符
-        execute_sql_and_commit(conn, cur, sql=f"update {each} set Question = REPLACE(Question,'\n', '') where Question like '%\n%'")
+        # 去除问题字段中的换行符 - questions
+        sql_update_questions = """
+            UPDATE questions
+            SET Question = REPLACE(Question, '\n', '')
+            WHERE Question LIKE '%\n%';
+        """
+        cur.execute(sql_update_questions)
 
+        # 去除问题字段中的换行符 - commquestions
+        sql_update_commquestions = """
+            UPDATE commquestions
+            SET Question = REPLACE(Question, '\n', '')
+            WHERE Question LIKE '%\n%';
+        """
+        cur.execute(sql_update_commquestions)
+
+        # 去除问题字段中的换行符 - morepractise
+        sql_update_morepractise = """
+            UPDATE morepractise
+            SET Question = REPLACE(Question, '\n', '')
+            WHERE Question LIKE '%\n%';
+        """
+        cur.execute(sql_update_morepractise)
+
+        # 提交事务
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+    finally:
+        pass
     # 弹出提示信息，表示站室题库/公共题库/错题集/章节信息库记录清理完成
     #st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
 
@@ -2694,7 +2756,7 @@ def exam(row):
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
             value = value.replace("\n", "").replace("\t", "").strip()
             option.append(f"{chr(65 + index)}. {value}")
-        if row[6] == "":
+        if row[6] == "" or row[6] is None:
             chosen = st.radio(" ", option, index=None, label_visibility="collapsed", horizontal=True)
         else:
             chosen = st.radio(" ", option, index=int(row[6]), label_visibility="collapsed", horizontal=True)
@@ -2705,7 +2767,7 @@ def exam(row):
         for index, value in enumerate(row[2].replace("；", ";").split(";")):
             value = value.replace("\n", "").replace("\t", "").strip()
             option.append(f"{chr(65 + index)}. {value}")
-        if row[6] != "":
+        if row[6] != "" and row[6] is not None:
             orgOption = row[6].replace("；", ";").split(";")
         else:
             orgOption = []
@@ -2718,11 +2780,11 @@ def exam(row):
         radioArea = st.empty()
         with radioArea.container():
             option = ["A. 正确", "B. 错误"]
-            if row[6] != "":
+            if row[6] != "" and row[6] is not None:
                 st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
             else:
                 st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
-            if row[6] != "" and st.session_state.radioChosen is None:
+            if row[6] != "" and row[6] is not None and st.session_state.radioChosen is None:
                 st.write(f":red[**你已选择:** ] :blue[[**{option[int(row[6]) ^ 1][0]}**]]")
             #st.write(st.session_state.radioChosen)
         if st.session_state.radioCompleted:
@@ -3762,10 +3824,15 @@ def aiGenerate_Image():
 
 global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
 
-DBFILE = "./DB/ETest.db"
-#DBFILE = "./DB/ETest_enc.db"
+conn = pymysql.connect(
+    host='localhost',
+    port=3001,
+    user='root',
+    password='7745',
+    database='etest-mysql',
+    charset='utf8mb4'
+)
 
-conn = sqlite3.Connection(DBFILE, check_same_thread=False)
 cur = conn.cursor()
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
@@ -3887,20 +3954,8 @@ if st.session_state.logged_in:
     if selected != "密码重置" and selected != "用户状态" and selected != "操作日志":
         st.session_state.userPwRecheck = False
     if selected == "主页":
-        #displayBigTime()
         displayBigTimeCircle()
-        #st.markdown(f"<font face='微软雅黑' color=purple size=8><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
-        #verinfo, verLM, likeCM = getVerInfo()
-        #st.subheader(f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
-        #st.subheader(f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
-        #st.subheader(f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} :orange[I feel {EMOJI[int(likeCM) - 1][1]}]")
-
-        #st.markdown(f"<font size=5><center>**软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}**</center></font>", unsafe_allow_html=True)
-        #st.markdown(f"<font size=5><center>**更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}**</center></font>", unsafe_allow_html=True)
-        #st.markdown(f"<font size=5><center>**用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} :orange[I feel {EMOJI[int(likeCM) - 1][1]}]**</center></font>", unsafe_allow_html=True)
-        #st.markdown(f"<font size=4><center>**更新内容: {UPDATETYPE['New']}/{UPDATETYPE['Optimize']} 练习模式为每个用户增加单独的题型设置并简化操作**</center></font>", unsafe_allow_html=True)
-
-        #displayAppInfo()
+        displayAppInfo()
         displayVisitCounter()
 
     elif selected == "生成题库" or selected == "选择考试":
@@ -4091,12 +4146,12 @@ if st.session_state.logged_in:
             if rows:
                 sql = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '公共题库' and StationCN = '" + st.session_state.StationCN + "'"
                 row = execute_sql(cur, sql)[0]
-                st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
+                st.slider(row[0], min_value=0, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
                 sql = "SELECT chapterName, examChapterRatio, ID from questionaff where chapterName = '错题集' and StationCN = '" + st.session_state.StationCN + "'"
                 row = execute_sql(cur, sql)[0]
-                st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="仅在练习题库中有效")
+                st.slider(row[0], min_value=0, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="仅在练习题库中有效")
                 for row in rows:
-                    st.slider(row[0], min_value=1, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
+                    st.slider(row[0], min_value=0, max_value=10, value=row[1], key=f"crsetup_{row[2]}", help="权重越大的章节占比越高")
                 st.button("章节权重更新", on_click=updateCRExam)
             else:
                 st.info("该站室没有可设置章节")

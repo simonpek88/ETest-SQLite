@@ -3,10 +3,10 @@ import base64
 import logging
 import os
 import random
-import sqlite3
 import time
 from hashlib import md5
 
+import pymysql
 import qianfan  # type: ignore
 from Crypto import Random
 from Crypto.Cipher import AES
@@ -304,61 +304,55 @@ def qianfan_AI_GenerQues(reference, quesType, quesCount, AImodel):
 
 
 def CreateExamTable(tablename, examRandom):
-    # 查询数据库，判断表是否存在
-    sql = "SELECT * from sqlite_master where type = 'table' and name = '" + tablename + "'"
-    tempTable = execute_sql(cur2, sql)
+    # 查询数据库中是否存在该表（MySQL）
+    sql = f"SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{tablename}'"
+    cur2.execute(sql)
+    tempTable = cur2.fetchone()
 
-    # 如果表存在
-    if tempTable:
-        # 如果表名包含 "exam_final_" 或 examRandom 为真
+    flagTableExist = bool(tempTable)
+
+    if flagTableExist:
         if tablename.find("exam_final_") != -1 or examRandom:
-            # 删除表
-            execute_sql_and_commit(conn2, cur2, sql=f"DROP TABLE {tablename}")
+            # 如果表存在且需要重建，则删除旧表
+            execute_sql_and_commit(conn2, cur2, f"DROP TABLE IF EXISTS {tablename}")
             flagTableExist = False
-        else:
-            # 表存在，flagTableExist 设置为 True
-            flagTableExist = True
     else:
-        # 如果表不存在，flagTableExist 设置为 False
         flagTableExist = False
 
-    # 如果表不存在
     if not flagTableExist:
-        # 如果表名包含 "exam_final_"
         if tablename.find("exam_final_") != -1:
-            # 创建包含 ID, Question, qOption, qAnswer, qType, qAnalysis, userAnswer, userName, SourceType 的表
-            sql = """CREATE TABLE exampleTable (
-                        ID integer not null primary key autoincrement,
-                        Question text not null,
-                        qOption text default '',
-                        qAnswer text not null,
-                        qType text not null,
-                        qAnalysis text default '',
-                        userAnswer text default '',
-                        userName integer default 0,
-                        SourceType text default '人工'
-                    );"""
-        # 如果表名包含 "exam_"
-        elif tablename.find("exam_") != -1:
-            # 创建包含 ID, Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType 的表
-            sql = """CREATE TABLE exampleTable (
-                        ID integer not null primary key autoincrement,
-                        Question text not null,
-                        qOption text default '',
-                        qAnswer text not null,
-                        qType text not null,
-                        qAnalysis text default '',
-                        randomID integer not null,
-                        SourceType text default '人工'
-                    );"""
-        # 将表名从 exampleTable 替换为实际的表名
-        sql = sql.replace("exampleTable", tablename)
-        # 执行 SQL 语句创建表
-        cur2.execute(sql)
-        # 提交事务
-        conn2.commit()
+            # 创建 exam_final_xxx 表结构
+            sql = f"""CREATE TABLE `{tablename}` (
+                        ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        Question TEXT NOT NULL,
+                        qOption TEXT,
+                        qAnswer TEXT NOT NULL,
+                        qType TINYTEXT NOT NULL,
+                        qAnalysis TEXT,
+                        userAnswer TINYTEXT,
+                        userName INT DEFAULT 0,
+                        SourceType TINYTEXT
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"""
 
-    return flagTableExist
+        elif tablename.find("exam_") != -1:
+            # 创建 exam_xxx 表结构
+            sql = f"""CREATE TABLE `{tablename}` (
+                        ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        Question TEXT NOT NULL,
+                        qOption TEXT,
+                        qAnswer TEXT NOT NULL,
+                        qType TINYTEXT NOT NULL,
+                        qAnalysis TEXT,
+                        randomID INT NOT NULL,
+                        SourceType TINYTEXT
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"""
+
+        # 执行建表语句
+        cur2.execute(sql)
+        conn2.commit()
+        return False  # 表被新创建了
+    else:
+        return True   # 表已存在
 
 
 # noinspection PyBroadException
@@ -455,10 +449,8 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
             rows = execute_sql(cur2, sql)
             for row in rows:
                 chapterRatio = getChapterRatio(StationCN, row[5], examType)
-                if examType == "training":
-                    sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[6]}')"
-                else:
-                    sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(1, 1100)}, '{row[6]}')"
+                sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[6]}')"
+                #sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(1, 1100)}, '{row[6]}')"
                 execute_sql_and_commit(conn2, cur2, sql)
         if "错题集" in qAffPack and examType == "training":
             chapterRatio = getChapterRatio(StationCN, "错题集", examType)
@@ -491,10 +483,8 @@ def GenerExam(qAffPack, StationCN, userName, examName, examType, quesType, examR
                 for row in rows:
                     sql = "SELECT ID from " + examTable + " where Question = '" + row[0] + "'"
                     if not execute_sql(cur2, sql):
-                        if examType == "training":
-                            sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
-                        else:
-                            sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(1, 1100)}, '{row[5]}')"
+                        sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(int(1000 - 100 * chapterRatio), int(1100 - 100 * chapterRatio))}, '{row[5]}')"
+                        #sql = f"INSERT INTO {examTable}(Question, qOption, qAnswer, qType, qAnalysis, randomID, SourceType) VALUES('{row[0]}', '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', {random.randint(1, 1100)}, '{row[5]}')"
                         execute_sql_and_commit(conn2, cur2, sql)
     CreateExamTable(examFinalTable, examRandom)
     for k in quesType:
@@ -545,8 +535,13 @@ def updatePyFileinfo():
                         execute_sql_and_commit(conn2, cur2, sql)
 
 
-DBFILE = "./DB/ETest.db"
-
-conn2 = sqlite3.Connection(DBFILE, check_same_thread=False)
+conn2 = pymysql.connect(
+host='localhost',
+port=3001,
+user='root',
+password='7745',
+database='etest-mysql',
+charset='utf8mb4'
+)
 cur2 = conn2.cursor()
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
