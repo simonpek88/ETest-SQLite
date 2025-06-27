@@ -42,9 +42,12 @@ isort
 jieba
 LIGHTMAGENTA
 linalg
+maxcached
+maxconnections
 Meslo
 mgate
 midir
+mincached
 mkdocs
 Monokai
 msyh
