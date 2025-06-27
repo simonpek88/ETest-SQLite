@@ -1337,21 +1337,52 @@ def inputWord():
 
 
 def resetTableID():
-    for tablename in ["questions", "commquestions", "morepractise", "favques", "examidd", "examresult", "questionaff", "studyinfo", "users", "keyactionlog", "setup_默认", f"setup_{st.session_state.StationCN}"]:
-        sql = f"SELECT ID from {tablename} order by ID"
-        rows = execute_sql(cur, sql)
-        for i, row in enumerate(rows):
-            sql = f"UPDATE {tablename} set ID = {i + 1} where ID = {row[0]}"
-            execute_sql_and_commit(conn, cur, sql)
-            if tablename == "questions" or tablename == "commquestions":
-                sql = f"UPDATE studyinfo set cid = {i + 1} where cid = {row[0]} and questable = '{tablename}'"
-                execute_sql_and_commit(conn, cur, sql)
-        if len(rows) > 0:
-            sql = f"UPDATE sqlite_sequence SET seq = {len(rows)} where name = '{tablename}'"
-            execute_sql_and_commit(conn, cur, sql)
-        #st.toast(f"重置 {tablename} 表ID完毕")
+    tables = [
+        "questions", "commquestions", "morepractise", "favques",
+        "examidd", "examresult", "questionaff", "studyinfo",
+        "users", "keyactionlog", "setup_默认", f"setup_{st.session_state.StationCN}"
+    ]
+
+    for tablename in tables:
+        try:
+            # 获取当前表的所有ID并按顺序排序
+            sql = f"SELECT ID FROM {tablename} ORDER BY ID"
+            cur.execute(sql)
+            rows = cur.fetchall()
+
+            if not rows:
+                continue
+
+            # 更新ID字段为连续值
+            for i, row in enumerate(rows):
+                new_id = i + 1
+                old_id = row['ID']
+
+                update_sql = f"UPDATE {tablename} SET ID = {new_id} WHERE ID = {old_id}"
+                cur.execute(update_sql)
+
+                # 如果是 questions 或 commquestions，还需更新 studyinfo 表中的 cid
+                if tablename in ["questions", "commquestions"]:
+                    update_studyinfo_sql = (
+                        f"UPDATE studyinfo SET cid = {new_id} "
+                        f"WHERE cid = {old_id} AND questable = '{tablename}'"
+                    )
+                    cur.execute(update_studyinfo_sql)
+
+            # 更新自增序列（MySQL 使用 AUTO_INCREMENT）
+            if rows:
+                last_id = len(rows)
+                alter_sql = f"ALTER TABLE {tablename} AUTO_INCREMENT = {last_id + 1}"
+                cur.execute(alter_sql)
+
+        except Exception as e:
+            conn.rollback()
+            st.error(f"重置 {tablename} 表ID失败: {e}")
+            continue
+
+    conn.commit()
     st.success("题库ID重置成功")
-    updateKeyAction("重置题库ID")
+    updateKeyAction("重置题库ID")        #st.toast(f"重置 {tablename} 表ID完毕")
 
 
 # noinspection PyShadowingNames,PyUnboundLocalVariable
