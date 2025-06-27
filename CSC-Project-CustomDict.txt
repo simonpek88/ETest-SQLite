@@ -31,6 +31,7 @@ DBSTAT
 dcol
 deepseek
 delUserFiles_
+dmysql
 dyna
 emsp
 etest
@@ -66,6 +67,7 @@ mmcq
 Monokai
 moption
 morepractise
+mysqldump
 Neue
 Objs
 openpyxl
