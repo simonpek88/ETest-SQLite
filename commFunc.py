@@ -6,11 +6,12 @@ import random
 import time
 from hashlib import md5
 
-import pymysql
 import qianfan  # type: ignore
 from Crypto import Random
 from Crypto.Cipher import AES
 from openai import OpenAI  # type: ignore
+
+from mysql_pool import get_connection
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
 # cSpell:ignoreRegExp /\b[A-Z]{3,15}\b/g
@@ -539,14 +540,6 @@ def updatePyFileinfo():
                         execute_sql_and_commit(conn2, cur2, sql)
 
 
-conn2 = pymysql.connect(
-host='localhost',
-port=3001,
-user='root',
-password='7745',
-database='etest-mysql',
-charset='utf8mb4',
-autocommit=True
-)
+conn2 = get_connection()
 cur2 = conn2.cursor()
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')

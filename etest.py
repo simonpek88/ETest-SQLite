@@ -11,7 +11,6 @@ import openpyxl
 import pandas as pd
 import plotly.graph_objects as go
 import pydeck as pdk
-import pymysql
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_antd_components as sac
@@ -35,6 +34,7 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
+from mysql_pool import get_connection
 from word2picture import tywx_generate_image, xfxh_generate_image
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
@@ -3866,16 +3866,7 @@ def aiGenerate_Image():
 
 
 global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
-
-conn = pymysql.connect(
-host='localhost',
-port=3001,
-user='root',
-password='7745',
-database='etest-mysql',
-charset='utf8mb4',
-autocommit=True
-)
+conn = get_connection()
 cur = conn.cursor()
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
