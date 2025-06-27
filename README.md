@@ -1,7 +1,6 @@
 # 调控中心安全生产业务考试系统
 
-#### E-Test 考试系统 是一个前端基于 Streamlit 框架，后端基于Python数据处理的web应用，旨在帮助用户进行专业技能自我评估和提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
-#### 手机端请访问SP版, 该版本适配手机端显示, 访问地址不变, 端口请改为8502
+## E-Test 考试系统 是一个前端基于 Streamlit 框架，后端基于Python数据处理的web应用，旨在帮助用户进行专业技能自我评估和提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
 
 ## Contents
 
@@ -17,7 +16,7 @@
 ## Install
 
 1. 下载并安装[Python](https://www.python.org/)(3.9<=版本<=3.13)
-2. 下载并安装[SQLite3驱动](https://www.sqlite.org/index.html)
+2. 下载并安装[MySQL](https://dev.mysql.com/downloads/mysql/)(8.0.42)
 3. 克隆仓库到本地或者解压提供的源代码包
 4. 配置环境变量, 将Python和Streamlit的安装路径添加到环境变量中
 5. 安装依赖
@@ -37,14 +36,12 @@
     - b. 进入程序目录
     - c. 运行
       - `streamlit run etest.py --server.port 8501`
-      - `streamlit run etest-sp.py --server.port 8502`(SP版)
 7. 访问地址
-    - 本机运行, 请访问`http://localhost:8501` (端口可使用--server.port参数自行修改, SP版默认端口8502)
+    - 本机运行, 请访问`http://localhost:8501` (端口可使用--server.port参数自行修改)
     - 服务器运行，请访问`http://域名:8501` (具体域名请询问管理员)
 
 ## Construction
 
-- DB/ETest.db # 数据库文件
 - .streamlit # Streamlit配置文件, 默认端口8501([修改前请查阅相关文档](https://docs.streamlit.io/develop/api-reference/configuration/config.toml))
 - etest.py # 入口文件及主程序 All in one
 - commFunc.py # 公共函数

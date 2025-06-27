@@ -3098,7 +3098,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Optimize']} 练习模式及格线强制调整为生成试题数目的80%, 此更改不涉及考试设置。(Issue提交者: 调控中心)")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 鉴于sqlite3数据库文件被多个用户同时访问时，可能会出现错误，现将数据库改为MySQL")
     components.html(infoStr, height=340)
 
 
