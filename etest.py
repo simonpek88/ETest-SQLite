@@ -98,11 +98,23 @@ def getUserCName(sUserName, sType="Digit"):
         st.session_state.StationCN = ""
 
 
+def is_valid_table_name(table_name):
+    """简单校验表名是否为合法的数据库标识符"""
+    import re
+    return bool(re.match(r'^[\w\d_]+$', table_name))
+
+
 def delOutdatedTable():
+    tables_to_drop = []
     if st.session_state.examRandom and "examTable" in st.session_state:
-        execute_sql_and_commit(conn, cur, sql=f"DROP TABLE IF EXISTS {st.session_state.examTable}")
+        tables_to_drop.append(st.session_state.examTable)
     if "examFinalTable" in st.session_state:
-        execute_sql_and_commit(conn, cur, sql=f"DROP TABLE IF EXISTS {st.session_state.examFinalTable}")
+        tables_to_drop.append(st.session_state.examFinalTable)
+    for table_name in tables_to_drop:
+        if is_valid_table_name(table_name):
+            execute_sql_and_commit(conn, cur, sql=f"DROP TABLE IF EXISTS {table_name}")
+        else:
+            raise ValueError(f"Invalid table name detected: {table_name}")
 
 
 # noinspection PyShadowingNames
@@ -3825,14 +3837,14 @@ def aiGenerate_Image():
 global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
 
 conn = pymysql.connect(
-    host='localhost',
-    port=3001,
-    user='root',
-    password='7745',
-    database='etest-mysql',
-    charset='utf8mb4'
+host='localhost',
+port=3001,
+user='root',
+password='7745',
+database='etest-mysql',
+charset='utf8mb4',
+autocommit=True
 )
-
 cur = conn.cursor()
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")

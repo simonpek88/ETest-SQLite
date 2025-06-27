@@ -541,7 +541,8 @@ port=3001,
 user='root',
 password='7745',
 database='etest-mysql',
-charset='utf8mb4'
+charset='utf8mb4',
+autocommit=True
 )
 cur2 = conn2.cursor()
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
