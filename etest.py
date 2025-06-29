@@ -2670,23 +2670,13 @@ def updateOptionAnswer(chosenID, chosen, option):
 
 
 @st.fragment
-def updateRadioAnswer(chosenID):
-    if st.session_state.radioChosen is not None:
-        if "正确" in st.session_state.radioChosen:
+def updateRadioAnswer(chosenID, radio_num):
+    if st.session_state[radio_num] is not None:
+        if "正确" in st.session_state[radio_num]:
             st.session_state.answer = 1
         else:
             st.session_state.answer = 0
         st.session_state.radioCompleted = True
-        updateAnswer(chosenID)
-
-
-@st.fragment
-def updateRadioAnswer2(chosenID):
-    if st.session_state.radioChosen2 is not None:
-        if "正确" in st.session_state.radioChosen2:
-            st.session_state.answer = 1
-        else:
-            st.session_state.answer = 0
         updateAnswer(chosenID)
 
 
@@ -2824,19 +2814,18 @@ def exam(row):
         with radioArea.container():
             option = ["A. 正确", "B. 错误"]
             if row[6] != "" and row[6] is not None:
-                st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
+                st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen0", on_change=updateRadioAnswer, args=(row[0], 'radioChosen0',), label_visibility="collapsed", horizontal=True)
             else:
-                st.radio(" ", option, index=None, key="radioChosen", on_change=updateRadioAnswer, args=(row[0],), label_visibility="collapsed", horizontal=True)
-            if row[6] != "" and row[6] is not None and st.session_state.radioChosen is None:
+                st.radio(" ", option, index=None, key="radioChosen1", on_change=updateRadioAnswer, args=(row[0], 'radioChosen1',), label_visibility="collapsed", horizontal=True)
+            if row[6] != "" and row[6] is not None and st.session_state.radioChosen0 is None:
                 st.write(f":red[**你已选择:** ] :blue[[**{option[int(row[6]) ^ 1][0]}**]]")
-            #st.write(st.session_state.radioChosen)
         if st.session_state.radioCompleted:
             radioArea.empty()
             st.session_state.radioCompleted = False
             sql = f"SELECT userAnswer from {st.session_state.examFinalTable} where ID = {row[0]}"
             tempUserAnswer = execute_sql(cur, sql)[0][0]
             if tempUserAnswer != "":
-                st.radio(" ", option, index=int(tempUserAnswer) ^ 1, key="radioChosen2", on_change=updateRadioAnswer2, args=(row[0],), label_visibility="collapsed", horizontal=True)
+                st.radio(" ", option, index=int(tempUserAnswer) ^ 1, key="radioChosen2", on_change=updateRadioAnswer, args=(row[0], 'radioChosen2',), label_visibility="collapsed", horizontal=True)
             radioArea.empty()
     elif row[4] == '填空题':
         orgOption = row[6].replace("；", ";").split(";")
