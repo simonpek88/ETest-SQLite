@@ -2579,7 +2579,7 @@ def score_dialog(userScore, passScore):
         st.balloons()
     else:
         st.subheader("考试结果: :red[未通过] 🤪")
-        #st.snow()
+        st.snow()
     if st.session_state.examType == "training":
         st.write("练习模式成绩不计入记录")
     if st.session_state.examType == "exam" and st.session_state.calcScore:
