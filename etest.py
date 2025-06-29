@@ -2810,23 +2810,11 @@ def exam(row):
             else:
                 st.checkbox(f"{value}", value=False, key=f"moption_{index}", on_change=updateMOptionAnswer, args=(row,))
     elif row[4] == '判断题':
-        radioArea = st.empty()
-        with radioArea.container():
-            option = ["A. 正确", "B. 错误"]
-            if row[6] != "" and row[6] is not None:
-                st.radio(" ", option, index=int(row[6]) ^ 1, key="radioChosen0", on_change=updateRadioAnswer, args=(row[0], 'radioChosen0',), label_visibility="collapsed", horizontal=True)
-            else:
-                st.radio(" ", option, index=None, key="radioChosen1", on_change=updateRadioAnswer, args=(row[0], 'radioChosen1',), label_visibility="collapsed", horizontal=True)
-            if row[6] != "" and row[6] is not None and st.session_state.radioChosen0 is None:
-                st.write(f":red[**你已选择:** ] :blue[[**{option[int(row[6]) ^ 1][0]}**]]")
-        if st.session_state.radioCompleted:
-            radioArea.empty()
-            st.session_state.radioCompleted = False
-            sql = f"SELECT userAnswer from {st.session_state.examFinalTable} where ID = {row[0]}"
-            tempUserAnswer = execute_sql(cur, sql)[0][0]
-            if tempUserAnswer != "":
-                st.radio(" ", option, index=int(tempUserAnswer) ^ 1, key="radioChosen2", on_change=updateRadioAnswer, args=(row[0], 'radioChosen2',), label_visibility="collapsed", horizontal=True)
-            radioArea.empty()
+        option = ["A. 正确", "B. 错误"]
+        if row[6] != "" and row[6] is not None:
+            st.radio(" ", option, index=int(row[6]) ^ 1, key=f"radioChosen_{row[0]}_0", on_change=updateRadioAnswer, args=(row[0], f"radioChosen_{row[0]}_0",), label_visibility="collapsed", horizontal=True)
+        else:
+            st.radio(" ", option, index=None, key=f"radioChosen_{row[0]}_1", on_change=updateRadioAnswer, args=(row[0], f"radioChosen_{row[0]}_1",), label_visibility="collapsed", horizontal=True)
     elif row[4] == '填空题':
         orgOption = row[6].replace("；", ";").split(";")
         textAnswerArea = st.empty()
@@ -3087,7 +3075,7 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['New']} 鉴于sqlite3数据库文件被多个用户同时访问时，可能会出现错误，现将数据库改为MySQL")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修复判断题答题时不显示已作的答案, 并优化处理过程")
     components.html(infoStr, height=340)
 
 
