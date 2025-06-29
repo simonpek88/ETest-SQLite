@@ -2442,7 +2442,7 @@ def training():
                     row = execute_sql(cur, sql)[0]
                     if uCCT == 0:
                         if each == "公共题库":
-                            generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=True))
+                            generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=False))
                         else:
                             generPack.append(ddCol1.checkbox(f"**:blue[{row[0]}]**", value=False))
                     elif uCCT == 1:
@@ -3871,11 +3871,8 @@ cur = conn.cursor()
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
-# noinspection PyRedeclaration
 APPNAME = "调控中心安全生产业务考试系统"
-# noinspection PyRedeclaration
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
-# noinspection PyRedeclaration
 UPDATETYPE = {"New": "✨", "Optimize": "🚀", "Fix": "🐞"}
 selected = None
 if "logged_in" not in st.session_state:

@@ -6,10 +6,10 @@ import random
 import time
 from hashlib import md5
 
-import qianfan  # type: ignore
+import qianfan
 from Crypto import Random
 from Crypto.Cipher import AES
-from openai import OpenAI  # type: ignore
+from openai import OpenAI
 
 from mysql_pool import get_connection
 
