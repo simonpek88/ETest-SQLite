@@ -16,7 +16,7 @@
 ## Install
 
 1. 下载并安装[Python](https://www.python.org/)(3.9<=版本<=3.13)
-2. 下载并安装[MySQL](https://dev.mysql.com/downloads/mysql/)(8.0.42)
+2. 下载并安装[MySQL](https://dev.mysql.com/downloads/mysql/)(8.4.5)
 3. 克隆仓库到本地或者解压提供的源代码包
 4. 配置环境变量, 将Python和Streamlit的安装路径添加到环境变量中
 5. 安装依赖
