@@ -1667,7 +1667,8 @@ def displayUserRanking():
     if boardType == "个人榜":
         sql = "SELECT userCName, StationCN, userRanking from users where userRanking > 0 order by userRanking DESC, ID limit 0, 10"
     elif boardType == "站室榜":
-        sql = "SELECT StationCN, ID, sum(userRanking) as Count from users GROUP BY StationCN having Count > 0 order by Count DESC"
+        # 为方便图表自动化处理, 所以添加了个无意义字段
+        sql = "SELECT StationCN, StationCN, sum(userRanking) as Count from users GROUP BY StationCN having Count > 0 order by Count DESC"
     else:
         sql = ""
     rows = execute_sql(cur, sql)
@@ -1695,7 +1696,7 @@ def displayUserRanking():
             for row in rows:
                 sql = f"SELECT lat, lng, Station from stations where Station = '{row[0]}'"
                 tmpTable = execute_sql(cur, sql)
-                for i in range(row[2]):
+                for i in range(int(row[2])):
                     data.append([round(tmpTable[0][0] / 100, 2), round(tmpTable[0][1] / 100, 2)])
             chart_data = pd.DataFrame(data, columns=["lat", "lng"],)
             st.pydeck_chart(
