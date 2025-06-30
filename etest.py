@@ -208,7 +208,6 @@ def get_userCName(searchUserCName=""):
 @st.fragment
 def login():
     # 显示应用名称
-    #st.write("## :blue[专业技能考试系统 - 离线版]")
     st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
 
     # 登录表单容器
@@ -327,8 +326,8 @@ def login():
                         st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
                     sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
                     execute_sql_and_commit(conn, cur, sql)
-                    #sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
-                    #execute_sql_and_commit(conn, cur, sql)
+                    sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
+                    execute_sql_and_commit(conn, cur, sql)
                     ClearTables()
                     # transform Key to Encrypt(temporary)
                     #print(getUserEDKeys("", "enc"))
