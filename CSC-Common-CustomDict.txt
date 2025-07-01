@@ -5,6 +5,7 @@ backcolor
 backpng
 celerybeat
 cmder
+cnaf
 Codegeex
 Codejock
 codestral
