@@ -17,9 +17,6 @@ def getVerInfo():
     except Exception as e:
 
         return 0, 0, 0
-    finally:
-        cur3.close()
-        conn3.close()
 
 
 def ClearTables():
@@ -112,9 +109,6 @@ def ClearTables():
 
     except Exception as e:
         conn3.rollback()
-    finally:
-        cur3.close()
-        conn3.close()
 
 
 def clearModifyQues(quesID, tablename, mRow):
@@ -124,8 +118,6 @@ def clearModifyQues(quesID, tablename, mRow):
         execute_sql_and_commit(conn3, cur3, sql)
     sql = f"DELETE from studyinfo where cid = {quesID} and quesTable = '{tablename}'"
     execute_sql_and_commit(conn3, cur3, sql)
-    cur3.close()
-    conn3.close()
 
 
 def reviseQues():
@@ -136,8 +128,6 @@ def reviseQues():
         for each2 in ['( )', '(  )', '(   )', '(    )']:
             sql = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
             execute_sql_and_commit(conn3, cur3, sql)
-    cur3.close()
-    conn3.close()
 
 
 def getStationCNALL(flagALL=False):
@@ -149,10 +139,36 @@ def getStationCNALL(flagALL=False):
     for row in rows:
         StationCNamePack.append(row[0])
 
-    cur3.close()
-    conn3.close()
-
     return StationCNamePack
+
+
+def get_userName(searchUserName=""):
+    searchUserNameInfo = ""
+    if len(searchUserName) > 1:
+        sql = f"SELECT userName, userCName, StationCN from users where userName like '{searchUserName}%'"
+        rows = execute_sql(cur3, sql)
+        for row in rows:
+            searchUserNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
+    if searchUserNameInfo != "":
+        searchUserNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
+
+    return searchUserNameInfo
+
+
+def get_userCName(searchUserCName=""):
+    searchUserCNameInfo = ""
+    if len(searchUserCName) > 1:
+        sql = f"SELECT userName, userCName, StationCN from users where userCName like '{searchUserCName}%'"
+        rows = execute_sql(cur3, sql)
+        for row in rows:
+            searchUserCNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
+    else:
+        searchUserCNameInfo = ":red[**请输入至少2个字**]"
+    if searchUserCNameInfo != "" and "请输入至少2个字" not in searchUserCNameInfo:
+        searchUserCNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
+
+    return searchUserCNameInfo
+
 
 conn3 = get_connection()
 cur3 = conn3.cursor()

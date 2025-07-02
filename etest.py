@@ -34,6 +34,8 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
+from commModules import (ClearTables, clearModifyQues, get_userCName,
+                         get_userName, getStationCNALL, getVerInfo, reviseQues)
 from mysql_pool import get_connection
 from word2picture import tywx_generate_image, xfxh_generate_image
 
@@ -55,7 +57,6 @@ def updateKeyAction(keyAction):
         execute_sql_and_commit(conn, cur, sql)
 
 
-# noinspection PyShadowingNames
 @st.fragment
 def getUserCName(sUserName, sType="Digit"):
     errorInfo = ""
@@ -117,7 +118,6 @@ def delOutdatedTable():
             raise ValueError(f"Invalid table name detected: {table_name}")
 
 
-# noinspection PyShadowingNames
 def changePassword():
     # 显示密码修改页面标题
     st.write("### :red[密码修改]")
@@ -173,36 +173,6 @@ def changePassword():
 
     # 记录用户密码修改操作及时间
     updateActionUser(st.session_state.userName, "密码修改", st.session_state.loginTime)
-
-
-# noinspection PyShadowingNames
-@st.cache_data
-def get_userName(searchUserName=""):
-    searchUserNameInfo = ""
-    if len(searchUserName) > 1:
-        sql = f"SELECT userName, userCName, StationCN from users where userName like '{searchUserName}%'"
-        rows = execute_sql(cur, sql)
-        for row in rows:
-            searchUserNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
-    if searchUserNameInfo != "":
-        searchUserNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
-    return searchUserNameInfo
-
-
-@st.cache_data
-def get_userCName(searchUserCName=""):
-    searchUserCNameInfo = ""
-    if len(searchUserCName) > 1:
-        sql = f"SELECT userName, userCName, StationCN from users where userCName like '{searchUserCName}%'"
-        rows = execute_sql(cur, sql)
-        for row in rows:
-            searchUserCNameInfo += f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n"
-    else:
-        searchUserCNameInfo = ":red[**请输入至少2个字**]"
-    if searchUserCNameInfo != "" and "请输入至少2个字" not in searchUserCNameInfo:
-        searchUserCNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
-
-    return searchUserCNameInfo
 
 
 @st.fragment
@@ -409,22 +379,6 @@ def aboutInfo():
     sql = f"UPDATE verinfo set pyMC = pyMC + 1 where pyFile = 'thumbs-up-stars' and pyLM = {stars}"
     execute_sql_and_commit(conn, cur, sql)
     updateActionUser(st.session_state.userName, "浏览[关于]信息", st.session_state.loginTime)
-
-
-# noinspection PyBroadException,PyUnusedLocal
-def getVerInfo():
-    try:
-        sql = "SELECT Sum(pyMC) from verinfo"
-        verinfo = execute_sql(cur, sql)[0][0]
-        sql = "SELECT Max(pyLM) from verinfo"
-        verLM = execute_sql(cur, sql)[0][0]
-        sql = "SELECT Sum(pyLM * pyMC), Sum(pyMC) from verinfo where pyFile = 'thumbs-up-stars'"
-        tmpTable = execute_sql(cur, sql)
-        likeCM = round(tmpTable[0][0] / tmpTable[0][1], 1)
-
-        return verinfo, verLM, likeCM
-    except Exception as e:
-        return 0, 0, 0
 
 
 def display_pypi():
@@ -634,102 +588,6 @@ def examResulttoExcel():
                     st.error(f":red[[{searchExamName}]] 考试成绩导出失败")
 
 
-def ClearTables():
-    try:
-        # 删除 questions 表中的重复记录
-        sql_delete_questions = """
-            DELETE q1
-            FROM questions q1
-            JOIN questions q2
-            ON q1.Question = q2.Question
-            AND q1.qType = q2.qType
-            AND q1.StationCN = q2.StationCN
-            AND q1.chapterName = q2.chapterName
-            WHERE q1.id > q2.id;
-        """
-        cur.execute(sql_delete_questions)
-
-        # 删除 commquestions 表中的重复记录
-        sql_delete_commquestions = """
-            DELETE c1
-            FROM commquestions c1
-            JOIN commquestions c2
-            ON c1.Question = c2.Question AND c1.qType = c2.qType
-            WHERE c1.id > c2.id;
-        """
-        cur.execute(sql_delete_commquestions)
-
-        # 删除 morepractise 表中的重复记录
-        sql_delete_morepractise = """
-            DELETE m1
-            FROM morepractise m1
-            JOIN morepractise m2
-            ON m1.Question = m2.Question AND m1.qType = m2.qType AND m1.userName = m2.userName
-            WHERE m1.id > m2.id;
-        """
-        cur.execute(sql_delete_morepractise)
-
-        # 删除 questionaff 表中的重复记录
-        sql_delete_questionaff = """
-            DELETE a1
-            FROM questionaff a1
-            JOIN questionaff a2
-            ON a1.chapterName = a2.chapterName AND a1.StationCN = a2.StationCN
-            WHERE a1.id > a2.id;
-        """
-        cur.execute(sql_delete_questionaff)
-
-        # 删除不在 questions 表中的 chapterName
-        sql_delete_invalid_chapters = """
-            DELETE FROM questionaff
-            WHERE chapterName NOT IN ('公共题库', '错题集', '关注题集')
-            AND chapterName NOT IN (SELECT DISTINCT(chapterName) FROM questions);
-        """
-        cur.execute(sql_delete_invalid_chapters)
-
-        # 更新 users 表中的用户中文名，去除空格
-        sql_update_users = """
-            UPDATE users
-            SET userCName = REPLACE(userCName, ' ', '')
-            WHERE userCName LIKE '% %';
-        """
-        cur.execute(sql_update_users)
-
-        # 去除问题字段中的换行符 - questions
-        sql_update_questions = """
-            UPDATE questions
-            SET Question = REPLACE(Question, '\n', '')
-            WHERE Question LIKE '%\n%';
-        """
-        cur.execute(sql_update_questions)
-
-        # 去除问题字段中的换行符 - commquestions
-        sql_update_commquestions = """
-            UPDATE commquestions
-            SET Question = REPLACE(Question, '\n', '')
-            WHERE Question LIKE '%\n%';
-        """
-        cur.execute(sql_update_commquestions)
-
-        # 去除问题字段中的换行符 - morepractise
-        sql_update_morepractise = """
-            UPDATE morepractise
-            SET Question = REPLACE(Question, '\n', '')
-            WHERE Question LIKE '%\n%';
-        """
-        cur.execute(sql_update_morepractise)
-
-        # 提交事务
-        conn.commit()
-
-    except Exception as e:
-        conn.rollback()
-    finally:
-        pass
-    # 弹出提示信息，表示站室题库/公共题库/错题集/章节信息库记录清理完成
-    #st.toast("站室题库/公共题库/错题集/章节信息库 记录清理完成")
-
-
 def create_element(name):
     return OxmlElement(name)
 
@@ -738,7 +596,6 @@ def create_attribute(element, name, value):
     element.set(qn(name), value)
 
 
-# noinspection PyProtectedMember
 def add_page_number(run):
     fldChar1 = create_element('w:fldChar')
     create_attribute(fldChar1, 'w:fldCharType', 'begin')
@@ -755,7 +612,6 @@ def add_page_number(run):
     run._r.append(fldChar2)
 
 
-# noinspection PyProtectedMember,PyTypeChecker
 def questoWord():
     allType, stationCName, chapterNamePack, outChapterName = [], [], [], []
     st.subheader("题库导出", divider="blue")
@@ -1024,7 +880,6 @@ def delExamTable():
         st.info("暂无试卷")
 
 
-# noinspection PyUnboundLocalVariable
 def dbinputSubmit(tarTable, orgTable):
     tmpTable, sql, maxcol = "", "", 0
 
@@ -1252,7 +1107,6 @@ def resetActiveUser():
     updateKeyAction("重置所有用户状态")
 
 
-# noinspection PyUnboundLocalVariable
 def inputWord():
     #doc = Document("./QuesRefer/2023年全国特种设备作业人员考试题库附答案.docx")
     doc = Document("./QuesRefer/2023年特种设备作业安全管理人员证考试题库(通用版).docx")
@@ -1381,7 +1235,6 @@ def resetTableID():
     updateKeyAction("重置题库ID")        #st.toast(f"重置 {tablename} 表ID完毕")
 
 
-# noinspection PyShadowingNames,PyUnboundLocalVariable
 def AIGenerQues():
     quesPack, chars, chapterPack, dynaQuesType, generQuesCount = [], ["A", "B", "C", "D", "E", "F", "G", "H"], [], ["单选题", "多选题", "判断题", "填空题"], 0
     StationCNPack, chosenStationCN = [], st.session_state.StationCN
@@ -1654,7 +1507,6 @@ def userRanking():
         updateActionUser(st.session_state.userName, f"证书及榜单-{study}", st.session_state.loginTime)
 
 
-# noinspection PyShadowingNames
 def displayUserRanking():
     xData, yData, boardInfo = [], [], ""
     col1, col2, col3 = st.columns(3)
@@ -2060,7 +1912,6 @@ def studyResetAction():
     updateKeyAction("重置学习记录")
 
 
-# noinspection PyTypeChecker
 def studyinfoDetail():
     # 创建三列布局
     scol1, scol2, scol3 = st.columns(3)
@@ -2348,20 +2199,10 @@ def actionDelQM(quesID, tablename, mRow):
     st.toast("试题删除成功")
 
 
-def clearModifyQues(quesID, tablename, mRow):
-    delTablePack = ["morepractise", "favques"]
-    for each in delTablePack:
-        sql = f"DELETE from {each} where Question = '{mRow[0]}' and qOption = '{mRow[1]}' and qAnswer = '{mRow[2]}' and qType = '{mRow[3]}'"
-        execute_sql_and_commit(conn, cur, sql)
-    sql = f"DELETE from studyinfo where cid = {quesID} and quesTable = '{tablename}'"
-    execute_sql_and_commit(conn, cur, sql)
-
-
 def aboutReadme():
     st.markdown(open("./README.md", "r", encoding="utf-8").read())
 
 
-# noinspection PyUnboundLocalVariable
 def training():
     flagProc, failInfo = True, ""
     if st.session_state.examType == "exam":
@@ -2508,16 +2349,6 @@ def training():
                 st.error("题库生成试题不满足要求, 请检查考试参数设置, 或个别题型试题候选数量不够, 或请联系管理员")
     else:
         st.error(f":red[⚠️] **{st.session_state.StationCN}试卷生成失败, :red[{failInfo[:-1]}] 试题数量不足, 请检查题库设置或增加以上题型候选试题**")
-
-
-def reviseQues():
-    for each in ["questions", "commquestions"]:
-        for each2 in [['（', '('], ['）', ')']]:
-            sql = f"UPDATE {each} set Question = replace(Question, '{each2[0]}', '{each2[1]}') where qType = '填空题' and Question like '%{each2[0]}%'"
-            execute_sql_and_commit(conn, cur, sql)
-        for each2 in ['( )', '(  )', '(   )', '(    )']:
-            sql = f"UPDATE {each} set Question = replace(Question, '{each2}', '()') where qType = '填空题' and Question like '%{each2}'"
-            execute_sql_and_commit(conn, cur, sql)
 
 
 @st.fragment
@@ -2750,7 +2581,6 @@ def addFavQues(favRow):
         st.toast("已添加到关注题集")
 
 
-# noinspection PyUnboundLocalVariable
 @st.fragment
 def exam(row):
     option, AIModelName, AIOption, AIOptionIndex = [], "", [], 0
@@ -2950,7 +2780,6 @@ def getStandardAnswer(qRow):
     return standardAnswer
 
 
-# noinspection PyTypeChecker
 @st.fragment
 def updateTA():
     textAnswerPack = []
@@ -3306,18 +3135,6 @@ def addUser():
             st.error(f"ID: [{userName}] 姓名: [{userCName}] 类型: [{ut}] 站室: [{station}] 用户添加失败")
 
 
-def getStationCNALL(flagALL=False):
-    StationCNamePack = []
-    if flagALL:
-        StationCNamePack.append("全站")
-    sql = "SELECT Station from stations order by ID"
-    rows = execute_sql(cur, sql)
-    for row in rows:
-        StationCNamePack.append(row[0])
-
-    return StationCNamePack
-
-
 def updateDAParam(updateParamType):
     for key in st.session_state.keys():
         if key.startswith("dasetup_"):
@@ -3369,7 +3186,6 @@ def updateAIModel2(AIOption, AIOptionIndex):
     execute_sql_and_commit(conn, cur, sql)
 
 
-# noinspection PyTypeChecker
 def highlight_max(x, forecolor='black', backcolor='yellow'):
     is_max = x == x.max()
 
@@ -3460,7 +3276,6 @@ def queryExamAnswer(tablename):
         st.warning("请设置查询类型")
 
 
-# noinspection PyTypeChecker
 def queryExamResult():
     # 初始化查询选项列表
     searchOption = []
