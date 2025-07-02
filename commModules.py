@@ -170,5 +170,23 @@ def get_userCName(searchUserCName=""):
     return searchUserCNameInfo
 
 
+def get_update_content(file_path):
+    update_type, update_content = '', ''
+    with open(file_path, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+    file.close()
+    flag_proc = False
+    for line in lines[:30]:
+        if line.startswith("### 版本"):
+            flag_proc = True
+        if flag_proc:
+            if line.startswith("- "):
+                update_type = line[2:-1]
+            elif line.startswith("  - "):
+                update_content = line[4:]
+                break
+
+    return update_type, update_content
+
 conn3 = get_connection()
 cur3 = conn3.cursor()

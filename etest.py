@@ -34,8 +34,9 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
-from commModules import (ClearTables, clearModifyQues, get_userCName,
-                         get_userName, getStationCNALL, getVerInfo, reviseQues)
+from commModules import (ClearTables, clearModifyQues, get_update_content,
+                         get_userCName, get_userName, getStationCNALL,
+                         getVerInfo, reviseQues)
 from mysql_pool import get_connection
 from word2picture import tywx_generate_image, xfxh_generate_image
 
@@ -2904,7 +2905,8 @@ def displayAppInfo():
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
-    infoStr = infoStr.replace("更新内容", f"更新内容: {UPDATETYPE['Fix']} 修复判断题答题时不显示已作的答案, 并优化处理过程")
+    update_type, update_content = get_update_content(f"./CHANGELOG.md")
+    infoStr = infoStr.replace("更新内容", f"更新内容: {update_type} - {update_content}")
     components.html(infoStr, height=340)
 
 
@@ -3651,7 +3653,7 @@ def aiGenerate_Image():
         AIGMInfo.empty()
 
 
-global APPNAME, EMOJI, UPDATETYPE, STATIONPACK
+global APPNAME, EMOJI, STATIONPACK
 conn = get_connection()
 cur = conn.cursor()
 
@@ -3659,7 +3661,6 @@ st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="mediu
 
 APPNAME = "调控中心安全生产业务考试系统"
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
-UPDATETYPE = {"New": "✨", "Optimize": "🚀", "Fix": "🐞"}
 selected = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
