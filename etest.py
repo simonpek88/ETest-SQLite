@@ -3098,12 +3098,6 @@ def submit_dialog(prompt):
         st.rerun()
 
 
-def ClearStr(strValue):
-    strValue = strValue.replace("\n", "").replace("\t", "").strip()
-
-    return strValue
-
-
 @st.fragment
 def addExamIDD():
     flagSuccess, examDateStr = False, ""
@@ -3113,7 +3107,7 @@ def addExamIDD():
         # 获取考试名称输入
         examName = st.text_input("考试名称", value="", help="名称不能设置为练习题库(此为保留题库)")
         # 清理考试名称字符串
-        examName = ClearStr(examName)
+        examName = examName.replace("\n", "").replace("\t", "").strip()
         # 获取考试有效期输入
         examDate = st.date_input("请设置考试有效期", min_value=datetime.date.today() + datetime.timedelta(days=1), max_value=datetime.date.today() + datetime.timedelta(days=180), value=datetime.date.today() + datetime.timedelta(days=3), help="考试有效期最短1天, 最长180天, 默认3天")
         # 检查考试名称和有效期是否有效
@@ -3167,7 +3161,7 @@ def addStation():
         # 输入站室名称
         sn = st.text_input("站室名称", value="")
         # 清除输入字符串中的多余空格
-        sn = ClearStr(sn)
+        sn = sn.replace("\n", "").replace("\t", "").strip()
         if sn:
             # 添加按钮
             buttonSubmit = st.button("添加站室名称")
@@ -3252,7 +3246,7 @@ def addUser():
         # 创建一个开关，用于选择用户类型（管理员/普通用户）
         userType = sac.switch(label="管理员", on_label="On", align='start', size='md', value=False)
         # 清除用户姓名中的多余空格
-        userCName = ClearStr(userCName)
+        userCName = userCName.replace("\n", "").replace("\t", "").strip()
         # 检查所有必填项是否都已填写
         if userName and userCName and userPassword1 and userPassword2 and userPassword1 != "" and userPassword2 != "":
             # 创建一个提交按钮

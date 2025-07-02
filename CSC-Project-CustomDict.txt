@@ -15,6 +15,7 @@ breakline
 clearex
 clocktype
 Cmder
+CNALL
 commquestions
 createtextfile
 crsetup
