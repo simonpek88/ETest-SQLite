@@ -887,11 +887,11 @@ def dbinputSubmit(tarTable, orgTable):
     # 根据目标表名设置不同的表名和SQL语句
     if tarTable == "站室题库":
         tablename = "questions"
-        sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis, StationCN, chapterName) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         maxcol = 7
     elif tarTable == "公共题库":
         tablename = "commquestions"
-        sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis) VALUES (?, ?, ?, ?, ?)"
+        sql = f"INSERT INTO {tablename}(Question, qOption, qAnswer, qType, qAnalysis) VALUES (%s, %s, %s, %s, %s)"
         maxcol = 5
 
     # 如果SQL语句不为空，则执行以下操作
@@ -912,15 +912,11 @@ def dbinputSubmit(tarTable, orgTable):
             for row in datainlist.iter_rows(min_row=2, max_col=maxcol, max_row=datainlist.max_row):
                 singleQues = [cell.value for cell in row]
                 if singleQues[0] is not None:
-                    cur.execute(sql, singleQues)
+                    cur.execute(sql, tuple(singleQues))
                     conn.commit()
 
             # 关闭Excel文件
             listinsheet.close()
-
-            # 如果文件名包含"_用户上传_"，则删除该文件
-            if each.find("_用户上传_") != -1:
-                os.remove(f"./InputQues/{each}.xlsx")
 
             # 拼接已处理的文件名
             tmpTable = tmpTable + each + ", "

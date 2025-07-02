@@ -18,17 +18,17 @@ def getVerInfo():
     """
     try:
         # 查询pyMC字段总和
-        sql = "SELECT Sum(pyMC) FROM verinfo"
+        sql = "SELECT SUM(pyMC) FROM verinfo"
         result = execute_sql(cur3, sql)
         verinfo = result[0][0] if result else 0
 
         # 查询pyLM字段最大值
-        sql = "SELECT Max(pyLM) FROM verinfo"
+        sql = "SELECT MAX(pyLM) FROM verinfo"
         result = execute_sql(cur3, sql)
         verLM = result[0][0] if result else 0
 
         # 查询特定文件记录的pyLM * pyMC总和以及pyMC总和
-        sql = "SELECT Sum(pyLM * pyMC), Sum(pyMC) FROM verinfo WHERE pyFile = ?"
+        sql = "SELECT SUM(pyLM * pyMC), SUM(pyMC) FROM verinfo WHERE pyFile = %s"
         tmpTable = execute_sql(cur3, sql, ('thumbs-up-stars',))
 
         # 防止除零错误，计算likeCM
@@ -141,15 +141,18 @@ def clearModifyQues(quesID, tablename, mRow):
     question, qOption, qAnswer, qType = mRow[:4]
 
     # 使用参数化查询防止SQL注入
-    delete_sql_template = "DELETE FROM {table} WHERE Question = ? AND qOption = ? AND qAnswer = ? AND qType = ?"
+    delete_sql_template = "DELETE FROM {table} WHERE Question = %s AND qOption = %s AND qAnswer = %s AND qType = %s"
 
     try:
         for each in delTablePack:
+            # 确保表名安全，避免SQL注入
+            if each not in ["morepractise", "favques"]:
+                raise ValueError("Invalid table name: {}".format(each))
             sql = delete_sql_template.format(table=each)
             execute_sql_and_commit(conn3, cur3, sql, (question, qOption, qAnswer, qType))
 
         # 删除studyinfo表中的记录
-        studyinfo_sql = "DELETE FROM studyinfo WHERE cid = ? AND quesTable = ?"
+        studyinfo_sql = "DELETE FROM studyinfo WHERE cid = %s AND quesTable = %s"
         execute_sql_and_commit(conn3, cur3, studyinfo_sql, (quesID, tablename))
 
     except Exception as e:
@@ -163,14 +166,16 @@ def reviseQues():
     for table_name in ["questions", "commquestions"]:
         # 替换全角括号
         for char_pair in [['（', '('], ['）', ')']]:
-            sql = f"UPDATE {table_name} SET Question = REPLACE(Question, ?, ?) WHERE qType = '填空题' AND Question LIKE '%' || ? || '%'"
+            # 使用 CONCAT 匹配包含通配符的模式，并使用 %s 占位符
+            sql = f"UPDATE {table_name} SET Question = REPLACE(Question, %s, %s) WHERE qType = '填空题' AND Question LIKE CONCAT('%%', %s, '%%')"
             params = (char_pair[0], char_pair[1], char_pair[0])
             execute_sql_and_commit(conn3, cur3, sql, params)
 
     # 替换带空格的括号为标准括号
     for table_name in ["questions", "commquestions"]:
         for space_parentheses in ['( )', '(  )', '(   )', '(    )']:
-            sql = f"UPDATE {table_name} SET Question = REPLACE(Question, ?, '()') WHERE qType = '填空题' AND Question LIKE '%' || ?"
+            # 使用 CONCAT 进行模式匹配
+            sql = f"UPDATE {table_name} SET Question = REPLACE(Question, %s, '()') WHERE qType = '填空题' AND Question LIKE CONCAT('%%', %s, '%%')"
             params = (space_parentheses, space_parentheses)
             execute_sql_and_commit(conn3, cur3, sql, params)
 
@@ -202,21 +207,21 @@ def get_userName(searchUserName=""):
     searchUserNameInfo = ""
     if len(searchUserName) > 1:
         # 构建SQL查询语句，使用参数化查询防止SQL注入
-        sql = "SELECT userName, userCName, StationCN FROM users WHERE userName LIKE ?"
-        rows = execute_sql(cur3, sql, (f"{searchUserName} %",))
+        sql = "SELECT userName, userCName, StationCN FROM users WHERE userName LIKE %s"
+        params = (f"%{searchUserName}%",)  # MySQL 使用 % 作为通配符，并用 %s 占位符
+        rows = execute_sql(cur3, sql, params)
         if rows:
             # 格式化查询结果，使用颜色标记不同字段
             searchUserNameInfo = "\n\n".join(
                 f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]" for row in rows
             )
+
     # 添加最终提示信息
     if searchUserNameInfo:
         searchUserNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
 
     return searchUserNameInfo
 
-
-# 常量定义（建议放在文件顶部或专用配置模块中）
 MIN_SEARCH_LENGTH_TIP = ":red[**请输入至少2个字**]"
 PLEASE_FILL_FULL_CODE_TIP = "\n请在用户编码栏中填写查询出的完整编码"
 
@@ -234,8 +239,11 @@ def get_userCName(searchUserCName=""):
     """
     searchUserCNameInfo = ""
     if len(searchUserCName) > 1:
-        sql = "SELECT userName, userCName, StationCN FROM users WHERE userCName LIKE ?"
-        rows = execute_sql(cur3, sql, (f"{searchUserCName}%%",))  # 使用参数化查询防止SQL注入
+        sql = "SELECT userName, userCName, StationCN FROM users WHERE userCName LIKE %s"
+        # 使用 %s 占位符，并在参数中添加通配符 %
+        params = (f"%{searchUserCName}%",)
+        rows = execute_sql(cur3, sql, params)
+
         result_lines = [f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n" for row in rows]
         searchUserCNameInfo = ''.join(result_lines)
     else:
@@ -278,6 +286,7 @@ def get_update_content(file_path):
                 break
 
     return update_type, update_content
+
 
 conn3 = get_connection()
 cur3 = conn3.cursor()
