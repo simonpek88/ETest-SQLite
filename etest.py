@@ -1184,52 +1184,78 @@ def inputWord():
 
 
 def resetTableID():
+    allowed_tables = {
+        "questions", "commquestions", "morepractise", "favques",
+        "examidd", "examresult", "questionaff", "studyinfo",
+        "users", "keyactionlog", "setup_默认"
+    }
+
+    def is_valid_table(tablename):
+        # 简单白名单 + 动态 setup 表检查
+        if tablename.startswith("setup_"):
+            return True
+        return tablename in allowed_tables
+
     tables = [
         "questions", "commquestions", "morepractise", "favques",
         "examidd", "examresult", "questionaff", "studyinfo",
         "users", "keyactionlog", "setup_默认", f"setup_{st.session_state.StationCN}"
     ]
 
-    for tablename in tables:
-        try:
+    conn.begin()  # 显式开启事务
+    try:
+        for tablename in tables:
+            if not is_valid_table(tablename):
+                st.error(f"非法表名: {tablename}")
+                continue
+
+            quoted_table = f"`{tablename}`"
+
             # 获取当前表的所有ID并按顺序排序
-            sql = f"SELECT ID FROM {tablename} ORDER BY ID"
+            sql = f"SELECT ID FROM {quoted_table} ORDER BY ID"
             cur.execute(sql)
             rows = cur.fetchall()
 
             if not rows:
                 continue
 
-            # 更新ID字段为连续值
+            # 批量更新准备
+            updates = []
+            studyinfo_updates = []
+
             for i, row in enumerate(rows):
                 new_id = i + 1
                 old_id = row['ID']
+                updates.append((new_id, old_id))
 
-                update_sql = f"UPDATE {tablename} SET ID = {new_id} WHERE ID = {old_id}"
-                cur.execute(update_sql)
-
-                # 如果是 questions 或 commquestions，还需更新 studyinfo 表中的 cid
                 if tablename in ["questions", "commquestions"]:
-                    update_studyinfo_sql = (
-                        f"UPDATE studyinfo SET cid = {new_id} "
-                        f"WHERE cid = {old_id} AND questable = '{tablename}'"
-                    )
-                    cur.execute(update_studyinfo_sql)
+                    studyinfo_updates.append((new_id, old_id))
 
-            # 更新自增序列（MySQL 使用 AUTO_INCREMENT）
-            if rows:
-                last_id = len(rows)
-                alter_sql = f"ALTER TABLE {tablename} AUTO_INCREMENT = {last_id + 1}"
-                cur.execute(alter_sql)
+            # 执行主表ID更新
+            for new_id, old_id in updates:
+                update_sql = f"UPDATE {quoted_table} SET ID = %s WHERE ID = %s"
+                cur.execute(update_sql, (new_id, old_id))
 
-        except Exception as e:
-            conn.rollback()
-            st.error(f"重置 {tablename} 表ID失败: {e}")
-            continue
+            # 执行 studyinfo 表更新
+            for new_id, old_id in studyinfo_updates:
+                update_studyinfo_sql = (
+                    f"UPDATE studyinfo SET cid = %s "
+                    f"WHERE cid = %s AND questable = %s"
+                )
+                cur.execute(update_studyinfo_sql, (new_id, old_id, tablename))
 
-    conn.commit()
-    st.success("题库ID重置成功")
-    updateKeyAction("重置题库ID")        #st.toast(f"重置 {tablename} 表ID完毕")
+            # 更新自增序列
+            last_id = len(rows)
+            alter_sql = f"ALTER TABLE {quoted_table} AUTO_INCREMENT = %s"
+            cur.execute(alter_sql, (last_id + 1,))
+
+        conn.commit()
+        st.success("题库ID重置成功")
+        updateKeyAction("重置题库ID")
+
+    except Exception as e:
+        conn.rollback()
+        st.error(f"重置表ID过程中发生错误: {e}")
 
 
 def AIGenerQues():
