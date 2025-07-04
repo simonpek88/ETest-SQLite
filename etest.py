@@ -395,7 +395,7 @@ def display_pypi():
     with pypi5:
         badge(type="pypi", name="folium")
     with pypi6:
-        badge(type="pypi", name="openai")
+        badge(type="pypi", name="qianfan")
 
 
 def aboutLicense():
