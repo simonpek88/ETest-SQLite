@@ -589,28 +589,33 @@ def examResulttoExcel():
                     st.error(f":red[[{searchExamName}]] 考试成绩导出失败")
 
 
-def create_element(name):
-    return OxmlElement(name)
+def add_page_number(paragraph):
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    run = paragraph.add_run()
+
+    # 插入 "第 "
+    run.add_text("第 ")
+    # 插入 PAGE 字段
+    _new_page_field(run, "PAGE")
+    run.add_text(" 页 / 共 ")
+    # 插入 NUMPAGES 字段
+    _new_page_field(run, "NUMPAGES")
+    run.add_text(" 页")
 
 
-def create_attribute(element, name, value):
-    element.set(qn(name), value)
-
-
-def add_page_number(run):
-    fldChar1 = create_element('w:fldChar')
-    create_attribute(fldChar1, 'w:fldCharType', 'begin')
-
-    instrText = create_element('w:instrText')
-    create_attribute(instrText, 'xml:space', 'preserve')
-    instrText.text = "PAGE"
-
-    fldChar2 = create_element('w:fldChar')
-    create_attribute(fldChar2, 'w:fldCharType', 'end')
-
-    run._r.append(fldChar1)
-    run._r.append(instrText)
-    run._r.append(fldChar2)
+def _new_page_field(run, field_code):
+    """
+    插入 PAGE 或 NUMPAGES 字段到指定 run 中
+    :param run: 要插入的 run 对象
+    :param field_code: 'PAGE' 或 'NUMPAGES'
+    """
+    # 创建 fldSimple 元素
+    fld_elm = OxmlElement('w:fldSimple')
+    # 设置属性
+    fld_elm.set(qn('w:instr'), f'{field_code} \\* MERGEFORMAT')
+    # 添加到 run
+    run._r.append(fld_elm)
 
 
 def questoWord():
@@ -801,8 +806,10 @@ def questoWord():
                                 #textAnalysis.font.underline = True
                                 #textAnalysis.font.italic = True
                         i += 1
-            add_page_number(quesDOC.sections[0].footer.paragraphs[0].add_run())
-            quesDOC.sections[0].footer.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            # 加入页码
+            footer = quesDOC.sections[0].footer
+            paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+            add_page_number(paragraph)
             header = quesDOC.sections[0].header.paragraphs[0]
             header.text = f"{stationCN}\t\t{quesTable}"
             header.style = quesDOC.styles["Header"]
