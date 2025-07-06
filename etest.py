@@ -348,8 +348,8 @@ def aboutInfo():
         st.caption("Streamlit")
         st.image("./Images/logos/streamlit.png")
     with logo3:
-        st.caption("SQLite")
-        st.image("./Images/logos/sqlite.png")
+        st.caption("MySQL")
+        st.image("./Images/logos/mysql.png")
     with logo4:
         st.caption("Pandas")
         st.image("./Images/logos/pandas.png")
@@ -391,8 +391,10 @@ def display_pypi():
     with pypi3:
         badge(type="pypi", name="streamlit_antd_components")
     with pypi4:
-        badge(type="pypi", name="folium")
+        badge(type="pypi", name="plotly")
     with pypi5:
+        badge(type="pypi", name="folium")
+    with pypi6:
         badge(type="pypi", name="qianfan")
 
 

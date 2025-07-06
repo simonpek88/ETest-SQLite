@@ -3,3 +3,6 @@ toolbarMode = "minimal"
 
 [theme]
 base = "light"
+
+[server]
+port = 8501

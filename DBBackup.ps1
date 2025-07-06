@@ -10,7 +10,7 @@ switch ($target.ToLower()) {
         $BACKUP_DIR = "D:\Simon\Codes\ETest-SQLite-VSC\ETest-SQLite\DB\MySQL_Backup"
     }
     "st" {
-        $BACKUP_DIR = "D:\Third\Path\MySQL_Backup"
+        $BACKUP_DIR = "D:\PythonProject\ETest-SQLite\DB\MySQL_Backup"
     }
     default {
         Write-Host "无效参数. 请使用如下参数: simon, cnaf, or st (必须小写)."
