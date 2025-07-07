@@ -178,6 +178,7 @@ def changePassword():
 
 @st.fragment
 def login():
+    st.set_page_config(layout="centered")
     # 显示应用名称
     st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
 
@@ -261,6 +262,7 @@ def login():
                         ClearTables()
                         # transform Key to Encrypt(temporary)
                         #print(getUserEDKeys("", "enc"))
+                        st.set_page_config(layout="wide")
                         st.rerun()
                     else:
                         # 如果密码验证成功但登录失败
@@ -3448,32 +3450,28 @@ def resetPassword():
         # 显示重置用户信息提示
         st.write(":red[**重置用户信息**]")
 
-        # 创建三列布局
-        rCol1, rCol2, rCol3 = st.columns(3)
+        rCol1, rCol2 = st.columns(2)
 
-        # 获取用户编码
-        rUserName = rCol1.number_input("用户编码", value=0)
+        userID, userCName = [], []
+        sql = "SELECT userName, userCName, StationCN from users order by StationCN, userCName"
+        rows = execute_sql(cur, sql)
+        for row in rows:
+            userID.append(row[0])
+            userCName.append(f'{row[1]} - {row[2]}')
+        query_userCName = rCol1.selectbox("请选择用户", userCName, index=None)
+        if query_userCName is not None:
+            rUserName = userID[userCName.index(query_userCName)]
 
-        # 检查用户编码是否不为0
-        if rUserName != 0:
-            # 执行SQL查询用户信息
-            sql = f"SELECT userCName, userType from users where userName = {rUserName}"
-            rows = execute_sql(cur, sql)
+        if query_userCName:
 
-            # 检查是否查询到用户信息
-            if rows:
-                # 显示用户姓名
-                rCol2.write(f"用户姓名: **{rows[0][0]}**")
+            with rCol2:
+                rUserType = False
 
-                # 在第三列创建布局
-                with rCol3:
-                    rUserType = False
-
-                    # 根据用户类型设置开关
-                    if rows[0][1] == "admin" or rows[0][1] == "supervisor":
-                        rUserType = sac.switch(label="管理员", value=True, on_label="On", align='start', size='md')
-                    elif rows[0][1] == "user":
-                        rUserType = sac.switch(label="管理员", value=False, on_label="On", align='start', size='md')
+                # 根据用户类型设置开关
+                if rows[0][1] == "admin" or rows[0][1] == "supervisor":
+                    rUserType = sac.switch(label="管理员", value=True, on_label="On", align='start', size='md')
+                elif rows[0][1] == "user":
+                    rUserType = sac.switch(label="管理员", value=False, on_label="On", align='start', size='md')
 
                 # 显示重置类型提示
                 st.write("重置类型")
@@ -3482,19 +3480,16 @@ def resetPassword():
                 rOption1 = st.checkbox("密码", value=False)
                 rOption2 = st.checkbox("账户类型", value=False)
 
-                # 创建重置按钮
-                btnResetUserPW = st.button("重置", type="primary")
+            # 创建重置按钮
+            btnResetUserPW = st.button("重置", type="primary")
 
-                # 检查是否点击了重置按钮并选择了重置类型
-                if btnResetUserPW and (rOption1 or rOption2):
-                    st.button("确认", type="secondary", on_click=actionResetUserPW, args=(rUserName, rOption1, rOption2, rUserType,))
-                    st.session_state.userPwRecheck = False
-                # 如果未选择任何重置类型，显示警告
-                elif not rOption1 and not rOption2:
-                    st.warning("请选择重置类型")
-            # 如果未查询到用户信息，显示错误
-            else:
-                st.error("用户不存在")
+            # 检查是否点击了重置按钮并选择了重置类型
+            if btnResetUserPW and (rOption1 or rOption2):
+                st.button("确认重置", type="secondary", on_click=actionResetUserPW, args=(rUserName, rOption1, rOption2, rUserType,))
+                st.session_state.userPwRecheck = False
+            # 如果未选择任何重置类型，显示警告
+            elif not rOption1 and not rOption2:
+                st.warning("请选择重置类型")
     # 如果不需要重置用户信息，显示密码输入框
     else:
         vUserPW = st.text_input("请输入密码", max_chars=8, placeholder="请输入管理员密码, 以验证身份", type="password", autocomplete="off")
