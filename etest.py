@@ -186,14 +186,19 @@ def login():
     login = st.empty()
     with login.container(border=True):
         userID, userCName = [], []
-        sql = "SELECT userName, userCName, StationCN from users order by StationCN, userCName"
+        sql = "SELECT DISTINCT(StationCN) from users order by StationCN"
+        rows = execute_sql(cur, sql)
+        station_type = st.selectbox(label="请选择站点", options=[row[0] for row in rows], index=2)
+        sql = f"SELECT userName, userCName, StationCN from users where StationCN = '{station_type}' order by StationCN, userCName"
         rows = execute_sql(cur, sql)
         for row in rows:
             userID.append(row[0])
-            userCName.append(f'{row[1]} - {row[2]}')
+            userCName.append(f'{row[1]}')
         query_userCName = st.selectbox("请选择用户", userCName, index=None)
         if query_userCName is not None:
             userName = userID[userCName.index(query_userCName)]
+        else:
+            userName = None
 
         # 用户密码输入框
         userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
@@ -2898,7 +2903,7 @@ def displayAppInfo():
     #infoStr = infoStr.replace("用户评价", f"用户评价: {EMOJI[int(likeCM) - 1][0]} {likeCM} I feel {EMOJI[int(likeCM) - 1][1]}")
     update_type, update_content = get_update_content(f"./CHANGELOG.md")
     infoStr = infoStr.replace("更新内容", f"更新内容: {update_type} - {update_content}")
-    components.html(infoStr, height=340)
+    components.html(infoStr, height=500)
 
 
 @st.fragment
@@ -3756,7 +3761,7 @@ if st.session_state.logged_in:
     if selected != "密码重置" and selected != "用户状态" and selected != "操作日志":
         st.session_state.userPwRecheck = False
     if selected == "主页":
-        displayBigTimeCircle()
+        #displayBigTimeCircle()
         displayAppInfo()
         displayVisitCounter()
 
