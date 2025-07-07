@@ -184,55 +184,15 @@ def login():
     # 登录表单容器
     login = st.empty()
     with login.container(border=True):
-        # 用户编码输入框
-        userName = st_keyup("请输入用户编码", placeholder="请输入纯数字用户编码, 非站室名称, 如果不知编码, 请在下方输入姓名查询", max_chars=8)
-        # 初始化用户姓名
-        st.session_state.userCName = ""
-
-        # 如果输入了用户编码
-        if userName:
-            filtered = get_userName(userName)
-            # 如果未找到对应的用户
-            if filtered == "":
-                # 根据用户编码获取用户姓名和站室
-                getUserCName(userName, "Digit")
-                # 显示用户姓名和站室
-                st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
-        else:
-            filtered = ""
-
-        # 如果用户姓名未找到或存在过滤结果
-        if st.session_state.userCName == "未找到" or filtered:
-            st.caption(filtered)
-
-        # 如果用户编码为空或用户姓名未找到
-        if userName == "" or st.session_state.userCName == "未找到":
-            # 用户姓名输入框
-            userCName = st_keyup("请输入用户姓名", placeholder="请输入用户姓名, 至少2个字, 用于查询, 非必填项", max_chars=8)
-            st.session_state.userCName = ""
-
-            # 如果输入了用户姓名
-            if userCName:
-                filtered = get_userCName(userCName)
-                # 如果未找到对应的用户
-                if filtered == "":
-                    # 根据用户姓名获取用户姓名和站室
-                    getUserCName(userCName, "Str")
-                    # 显示用户姓名和站室
-                    st.caption(f"用户名: :blue[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
-            else:
-                filtered = ""
-
-            # 如果用户姓名未找到或存在过滤结果
-            if st.session_state.userCName == "未找到" or filtered:
-                # 提示区域容器
-                promptArea = st.empty()
-                with promptArea.container():
-                    # 显示过滤结果
-                    st.caption(filtered)
-                # 如果用户编码存在但过滤结果为空
-                if userName and filtered == "":
-                    promptArea.empty()
+        userID, userCName = [], []
+        sql = "SELECT userName, userCName, StationCN from users order by StationCN, userCName"
+        rows = execute_sql(cur, sql)
+        for row in rows:
+            userID.append(row[0])
+            userCName.append(f'{row[1]} - {row[2]}')
+        query_userCName = st.selectbox("请选择用户", userCName, index=None)
+        if query_userCName is not None:
+            userName = userID[userCName.index(query_userCName)]
 
         # 用户密码输入框
         userPassword = st.text_input("请输入密码", max_chars=8, placeholder="用户初始密码为1234", type="password", autocomplete="off")
@@ -244,74 +204,72 @@ def login():
                 sac.SegmentedItem(label="考试", icon="card-list"),
             ], align="start"
         )
-        #examType = st.selectbox("请选择模式类型", ("练习", "考试"), index=0, help="各站管理员如需修改设置及查询请选择练习模式, 考试模式仅限考试")
 
         # 登录按钮
         buttonLogin = st.button("登录")
 
-    # 如果点击了登录按钮
-    if buttonLogin:
-        # 如果用户编码和密码不为空
-        if userName != "" and userPassword != "":
-            # 验证用户密码
-            verifyUPW = verifyUserPW(userName, userPassword)
-            # 如果密码验证成功
-            if verifyUPW[0]:
-                userPassword = verifyUPW[1]
+        # 如果点击了登录按钮
+        if buttonLogin:
+            # 如果用户编码和密码不为空
+            if userName and userPassword:
+                # 验证用户密码
+                verifyUPW = verifyUserPW(userName, userPassword)
+                # 如果密码验证成功
+                if verifyUPW[0]:
+                    userPassword = verifyUPW[1]
 
-            # 根据选择的模式类型执行不同的逻辑
-            if examType == "练习":
-                st.session_state.examType = "training"
-                st.session_state.examName = "练习题库"
-                sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}'"
-            elif examType == "考试":
-                st.session_state.examType = "exam"
-                sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
-            else:
-                sql = ""
-
-            # 如果SQL语句不为空
-            if sql != "":
-                result = execute_sql(cur, sql)
-                # 如果查询结果存在
-                if result:
-                    st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
-                    login.empty()
-                    st.session_state.logged_in = True
-                    st.session_state.userPwRecheck = False
-                    st.session_state.userName = result[0][0]
-                    st.session_state.userCName = result[0][1].replace(" ", "")
-                    st.session_state.userType = result[0][2]
-                    st.session_state.StationCN = result[0][3]
-                    st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
-                    st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
-                    st.session_state.clockType = bool(getParam("时钟样式", st.session_state.StationCN))
-                    st.session_state.curQues = 0
-                    st.session_state.examChosen = False
-                    st.session_state.delExam = True
-                    st.session_state.tooltipColor = "#ed872d"
-                    st.session_state.loginTime = int(time.time())
-                    if examType == "练习":
-                        st.session_state.examRandom = True
-                    elif examType == "考试":
-                        st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
-                    sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
-                    execute_sql_and_commit(conn, cur, sql)
-                    sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
-                    execute_sql_and_commit(conn, cur, sql)
-                    ClearTables()
-                    # transform Key to Encrypt(temporary)
-                    #print(getUserEDKeys("", "enc"))
-                    st.rerun()
+                # 根据选择的模式类型执行不同的逻辑
+                if examType == "练习":
+                    st.session_state.examType = "training"
+                    st.session_state.examName = "练习题库"
+                    sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}'"
+                elif examType == "考试":
+                    st.session_state.examType = "exam"
+                    sql = f"SELECT userName, userCName, userType, StationCN from users where userName = {userName} and userPassword = '{userPassword}' and activeUser = 0"
                 else:
-                    # 如果密码验证成功但登录失败
-                    if verifyUPW[0]:
-                        st.error("登录失败, 用户已经在别处登录, 请联系管理员解决")
+                    sql = ""
+
+                # 如果SQL语句不为空
+                if sql != "":
+                    result = execute_sql(cur, sql)
+                    # 如果查询结果存在
+                    if result:
+                        st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
+                        login.empty()
+                        st.session_state.logged_in = True
+                        st.session_state.userPwRecheck = False
+                        st.session_state.userName = result[0][0]
+                        st.session_state.userCName = result[0][1].replace(" ", "")
+                        st.session_state.userType = result[0][2]
+                        st.session_state.StationCN = result[0][3]
+                        st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
+                        st.session_state.debug = bool(getParam("测试模式", st.session_state.StationCN))
+                        st.session_state.clockType = bool(getParam("时钟样式", st.session_state.StationCN))
+                        st.session_state.curQues = 0
+                        st.session_state.examChosen = False
+                        st.session_state.delExam = True
+                        st.session_state.tooltipColor = "#ed872d"
+                        st.session_state.loginTime = int(time.time())
+                        if examType == "练习":
+                            st.session_state.examRandom = True
+                        elif examType == "考试":
+                            st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
+                        sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
+                        execute_sql_and_commit(conn, cur, sql)
+                        sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
+                        execute_sql_and_commit(conn, cur, sql)
+                        ClearTables()
+                        # transform Key to Encrypt(temporary)
+                        #print(getUserEDKeys("", "enc"))
+                        st.rerun()
                     else:
-                        st.error("登录失败, 请检查用户名和密码, 若忘记密码请联系管理员重置")
-        else:
-            # 如果用户编码或密码为空
-            st.warning("请输入用户编码和密码")
+                        # 如果密码验证成功但登录失败
+                        if verifyUPW[0]:
+                            st.error("登录失败, 用户已经在别处登录, 请联系管理员解决")
+                        else:
+                            st.error("登录失败, 请检查用户名和密码, 若忘记密码请联系管理员重置")
+            else:
+                st.warning("请选择用户并输入密码")
 
 
 def logout():
