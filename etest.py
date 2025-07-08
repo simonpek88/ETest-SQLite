@@ -354,20 +354,14 @@ def aboutInfo():
 
 
 def display_pypi():
-    gen_badge(['streamlit', 'pandas', 'streamlit_antd_components', 'plotly', 'folium', 'qianfan'])
-    pypi1, pypi2, pypi3, pypi4, pypi5, pypi6 = st.columns(6)
-    with pypi1:
-        badge(type="pypi", name="streamlit")
-    with pypi2:
-        badge(type="pypi", name="pandas")
-    with pypi3:
-        badge(type="pypi", name="streamlit_antd_components")
-    with pypi4:
-        badge(type="pypi", name="plotly")
-    with pypi5:
-        badge(type="pypi", name="folium")
-    with pypi6:
-        badge(type="pypi", name="qianfan")
+    badge_pack = ['streamlit', 'pandas', 'streamlit_antd_components', 'plotly', 'folium', 'openai']
+    gen_badge(badge_pack)
+    pypi = st.columns(len(badge_pack) + 2)
+    pypi[0].image('./Images/badges/Python-badge.svg')
+    pypi[1].image('./Images/badges/MySQL-badge.svg')
+
+    for index, value in enumerate(badge_pack):
+        pypi[index + 2].image(f'./Images/badges/{value}-badge.svg')
 
 
 def aboutLicense():

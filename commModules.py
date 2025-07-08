@@ -245,8 +245,16 @@ def gen_badge(badge_text_pack):
     badge_folder = './Images/badges'
     badge_ver_color = 'blue'
 
-    with open(f'{badge_folder}/python-badge.svg', 'w') as f:
-        f.write(badge(left_text='python', right_text=sys.version[:sys.version.find('(')].strip()))
+    # 获取python版本
+    with open(f'{badge_folder}/Python-badge.svg', 'w') as f:
+        f.write(badge(left_text='Python', right_text=sys.version[:sys.version.find('(')].strip()))
+
+    # 执行查询以获取MySQL版本
+    cur3.execute("SELECT VERSION()")
+    # 获取查询结果
+    mysql_ver = cur3.fetchone()[0]
+    with open(f'{badge_folder}/MySQL-badge.svg', 'w') as f:
+        f.write(badge(left_text='MySQL', right_text=mysql_ver))
 
     # 获取指定package的版本号
     for package in badge_text_pack:
@@ -256,6 +264,7 @@ def gen_badge(badge_text_pack):
             if package == 'streamlit_antd_components':
                 package = 'Ant Comp'
             f.write(badge(left_text=package, right_text=package_version))
+
 
 
 conn3 = get_connection()
