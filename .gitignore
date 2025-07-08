@@ -11,6 +11,7 @@ package.json
 ExamResult/*.*
 outputQues/*.*
 OYC/
+Images/badges/Python-badge.svg
 CacheData/
 word2pic/*.jpg
 word2pic/*.jpeg
