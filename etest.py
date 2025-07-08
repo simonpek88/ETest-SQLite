@@ -22,7 +22,6 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 from folium.plugins import HeatMap, MiniMap
 from PIL import Image, ImageDraw, ImageFont
-from streamlit_extras.badges import badge
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_folium import st_folium
 from streamlit_javascript import st_javascript
@@ -34,9 +33,9 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
-from commModules import (ClearTables, clearModifyQues, gen_badge,
-                         get_update_content, getStationCNALL, getVerInfo,
-                         reviseQues)
+from commModules import (ClearTables, clearModifyQues, get_update_content,
+                         getStationCNALL, getVerInfo, reviseQues)
+from gen_badges import gen_badge
 from mysql_pool import get_connection
 from word2picture import tywx_generate_image, xfxh_generate_image
 
@@ -180,7 +179,7 @@ def changePassword():
 def login():
     st.set_page_config(layout="centered")
     # 显示应用名称
-    st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME}**</center></font>", unsafe_allow_html=True)
+    st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME_CN}**</center></font>", unsafe_allow_html=True)
 
     # 登录表单容器
     login = st.empty()
@@ -260,10 +259,20 @@ def login():
                             st.session_state.examRandom = True
                         elif examType == "考试":
                             st.session_state.examRandom = bool(getParam("考试题库每次随机生成", st.session_state.StationCN))
+                        # 更新登录时间
                         sql = f"UPDATE users set activeUser = 1, loginTime = {st.session_state.loginTime}, activeTime_session = 0, actionUser = '空闲' where userName = {st.session_state.userName}"
                         execute_sql_and_commit(conn, cur, sql)
+                        # 更新访问次数
                         sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
                         execute_sql_and_commit(conn, cur, sql)
+                        # 更新版本信息
+                        updatePyFileinfo()
+                        # 生成Badge
+                        verinfo, verLM, likeCM = getVerInfo()
+                        app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)}.{verinfo}'
+                        app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
+                        gen_badge(cur, [], 'MySQL', APPNAME_EN, app_version, app_lm)
+                        # 更新登录记录
                         login_record()
                         ClearTables()
                         # transform Key to Encrypt(temporary)
@@ -356,13 +365,18 @@ def aboutInfo():
 def display_pypi():
     db_type = 'MySQL'
     badge_pack = ['streamlit', 'pandas', 'streamlit_antd_components', 'plotly', 'folium', 'openai']
-    gen_badge(badge_pack, db_type)
+    verinfo, verLM, likeCM = getVerInfo()
+    app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)}.{verinfo}'
+    app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
+    gen_badge(cur, badge_pack, db_type, APPNAME_EN, app_version, app_lm)
     pypi = st.columns(len(badge_pack) + 2)
     pypi[0].image('./Images/badges/Python-badge.svg')
     pypi[1].image(f'./Images/badges/{db_type}-badge.svg')
 
     for index, value in enumerate(badge_pack):
         pypi[index + 2].image(f'./Images/badges/{value}-badge.svg')
+    pypi[0].image(f'./Images/badges/{APPNAME_EN}-badge.svg')
+    pypi[1].image(f'./Images/badges/{APPNAME_EN}-lm-badge.svg')
 
 
 def aboutLicense():
@@ -2953,7 +2967,7 @@ def displayVisitCounter():
 @st.fragment
 def displayAppInfo():
     infoStr = open("./MyComponentsScript/glowintext.txt", "r", encoding="utf-8").read()
-    infoStr = infoStr.replace("软件名称", APPNAME)
+    infoStr = infoStr.replace("软件名称", APPNAME_CN)
     verinfo, verLM, likeCM = getVerInfo()
     infoStr = infoStr.replace("软件版本", f"软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}")
     infoStr = infoStr.replace("更新时间", f"更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}")
@@ -3699,13 +3713,14 @@ def aiGenerate_Image():
         AIGMInfo.empty()
 
 
-global APPNAME, EMOJI, STATIONPACK
+global APPNAME_CN, APPNAME_EN, EMOJI, STATIONPACK
 conn = get_connection()
 cur = conn.cursor()
 
 st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="medium")
 
-APPNAME = "调控中心安全生产业务考试系统"
+APPNAME_CN = "调控中心安全生产业务考试系统"
+APPNAME_EN = 'E-Test'
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
 selected = None
 if "logged_in" not in st.session_state:
@@ -3814,7 +3829,6 @@ if st.session_state.logged_in:
         st.write(f"### 姓名: :orange[{st.session_state.userCName}] 站室: :orange[{st.session_state.StationCN}]")
         st.caption("📢:red[**不要刷新页面, 否则会登出**]")
         #st.caption("**请使用 :red[[登出]] 功能退出页面, 否则会影响下次登录**")
-    updatePyFileinfo()
     if selected != "密码重置" and selected != "用户状态" and selected != "操作日志":
         st.session_state.userPwRecheck = False
     if selected == "主页":

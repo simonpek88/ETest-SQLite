@@ -1,9 +1,4 @@
 # coding utf-8
-import importlib.metadata
-import sys
-
-from pybadges import badge
-
 from commFunc import execute_sql, execute_sql_and_commit
 from mysql_pool import get_connection
 
@@ -239,39 +234,6 @@ def get_update_content(file_path):
                 break
 
     return update_type, update_content
-
-
-def gen_badge(badge_text_pack, db_type='MySQL'):
-    badge_folder = './Images/badges'
-    badge_ver_color = 'blue'
-
-    # 获取python版本
-    with open(f'{badge_folder}/Python-badge.svg', 'w') as f:
-        f.write(badge(left_text='Python', right_text=sys.version[:sys.version.find('(')].strip()))
-
-    if db_type == 'MySQL':
-        # 执行查询以获取MySQL版本
-        cur3.execute("SELECT VERSION()")
-        # 获取查询结果
-        db_ver = cur3.fetchone()[0]
-    elif db_type == 'sqlite3':
-        # 执行查询以获取 SQLite 版本号
-        cur3.execute("SELECT sqlite_version()")
-        # 获取查询结果
-        db_ver = cur3.fetchone()[0]
-    else:
-        db_ver = 'unknown'
-    with open(f'{badge_folder}/{db_type}-badge.svg', 'w') as f:
-        f.write(badge(left_text=db_type, right_text=db_ver))
-
-    # 获取指定package的版本号
-    for package in badge_text_pack:
-        package_version = importlib.metadata.version(package)
-
-        with open(f'{badge_folder}/{package}-badge.svg', 'w') as f:
-            if package == 'streamlit_antd_components':
-                package = 'Ant Comp'
-            f.write(badge(left_text=package, right_text=package_version))
 
 
 conn3 = get_connection()
