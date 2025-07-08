@@ -7,6 +7,7 @@ import re
 import time
 
 import folium
+import nivo_chart as nc
 import openpyxl
 import pandas as pd
 import plotly.graph_objects as go
@@ -240,12 +241,12 @@ def login():
                     result = execute_sql(cur, sql)
                     # 如果查询结果存在
                     if result:
-                        st.toast(f"用户: {result[0][0]} 姓名: {result[0][1]} 登录成功, 欢迎回来")
+                        st.toast(f"用户: {result[0][1]} 登录成功, 欢迎回来")
                         login.empty()
                         st.session_state.logged_in = True
                         st.session_state.userPwRecheck = False
                         st.session_state.userName = result[0][0]
-                        st.session_state.userCName = result[0][1].replace(" ", "")
+                        st.session_state.userCName = result[0][1]
                         st.session_state.userType = result[0][2]
                         st.session_state.StationCN = result[0][3]
                         st.session_state.examLimit = getParam("同场考试次数限制", st.session_state.StationCN)
@@ -264,6 +265,7 @@ def login():
                         execute_sql_and_commit(conn, cur, sql)
                         sql = "UPDATE verinfo set pyLM = pyLM + 1 where pyFile = 'visitcounter'"
                         execute_sql_and_commit(conn, cur, sql)
+                        login_record()
                         ClearTables()
                         # transform Key to Encrypt(temporary)
                         #print(getUserEDKeys("", "enc"))
@@ -299,6 +301,11 @@ def logout():
 
     # 重新运行当前脚本
     st.rerun()
+
+
+def login_record():
+    sql = f"INSERT INTO login_rec (userName, userCName, StationCN, login_date) VALUES ({st.session_state.userName}, '{st.session_state.userCName}', '{st.session_state.StationCN}', '{datetime.datetime.now()}')"
+    execute_sql_and_commit(conn, cur, sql)
 
 
 def aboutInfo():
@@ -1024,6 +1031,7 @@ def dbfunc():
                 sac.SegmentedItem(label="删除试卷", icon="trash3"),
                 sac.SegmentedItem(label="删除静态题库", icon="trash3"),
                 #sac.SegmentedItem(label="删除用户上传文件", icon="trash3"),
+                sac.SegmentedItem(label="重置题库ID", icon="bootstrap-reboot"),
             ], align="center", color="red"
         )
     if bc == "A.I.出题":
@@ -1161,7 +1169,7 @@ def resetTableID():
     allowed_tables = {
         "questions", "commquestions", "morepractise", "favques",
         "examidd", "examresult", "questionaff", "studyinfo",
-        "users", "keyactionlog", "setup_默认"
+        "users", "keyactionlog", "setup_默认", "login_rec"
     }
 
     def is_valid_table(tablename):
@@ -1172,7 +1180,7 @@ def resetTableID():
 
     tables = [
         "questions", "commquestions", "morepractise", "favques",
-        "examidd", "examresult", "questionaff", "studyinfo",
+        "examidd", "examresult", "questionaff", "studyinfo", "login_rec",
         "users", "keyactionlog", "setup_默认", f"setup_{st.session_state.StationCN}"
     ]
 
@@ -1199,7 +1207,7 @@ def resetTableID():
 
             for i, row in enumerate(rows):
                 new_id = i + 1
-                old_id = row['ID']
+                old_id = row[0]
                 updates.append((new_id, old_id))
 
                 if tablename in ["questions", "commquestions"]:
@@ -1468,6 +1476,7 @@ def studyinfo():
             sac.SegmentedItem(label="学习进度", icon="grid-3x2-gap"),
             sac.SegmentedItem(label="错题集", icon="list-stars"),
             sac.SegmentedItem(label="章节时间线", icon="clock-history"),
+            sac.SegmentedItem(label="登录热度图", icon="calendar3-week"),
             sac.SegmentedItem(label="学习记录重置", icon="bootstrap-reboot"),
             sac.SegmentedItem(label="错题集重置", icon="journal-x"),
         ], align="center", color="red"
@@ -1478,12 +1487,65 @@ def studyinfo():
         displayErrorQues()
     elif study == "章节时间线":
         generTimeline()
+    elif study == "登录热度图":
+        cal_heatmap()
     elif study == "学习记录重置":
         studyReset()
     elif study == "错题集重置":
         ClearMP()
     if study is not None:
         updateActionUser(st.session_state.userName, f"查看信息-{study}", st.session_state.loginTime)
+
+
+def cal_heatmap():
+    display_area = st.empty()
+    query_date_start = f'{datetime.datetime.now().year}-01-01'
+    query_date_end = f'{datetime.datetime.now().year}-12-31'
+    cal_data, raws_data = [], []
+    if st.session_state.userType == 'user':
+        sql = f"SELECT login_date, count(login_date) from login_rec where userName = {st.session_state.userName} and login_date >= '{query_date_start}' and login_date <= '{query_date_end}' group by login_date"
+    else:
+        sql = f"SELECT login_date, count(login_date) from login_rec where login_date >= '{query_date_start}' and login_date <= '{query_date_end}' group by login_date"
+    rows = execute_sql(cur, sql)
+    for row in rows:
+        raws_data.append([row[0], int(row[1])])
+        temp = {'value': int(row[1]), 'day': row[0].strftime("%Y-%m-%d")}
+        cal_data.append(temp)
+    if raws_data:
+        with display_area.container(border=True):
+            df = pd.DataFrame(raws_data, columns=["日期", "登录次数"])
+            calendar_chart = {
+                "data": cal_data,
+                "layout": {
+                    "title": "登录热度图",
+                    "type": "calendar",
+                    "height": 500,
+                    "from": query_date_start,
+                    "to": query_date_end,
+                    "emptyColor": "#eeeeee",
+                    "colors": ["#61cdbb", "#97e3d5", "#e8c1a0", "#f47560"],
+                    "margin": {"top": 40, "right": 40, "bottom": 40, "left": 40},
+                    "yearSpacing": 40,
+                    "monthBorderColor": "#ffffff",
+                    "dayBorderWidth": 2,
+                    "dayBorderColor": "#ffffff",
+                    "legends": [
+                        {
+                            "anchor": "bottom-right",
+                            "direction": "row",
+                            "translateY": 36,
+                            "itemCount": 4,
+                            "itemWidth": 42,
+                            "itemHeight": 36,
+                            "itemsSpacing": 14,
+                            "itemDirection": "right-to-left",
+                        }
+                    ],
+                },
+            }
+            nc.nivo_chart(data=calendar_chart["data"], layout=calendar_chart["layout"])
+        sac.divider(color='blue')
+        st.write(df)
 
 
 def userRanking():

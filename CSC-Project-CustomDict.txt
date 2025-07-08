@@ -70,6 +70,7 @@ moption
 morepractise
 mysqldump
 Neue
+nivo
 Objs
 openpyxl
 oxml
