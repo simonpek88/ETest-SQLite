@@ -3926,13 +3926,13 @@ if st.session_state.logged_in:
                             st.write("#### :blue[跳转到指定题号: ]")
                         exam(row)
                     if submitButton:
-                        emptyAnswer = "你没有作答的题为:第["
+                        emptyAnswer = "你没有作答的题为:第"
                         sql = f"SELECT ID from {st.session_state.examFinalTable} where userAnswer = '' order by ID"
                         rows2 = execute_sql(cur, sql)
                         for row2 in rows2:
                             emptyAnswer = emptyAnswer + str(row2[0]) + ", "
                         if emptyAnswer.endswith(", "):
-                            emptyAnswer = emptyAnswer[:-2] + "]题, 请检查或直接交卷!"
+                            emptyAnswer = emptyAnswer[:-2] + "题, 请检查或直接交卷!"
                         else:
                             emptyAnswer = "你的所有题目均已作答, 确认交卷吗?"
                         submit_dialog(emptyAnswer)
