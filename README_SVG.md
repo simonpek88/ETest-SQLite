@@ -5,6 +5,8 @@
 ## Contents
 
 - E-Test 考试系统
+    <img src="./Images/badges/E-Test-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
+    <img src="./Images/badges/E-Test-lm-badge.svg" alt="Badge" width="110" height="auto" style="vertical-align: middle;">
   - [安装](#install)
   - [项目结构](#construction)
   - [功能](#functions)
@@ -22,13 +24,21 @@
 5. 安装依赖
     - 手工安装
       - MySQL # 数据库
+      <img src="./Images/badges/MySQL-badge.svg" alt="Badge" width="70" height="auto" style="vertical-align: middle;">
       - Streamlit # 前端框架
+      <img src="./Images/badges/streamlit-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - streamlit-antd-components/extras/keyup # 前端组件库
+      <img src="./Images/badges/streamlit_antd_components-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - pycryptodome # 数据加密模块
       - openai/qianfan # A.I.调用模块及文心千帆API调用接口
+      <img src="./Images/badges/openai-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
+      <img src="./Images/badges/qianfan-badge.svg" alt="Badge" width="100" height="auto" style="vertical-align: middle;">
       - folium/pydeck # 地图可视化
+      <img src="./Images/badges/folium-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - python-docx # Word文档操作
+      <img src="./Images/badges/python-docx-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - openpyxl/XlsxWriter # Excel文档操作
+      <img src="./Images/badges/openpyxl-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - ...
     - 或使用提供的requirements.txt文件自动安装
       - `pip install -r requirements.txt`
@@ -85,5 +95,7 @@
 [E-Test 考试系统](https://github.com/simonpek88/ETest-SQLite.git)
 
 ## License
+
+<img src="./Images/badges/license-badge.svg">
 
 MIT © 2024-2027 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
