@@ -5,7 +5,7 @@
 ## Contents
 
 - E-Test 考试系统
-    <img src="./Images/badges/E-Test-badge.svg" alt="Badge" width="100" height="auto" style="vertical-align: middle;">
+    <img src="./Images/badges/E-Test-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
     <img src="./Images/badges/E-Test-lm-badge.svg" alt="Badge" width="120" height="auto" style="vertical-align: middle;">
   - [安装](#install)
   - [项目结构](#construction)
