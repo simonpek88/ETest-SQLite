@@ -5,8 +5,8 @@
 ## Contents
 
 - E-Test 考试系统
-    <img src="./Images/badges/E-Test-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
-    <img src="./Images/badges/E-Test-lm-badge.svg" alt="Badge" width="110" height="auto" style="vertical-align: middle;">
+    <img src="./Images/badges/E-Test-badge.svg" alt="Badge" width="100" height="auto" style="vertical-align: middle;">
+    <img src="./Images/badges/E-Test-lm-badge.svg" alt="Badge" width="120" height="auto" style="vertical-align: middle;">
   - [安装](#install)
   - [项目结构](#construction)
   - [功能](#functions)
@@ -32,7 +32,7 @@
       - pycryptodome # 数据加密模块
       - openai/qianfan # A.I.调用模块及文心千帆API调用接口
         <img src="./Images/badges/openai-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
-        <img src="./Images/badges/qianfan-badge.svg" alt="Badge" width="100" height="auto" style="vertical-align: middle;">
+        <img src="./Images/badges/qianfan-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
       - folium/pydeck # 地图可视化
         <img src="./Images/badges/folium-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - python-docx # Word文档操作
