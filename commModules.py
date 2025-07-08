@@ -1,4 +1,9 @@
 # coding utf-8
+import importlib.metadata
+import sys
+
+from pybadges import badge
+
 from commFunc import execute_sql, execute_sql_and_commit
 from mysql_pool import get_connection
 
@@ -234,6 +239,23 @@ def get_update_content(file_path):
                 break
 
     return update_type, update_content
+
+
+def gen_badge(badge_text_pack):
+    badge_folder = './Images/badges'
+    badge_ver_color = 'blue'
+
+    with open(f'{badge_folder}/python-badge.svg', 'w') as f:
+        f.write(badge(left_text='python', right_text=sys.version[:sys.version.find('(')].strip()))
+
+    # 获取指定package的版本号
+    for package in badge_text_pack:
+        package_version = importlib.metadata.version(package)
+
+        with open(f'{badge_folder}/{package}-badge.svg', 'w') as f:
+            if package == 'streamlit_antd_components':
+                package = 'Ant Comp'
+            f.write(badge(left_text=package, right_text=package_version))
 
 
 conn3 = get_connection()

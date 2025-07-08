@@ -34,8 +34,9 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       getUserEDKeys, qianfan_AI, qianfan_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
-from commModules import (ClearTables, clearModifyQues, get_update_content,
-                         getStationCNALL, getVerInfo, reviseQues)
+from commModules import (ClearTables, clearModifyQues, gen_badge,
+                         get_update_content, getStationCNALL, getVerInfo,
+                         reviseQues)
 from mysql_pool import get_connection
 from word2picture import tywx_generate_image, xfxh_generate_image
 
@@ -353,6 +354,7 @@ def aboutInfo():
 
 
 def display_pypi():
+    gen_badge(['streamlit', 'pandas', 'streamlit_antd_components', 'plotly', 'folium', 'qianfan'])
     pypi1, pypi2, pypi3, pypi4, pypi5, pypi6 = st.columns(6)
     with pypi1:
         badge(type="pypi", name="streamlit")
