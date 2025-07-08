@@ -22,7 +22,6 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 from folium.plugins import HeatMap, MiniMap
 from PIL import Image, ImageDraw, ImageFont
-from st_keyup import st_keyup
 from streamlit_extras.badges import badge
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_folium import st_folium
@@ -36,8 +35,7 @@ from commFunc import (GenerExam, deepseek_AI, deepseek_AI_GenerQues,
                       updateActionUser, updatePyFileinfo, xunfei_xh_AI,
                       xunfei_xh_AI_fib, xunfei_xh_AI_GenerQues)
 from commModules import (ClearTables, clearModifyQues, get_update_content,
-                         get_userCName, get_userName, getStationCNALL,
-                         getVerInfo, reviseQues)
+                         getStationCNALL, getVerInfo, reviseQues)
 from mysql_pool import get_connection
 from word2picture import tywx_generate_image, xfxh_generate_image
 

@@ -203,58 +203,6 @@ def getStationCNALL(flagALL=False):
     return StationCNamePack
 
 
-def get_userName(searchUserName=""):
-    searchUserNameInfo = ""
-    if len(searchUserName) > 1:
-        # 构建SQL查询语句，使用参数化查询防止SQL注入
-        sql = "SELECT userName, userCName, StationCN FROM users WHERE userName LIKE %s"
-        params = (f"%{searchUserName}%",)  # MySQL 使用 % 作为通配符，并用 %s 占位符
-        rows = execute_sql(cur3, sql, params)
-        if rows:
-            # 格式化查询结果，使用颜色标记不同字段
-            searchUserNameInfo = "\n\n".join(
-                f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]" for row in rows
-            )
-
-    # 添加最终提示信息
-    if searchUserNameInfo:
-        searchUserNameInfo += "\n请在用户编码栏中填写查询出的完整编码"
-
-    return searchUserNameInfo
-
-MIN_SEARCH_LENGTH_TIP = ":red[**请输入至少2个字**]"
-PLEASE_FILL_FULL_CODE_TIP = "\n请在用户编码栏中填写查询出的完整编码"
-
-
-def get_userCName(searchUserCName=""):
-    """
-    根据用户输入的中文名前缀搜索用户信息。
-
-    参数:
-    searchUserCName (str): 要搜索的用户中文名前缀，默认为空字符串。
-
-    返回值:
-    str: 包含搜索结果的字符串，包含用户编码、姓名和站室信息，
-         或提示信息如输入长度不足或请填写完整编码。
-    """
-    searchUserCNameInfo = ""
-    if len(searchUserCName) > 1:
-        sql = "SELECT userName, userCName, StationCN FROM users WHERE userCName LIKE %s"
-        # 使用 %s 占位符，并在参数中添加通配符 %
-        params = (f"%{searchUserCName}%",)
-        rows = execute_sql(cur3, sql, params)
-
-        result_lines = [f"用户编码: :red[{row[0]}] 姓名: :blue[{row[1]}] 站室: :orange[{row[2]}]\n\n" for row in rows]
-        searchUserCNameInfo = ''.join(result_lines)
-    else:
-        searchUserCNameInfo = MIN_SEARCH_LENGTH_TIP
-
-    if "请输入至少2个字" not in searchUserCNameInfo:
-        searchUserCNameInfo += PLEASE_FILL_FULL_CODE_TIP
-
-    return searchUserCNameInfo
-
-
 def get_update_content(file_path):
     """
     从指定文件中读取更新类型和更新内容信息。
