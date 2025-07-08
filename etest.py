@@ -354,11 +354,12 @@ def aboutInfo():
 
 
 def display_pypi():
+    db_type = 'MySQL'
     badge_pack = ['streamlit', 'pandas', 'streamlit_antd_components', 'plotly', 'folium', 'openai']
-    gen_badge(badge_pack)
+    gen_badge(badge_pack, db_type)
     pypi = st.columns(len(badge_pack) + 2)
     pypi[0].image('./Images/badges/Python-badge.svg')
-    pypi[1].image('./Images/badges/MySQL-badge.svg')
+    pypi[1].image(f'./Images/badges/{db_type}-badge.svg')
 
     for index, value in enumerate(badge_pack):
         pypi[index + 2].image(f'./Images/badges/{value}-badge.svg')
