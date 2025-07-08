@@ -9,6 +9,7 @@ plotly==6.2.0
 pycryptodome==3.23.0
 pydeck==0.9.1
 PyMySQL==1.1.1
+pybadges==3.0.1
 python_docx==1.2.0
 qianfan==0.4.12.3
 Requests==2.32.4
@@ -16,7 +17,7 @@ streamlit==1.46.1
 streamlit_antd_components==0.3.2
 streamlit_extras==0.7.5
 streamlit_folium==0.25.0
+streamlit-nivo==0.1.8
 streamlit_javascript==0.1.5
-streamlit_keyup==0.3.0
 streamlit_vis_timeline==0.3.0
 xlsxwriter==3.2.5
