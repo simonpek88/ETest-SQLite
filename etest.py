@@ -269,7 +269,7 @@ def login():
                         updatePyFileinfo()
                         # 生成Badge
                         verinfo, verLM, likeCM = getVerInfo()
-                        app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)}.{verinfo}'
+                        app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
                         app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
                         gen_badge(cur, [], 'MySQL', APPNAME_EN, app_version, app_lm)
                         # 更新登录记录
@@ -366,7 +366,7 @@ def display_pypi():
     db_type = 'MySQL'
     badge_pack = ['streamlit', 'pandas', 'streamlit_antd_components', 'plotly', 'folium', 'openai']
     verinfo, verLM, likeCM = getVerInfo()
-    app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)}.{verinfo}'
+    app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
     app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
     gen_badge(cur, badge_pack, db_type, APPNAME_EN, app_version, app_lm)
     pypi = st.columns(len(badge_pack) + 2)
@@ -3833,9 +3833,9 @@ if st.session_state.logged_in:
         st.session_state.userPwRecheck = False
     if selected == "主页":
         #displayBigTimeCircle()
+        updatePyFileinfo()
         displayAppInfo()
         displayVisitCounter()
-
     elif selected == "生成题库" or selected == "选择考试":
         if st.session_state.examType == "training":
             #st.write("### :red[生成练习题库]")
