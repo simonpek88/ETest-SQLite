@@ -317,37 +317,15 @@ def login_record():
 
 
 def aboutInfo():
+    updatePyFileinfo()
     st.subheader("关于本软件", divider="rainbow")
     st.subheader(":blue[Powered by Python and Streamlit]")
-    logo1, logo2, logo3, logo4, logo5, logo6 = st.columns(6)
-    logo7, logo8, logo9, logo10, logo11, logo12 = st.columns(6)
-    with logo1:
-        st.caption("Python")
-        st.image("./Images/logos/python.png")
-    with logo2:
-        st.caption("Streamlit")
-        st.image("./Images/logos/streamlit.png")
-    with logo3:
-        st.caption("MySQL")
-        st.image("./Images/logos/mysql.png")
-    with logo4:
-        st.caption("Pandas")
-        st.image("./Images/logos/pandas.png")
-    with logo5:
-        st.caption("Ant Comp")
-        st.image("./Images/logos/antd.png")
-    with logo7:
-        st.caption("iFlytek Spark")
-        st.image("./Images/logos/xfxh.png")
-    with logo8:
-        st.caption("ERNIE Qianfan")
-        st.image("./Images/logos/qianfan.png")
-    with logo9:
-        st.caption("DeepSeek")
-        st.image("./Images/logos/deepseek.png")
-    with logo10:
-        st.caption("通义万相")
-        st.image("./Images/logos/tywx.png")
+    cols_limit = 6
+    module_pack = ['Python', 'MySQL', 'Streamlit', 'Ant Comp', 'Pandas', 'Python-Docx', 'DeepSeek', 'iFlytek Spark', 'ERNIE Qianfan', '通义万相']
+    module_img = st.columns(cols_limit)
+    for index, value in enumerate(module_pack):
+        module_img[index % cols_limit].caption(value)
+        module_img[index % cols_limit].image(f'./Images/logos/{value.replace(" ", "_").lower()}.png')
     display_pypi()
     st.write("###### :violet[为了获得更好的使用体验, 请使用浅色主题]")
     verinfo, verLM, likeCM = getVerInfo()
@@ -364,7 +342,7 @@ def aboutInfo():
 
 def display_pypi():
     db_type = 'MySQL'
-    badge_pack = ['streamlit', 'pandas', 'streamlit_antd_components', 'plotly', 'folium', 'openai']
+    badge_pack = ['streamlit', 'streamlit_antd_components', 'pandas', 'folium', 'python-docx', 'openpyxl']
     verinfo, verLM, likeCM = getVerInfo()
     app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
     app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
