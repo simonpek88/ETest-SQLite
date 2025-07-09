@@ -40,7 +40,7 @@
       ![Python](https://img.shields.io/badge/Python-3.12.6-blue.svg)
       ![MySQL](https://img.shields.io/badge/MySQL-8.4.5-blue.svg)
       ![Streamlit](https://img.shields.io/badge/Streamlit-1.46.1-blue.svg)
-      ![streamlit-antd-components](https://img.shields.io/badge/Antd-0.32-blue.svg)
+      ![streamlit-antd-components](https://img.shields.io/badge/Antd-0.3.2-blue.svg)
       ![pycryptodome](https://img.shields.io/badge/pycryptodome-3.23.0-blue.svg)
       ![openai](https://img.shields.io/badge/openai-1.93.0-blue.svg)
       ![qianfan](https://img.shields.io/badge/qianfan-0.4.12.3-blue.svg)

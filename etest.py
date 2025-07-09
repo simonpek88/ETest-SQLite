@@ -271,7 +271,7 @@ def login():
                         verinfo, verLM, likeCM = getVerInfo()
                         app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
                         app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
-                        gen_badge(cur, [], 'MySQL', APPNAME_EN, app_version, app_lm)
+                        gen_badge(conn, cur, [], 'MySQL', APPNAME_EN, app_version, app_lm)
                         # 更新登录记录
                         login_record()
                         ClearTables()
@@ -321,7 +321,7 @@ def aboutInfo():
     st.subheader("关于本软件", divider="rainbow")
     st.subheader(":blue[Powered by Python and Streamlit]")
     cols_limit = 6
-    module_pack = ['Python', 'MySQL', 'Streamlit', 'Ant Comp', 'Pandas', 'Python-Docx', 'DeepSeek', 'iFlytek Spark', 'ERNIE Qianfan', '通义万相']
+    module_pack = ['Python', 'MySQL', 'Streamlit', 'Antd', 'Pandas', 'Python-Docx', 'DeepSeek', 'iFlytek Spark', 'ERNIE Qianfan', '通义万相']
     module_img = st.columns(cols_limit)
     for index, value in enumerate(module_pack):
         module_img[index % cols_limit].caption(value)
@@ -346,7 +346,7 @@ def display_pypi():
     verinfo, verLM, likeCM = getVerInfo()
     app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
     app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
-    gen_badge(cur, badge_pack, db_type, APPNAME_EN, app_version, app_lm)
+    gen_badge(conn, cur, badge_pack, db_type, APPNAME_EN, app_version, app_lm)
     pypi = st.columns(len(badge_pack) + 2)
     pypi[0].image('./Images/badges/Python-badge.svg')
     pypi[1].image(f'./Images/badges/{db_type}-badge.svg')
@@ -2246,7 +2246,7 @@ def actionDelQM(quesID, tablename, mRow):
 
 
 def aboutReadme():
-    st.markdown(open("./README.md", "r", encoding="utf-8").read())
+    st.markdown(open("./README.md", "r", encoding="utf-8").read(), unsafe_allow_html=True)
 
 
 def training():
