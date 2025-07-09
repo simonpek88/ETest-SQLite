@@ -1,12 +1,16 @@
 # 调控中心安全生产业务考试系统
 
+- E-Test 考试系统
+
+    <img src="./Images/badges/E-Test-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
+    <img src="./Images/badges/E-Test-lm-badge.svg" alt="Badge" width="120" height="auto" style="vertical-align: middle;">
+    <img src="./Images/badges/build-badge.svg" alt="Badge" width="70" height="auto" style="vertical-align: middle;">
+
 ## E-Test 考试系统 是一个前端基于 Streamlit 框架，后端基于Python数据处理的web应用，旨在帮助用户进行专业技能自我评估和提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
 
 ## Contents
 
-- E-Test 考试系统
-    <img src="./Images/badges/E-Test-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
-    <img src="./Images/badges/E-Test-lm-badge.svg" alt="Badge" width="120" height="auto" style="vertical-align: middle;">
+-
   - [安装](#install)
   - [项目结构](#construction)
   - [功能](#functions)
@@ -24,22 +28,24 @@
 5. 安装依赖
     - 手工安装
       - MySQL # 数据库
-        <img src="./Images/badges/MySQL-badge.svg" alt="Badge" width="70" height="auto" style="vertical-align: middle;">
       - Streamlit # 前端框架
-        <img src="./Images/badges/streamlit-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - streamlit-antd-components/extras/keyup # 前端组件库
-        <img src="./Images/badges/streamlit_antd_components-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
       - pycryptodome # 数据加密模块
       - openai/qianfan # A.I.调用模块及文心千帆API调用接口
+      - folium/pydeck # 地图可视化
+      - python-docx # Word文档操作
+      - openpyxl/XlsxWriter # Excel文档操作
+      - ...
+
+        <img src="./Images/badges/MySQL-badge.svg" alt="Badge" width="70" height="auto" style="vertical-align: middle;">
+        <img src="./Images/badges/streamlit-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
+        <img src="./Images/badges/streamlit_antd_components-badge.svg" alt="Badge" width="85" height="auto" style="vertical-align: middle;">
         <img src="./Images/badges/openai-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
         <img src="./Images/badges/qianfan-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
-      - folium/pydeck # 地图可视化
-        <img src="./Images/badges/folium-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
-      - python-docx # Word文档操作
-        <img src="./Images/badges/python-docx-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
-      - openpyxl/XlsxWriter # Excel文档操作
-        <img src="./Images/badges/openpyxl-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
-      - ...
+        <img src="./Images/badges/folium-badge.svg" alt="Badge" width="76" height="auto" style="vertical-align: middle;">
+        <img src="./Images/badges/python-docx-badge.svg" alt="Badge" width="100" height="auto" style="vertical-align: middle;">
+        <img src="./Images/badges/openpyxl-badge.svg" alt="Badge" width="85" height="auto" style="vertical-align: middle;">
+
     - 或使用提供的requirements.txt文件自动安装
       - `pip install -r requirements.txt`
 6. 运行程序
@@ -96,6 +102,6 @@
 
 ## License
 
-<img src="./Images/badges/license-badge.svg">
+![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-MIT © 2024-2027 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
+MIT © 2024-2037 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
