@@ -1,0 +1,1 @@
+@mysql --defaults-file=.mysql.cnf etest-mysql < DB\MySQL_Backup\ETest-MySQL_Backup_%1.sql
