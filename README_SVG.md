@@ -39,7 +39,6 @@
 
         <img src="./Images/badges/MySQL-badge.svg" alt="Badge" width="70" height="auto" style="vertical-align: middle;">
         <img src="./Images/badges/streamlit-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
-        <img src="./Images/badges/streamlit_antd_components-badge.svg" alt="Badge" width="85" height="auto" style="vertical-align: middle;">
         <img src="./Images/badges/openai-badge.svg" alt="Badge" width="80" height="auto" style="vertical-align: middle;">
         <img src="./Images/badges/qianfan-badge.svg" alt="Badge" width="90" height="auto" style="vertical-align: middle;">
         <img src="./Images/badges/folium-badge.svg" alt="Badge" width="76" height="auto" style="vertical-align: middle;">

@@ -320,8 +320,8 @@ def aboutInfo():
     updatePyFileinfo()
     st.subheader("关于本软件", divider="rainbow")
     st.subheader(":blue[Powered by Python and Streamlit]")
-    cols_limit = 6
-    module_pack = ['Python', 'MySQL', 'Streamlit', 'Antd', 'Pandas', 'Python-Docx', 'DeepSeek', 'iFlytek Spark', 'ERNIE Qianfan', '通义万相']
+    cols_limit = 5
+    module_pack = ['Python', 'MySQL', 'Streamlit', 'Pandas', 'Python-Docx', 'Openpyxl', 'DeepSeek', 'iFlytek Spark', 'ERNIE Qianfan', '通义万相']
     module_img = st.columns(cols_limit)
     for index, value in enumerate(module_pack):
         module_img[index % cols_limit].caption(value)
@@ -342,17 +342,19 @@ def aboutInfo():
 
 def display_pypi():
     db_type = 'MySQL'
-    badge_pack = ['streamlit', 'streamlit_antd_components', 'pandas', 'folium', 'python-docx', 'openpyxl']
+    cols_limit = 5
+    badge_pack = ['python-docx', 'openpyxl', 'streamlit', 'pandas', 'folium']
     verinfo, verLM, likeCM = getVerInfo()
     app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
     app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
     gen_badge(conn, cur, badge_pack, db_type, APPNAME_EN, app_version, app_lm)
-    pypi = st.columns(len(badge_pack) + 2)
+    pypi = st.columns(cols_limit)
     pypi[0].image('./Images/badges/Python-badge.svg')
     pypi[1].image(f'./Images/badges/{db_type}-badge.svg')
 
     for index, value in enumerate(badge_pack):
-        pypi[index + 2].image(f'./Images/badges/{value}-badge.svg')
+        pypi[index % cols_limit].image(f'./Images/badges/{value}-badge.svg')
+
     pypi[0].image(f'./Images/badges/{APPNAME_EN}-badge.svg')
     pypi[1].image(f'./Images/badges/{APPNAME_EN}-lm-badge.svg')
 
