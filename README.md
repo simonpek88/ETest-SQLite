@@ -5,6 +5,8 @@
 ## Contents
 
 - E-Test 考试系统
+    ![GRU-PA build](https://img.shields.io/badge/build-passing-green.svg)
+
   - [安装](#install)
   - [项目结构](#construction)
   - [功能](#functions)
@@ -85,5 +87,7 @@
 [E-Test 考试系统](https://github.com/simonpek88/ETest-SQLite.git)
 
 ## License
+
+![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 MIT © 2024-2027 Simon Lau TradeMark :rainbow[Enjoy for AP] ™
