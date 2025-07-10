@@ -346,7 +346,8 @@ def aboutInfo():
         module_img[index % cols_limit].caption(value)
         module_img[index % cols_limit].image(f'./Images/logos/{value.replace(" ", "_").lower()}.png')
     display_pypi()
-    st.write("###### :violet[为了获得更好的使用体验, 请使用浅色主题]")
+    if st.context.theme.type == 'dark':
+        st.write("###### :violet[为了获得更好的使用体验, 请使用浅色主题]")
     sac.divider(align="center", color="gray")
     stars = sac.rate(label='Please give me a star if you like it!', align='start')
     if stars > 0:
