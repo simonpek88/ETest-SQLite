@@ -185,7 +185,7 @@ def get_city_info(ip_address):
         #st.write(f"城市：{city_name}，国家：{country_name}")
         return city_name
     except geoip2.errors.AddressNotFoundError:
-        return 'Tianjin'
+        return None
     finally:
         reader.close()
 
@@ -195,11 +195,15 @@ def login():
     st.set_page_config(layout="centered")
     # 显示应用名称
     st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME_CN}**</center></font>", unsafe_allow_html=True)
-    client_ip = st.context.ip_address
+    # 局域网访问, 暂时禁用
+    client_ip = None
+    # 获取客户端IP
+    #client_ip = st.context.ip_address
+    station_index = 2
     if client_ip:
-        station_index = CITY_STATION[get_city_info(client_ip)]
-    else:
-        station_index = 2
+        ip_city = get_city_info(client_ip)
+        if ip_city in CITY_STATION.keys():
+            station_index = CITY_STATION[ip_city]
     # 登录表单容器
     login = st.empty()
     with login.container(border=True):
@@ -3719,7 +3723,7 @@ st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="mediu
 APPNAME_CN = "调控中心安全生产业务考试系统"
 APPNAME_EN = 'E-Test'
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
-CITY_STATION = {None: 2, 'Beijing': 0, 'Tianjin': 2, 'Wuqing': 3}
+CITY_STATION = {'Beijing': 0, 'Tianjin': 2, 'Wuqing': 3}
 selected = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
