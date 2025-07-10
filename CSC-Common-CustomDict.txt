@@ -1,4 +1,5 @@
 Abstra
+adcode
 apisecret
 argostranslate
 backcolor
@@ -16,6 +17,10 @@ cursorignore
 cursorindexingignore
 Cython
 dataframe
+daypower
+daytemp
+dayweather
+daywind
 dbindexes
 dbschemas
 dbtables
@@ -36,6 +41,7 @@ hanlp
 htmlcov
 imagen
 indexstats
+infocode
 intellicode
 ipynb
 ipython
@@ -54,6 +60,10 @@ Monokai
 msyh
 msyhbd
 mypy
+nightpower
+nighttemp
+nightweather
+nightwind
 nlpir
 noimage
 nosetests
@@ -82,6 +92,7 @@ pytype
 Qiushui
 Qwen
 rects
+reporttime
 requset
 reranker
 ropeproject
@@ -107,6 +118,8 @@ vsclog
 wanx
 webassets
 webhint
+winddirection
+windpower
 xdiv
 yake
 yapf
