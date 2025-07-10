@@ -49,7 +49,7 @@ def gen_badge(conn, cur, badge_text_pack, db_type='MySQL', app_name='app_name', 
     if check_is_changed(conn, cur, app_name, app_ver, f'{badge_folder}/{app_name}-badge.svg'):
         with open(f'{badge_folder}/{app_name}-badge.svg', 'w') as f:
             f.write(badge(left_text=app_name, right_text=app_ver))
-    if check_is_changed(conn, cur, app_name, app_ver, f'{badge_folder}/{app_name}-lm-badge.svg'):
+    if check_is_changed(conn, cur, f'{app_name}_last-updated', app_ver, f'{badge_folder}/{app_name}-lm-badge.svg'):
         with open(f'{badge_folder}/{app_name}-lm-badge.svg', 'w') as f:
             f.write(badge(left_text='Updated', right_text=app_lm[2:], right_color=badge_ver_color))
 
