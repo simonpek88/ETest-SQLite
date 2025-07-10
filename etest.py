@@ -7,6 +7,7 @@ import re
 import time
 
 import folium
+import geoip2.database
 import nivo_chart as nc
 import openpyxl
 import pandas as pd
@@ -175,19 +176,37 @@ def changePassword():
     updateActionUser(st.session_state.userName, "密码修改", st.session_state.loginTime)
 
 
+def get_city_info(ip_address):
+    reader = geoip2.database.Reader('./GeoCity/GeoLite2-City.mmdb')
+    try:
+        response = reader.city(ip_address)
+        city_name = response.city.name
+        country_name = response.country.name
+        #st.write(f"城市：{city_name}，国家：{country_name}")
+        return city_name
+    except geoip2.errors.AddressNotFoundError:
+        return 'Tianjin'
+    finally:
+        reader.close()
+
+
 @st.fragment
 def login():
     st.set_page_config(layout="centered")
     # 显示应用名称
     st.markdown(f"<font face='微软雅黑' color=purple size=20><center>**{APPNAME_CN}**</center></font>", unsafe_allow_html=True)
-
+    client_ip = st.context.ip_address
+    if client_ip:
+        station_index = CITY_STATION[get_city_info(client_ip)]
+    else:
+        station_index = 2
     # 登录表单容器
     login = st.empty()
     with login.container(border=True):
         userID, userCName = [], []
         sql = "SELECT DISTINCT(StationCN) from users order by StationCN"
         rows = execute_sql(cur, sql)
-        station_type = st.selectbox(label="请选择站点", options=[row[0] for row in rows], index=2)
+        station_type = st.selectbox(label="请选择站点", options=[row[0] for row in rows], index=station_index)
         sql = f"SELECT userName, userCName, StationCN from users where StationCN = '{station_type}' order by StationCN, userCName"
         rows = execute_sql(cur, sql)
         for row in rows:
@@ -3690,7 +3709,7 @@ def aiGenerate_Image():
         AIGMInfo.empty()
 
 
-global APPNAME_CN, APPNAME_EN, EMOJI, STATIONPACK
+global APPNAME_CN, APPNAME_EN, EMOJI, STATIONPACK, CITY_STATION
 conn = get_connection()
 cur = conn.cursor()
 
@@ -3699,6 +3718,7 @@ st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="mediu
 APPNAME_CN = "调控中心安全生产业务考试系统"
 APPNAME_EN = 'E-Test'
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
+CITY_STATION = {None: 2, 'Beijing': 0, 'Tianjin': 2, 'Wuqing': 3}
 selected = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
