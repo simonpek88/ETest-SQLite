@@ -116,6 +116,7 @@ unixepoch
 venv
 vsclog
 wanx
+WEATHERICON
 webassets
 webhint
 winddirection

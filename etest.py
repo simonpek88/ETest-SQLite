@@ -203,8 +203,10 @@ def login():
     station_index = 2
     if client_ip:
         ip_city = get_city_info(client_ip)
-        if ip_city in CITY_STATION.keys():
-            station_index = CITY_STATION[ip_city]
+        city_to_station = {'Tianjin': 2, 'Beijing': 0, 'Wuqing': 3}
+        # 添加类型检查以确保 ip_city 是字符串类型
+        if isinstance(ip_city, str) and ip_city:
+            station_index = city_to_station.get(ip_city, 2)
     # 登录表单容器
     login = st.empty()
     with login.container(border=True):
@@ -3719,14 +3721,14 @@ def display_weather(city_code, display_align):
     weather_info = get_city_weather(city_code)
     if weather_info:
         if display_align == 'left':
-            st.markdown(f"地区: {weather_info['city']} 天气: {WEATHERICON[weather_info['weather']]} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}")
+            st.markdown(f"地区: {weather_info['city']} 天气: {weather_info['weather_icon']} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}")
             st.markdown(f"风向: {weather_info['winddirection']} 风力: {weather_info['wind_icon']} {weather_info['windpower']} 米/秒 湿度: {weather_info['humidity']}% {weather_info['humidity_icon']}")
         elif display_align == 'center':
-            st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>地区: {weather_info['city']} 天气: {WEATHERICON[weather_info['weather']]} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>地区: {weather_info['city']} 天气: {weather_info['weather_icon']} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>风向: {weather_info['winddirection']} 风力: {weather_info['wind_icon']} {weather_info['windpower']} 米/秒 湿度: {weather_info['humidity']}% {weather_info['humidity_icon']}</div>", unsafe_allow_html=True)
 
 
-global APPNAME_CN, APPNAME_EN, EMOJI, STATIONPACK, CITY_STATION, WEATHERICON, CITYCODE
+global APPNAME_CN, APPNAME_EN, EMOJI, STATIONPACK, CITYCODE
 conn = get_connection()
 cur = conn.cursor()
 
@@ -3735,10 +3737,6 @@ st.logo("./Images/etest-logo2.png", icon_image="./Images/exam2.png", size="mediu
 APPNAME_CN = "调控中心安全生产业务考试系统"
 APPNAME_EN = 'E-Test'
 EMOJI = [["🥺", "very sad!"], ["😣", "bad!"], ["😋", "not bad!"], ["😊", "happy!"], ["🥳", "fab, thank u so much!"]]
-CITY_STATION = {'Beijing': 0, 'Tianjin': 2, 'Wuqing': 3}
-WEATHERICON = {'多云': '☁️', '阴': '⛅', '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️', '暴雨': '🌧️💧', '雷阵雨': '⛈️', '小雪': '🌨️',
-               '中雪': '❄️🌨', '大雪': '🌨❄️🌨', '暴雪': '❄️🌨❄️', '晴': '☀️', '雾': '🌫️', '霾': '🌫️', '风': '💨', '雪': '🌨️',
-               '冰雹': '🌨️', '冻雨': '❄️', '沙尘暴': '🌪️'}
 CITYCODE = {'北京站': '110113', '天津站': '120116', '总控室': '120116', '调控中心': '120116', '武清站': '120114'}
 
 selected = None
