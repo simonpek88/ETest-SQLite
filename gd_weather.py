@@ -3,16 +3,19 @@ import re
 
 import requests
 
+from commFunc import getEncryptKeys
+
 
 def get_weather(city_code):
+    gd_key = getEncryptKeys('gd_key')
     url = 'https://restapi.amap.com/v3/weather/weatherInfo?parameters'
     params_realtime = {
-        'key':'0befa0ca3650bc4cbf6d9d2607b13001',
+        'key':gd_key,
         'city':city_code,
         'extensions':'base'
     }
     params_estimate = {
-        'key':'0befa0ca3650bc4cbf6d9d2607b13001',
+        'key':gd_key,
         'city':city_code,
         'extensions':'all'
     }
@@ -79,9 +82,9 @@ def get_city_weather(city_code):
                 if temperature_dig < 10:
                     temp_icon = '❄️ 寒冷'
                 elif 10 <= temperature_dig <= 25:
-                    temp_icon = '🌡️ 舒适'
+                    temp_icon = '🌿 舒适'
                 elif 26 <= temperature_dig <= 35:
-                    temp_icon = '⚠️ 较热'
+                    temp_icon = '☀️ 较热'
                 else:
                     temp_icon = '🔥 高温'
 
