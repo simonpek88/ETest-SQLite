@@ -3736,7 +3736,7 @@ def aiGenerate_Image():
 def display_weather(city_code):
     weather_info = get_city_weather(city_code)
     if weather_info:
-        st.markdown(f"#### {weather_info['city']}实时天气")
+        st.markdown(f"#### {weather_info['city']} - 实时天气")
         #st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>地区: {weather_info['city']} 天气: {weather_info['weather_icon']} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}</div>", unsafe_allow_html=True)
         #st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>风向: {weather_info['winddirection']} 风力: {weather_info['windpower']} km/h {weather_info['wind_icon']} 湿度: {weather_info['humidity']}% {weather_info['humidity_icon']}</div>", unsafe_allow_html=True)
         wcol = st.columns(5)
