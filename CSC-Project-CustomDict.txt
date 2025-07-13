@@ -108,6 +108,7 @@ verinfo
 visitcount
 visitcounter
 VTAB
+wcol
 Wuqing
 xdsoft
 xfxh
