@@ -2989,7 +2989,7 @@ def displayAppInfo(txt_height=400):
 
 @st.fragment
 def displayAppInfo_static():
-    st.markdown(f"<font face='微软雅黑' color=tear size=16><center>**{APPNAME_CN}**</center></font>", unsafe_allow_html=True)
+    st.markdown(f"<font face='微软雅黑' color=purple size=16><center>**{APPNAME_CN}**</center></font>", unsafe_allow_html=True)
     verinfo, verLM, likeCM = getVerInfo()
     st.markdown(f"<font face='微软雅黑' size=5><center>软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}</center></font>", unsafe_allow_html=True)
     st.markdown(f"<font face='微软雅黑' size=3><center>更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}</center></font>", unsafe_allow_html=True)
