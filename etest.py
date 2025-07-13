@@ -2968,6 +2968,13 @@ def displayVisitCounter():
 
 
 @st.fragment
+def displayVisitCounter_static():
+    sql = "SELECT pyLM from verinfo where pyFile = 'visitcounter'"
+    visitcount = execute_sql(cur, sql)[0][0]
+    st.markdown(f"<font face='微软雅黑' size=3><center>**第 {visitcount} 位访问者**</center></font>", unsafe_allow_html=True)
+
+
+@st.fragment
 def displayAppInfo(txt_height=400):
     infoStr = open("./MyComponentsScript/glowintext.txt", "r", encoding="utf-8").read()
     infoStr = infoStr.replace("软件名称", APPNAME_CN)
@@ -2978,6 +2985,16 @@ def displayAppInfo(txt_height=400):
     update_type, update_content = get_update_content(f"./CHANGELOG.md")
     infoStr = infoStr.replace("更新内容", f"更新内容: {update_type} - {update_content}")
     components.html(infoStr, height=txt_height)
+
+
+@st.fragment
+def displayAppInfo_static():
+    st.markdown(f"<font face='微软雅黑' color=tear size=16><center>**{APPNAME_CN}**</center></font>", unsafe_allow_html=True)
+    verinfo, verLM, likeCM = getVerInfo()
+    st.markdown(f"<font face='微软雅黑' size=5><center>软件版本: {int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{int(verinfo / 10)} building {verinfo}</center></font>", unsafe_allow_html=True)
+    st.markdown(f"<font face='微软雅黑' size=3><center>更新时间: {time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))}</center></font>", unsafe_allow_html=True)
+    update_type, update_content = get_update_content(f"./CHANGELOG.md")
+    st.markdown(f"<font face='微软雅黑' color=blue size=4><center>更新内容: {update_type} - {update_content}</center></font>", unsafe_allow_html=True)
 
 
 @st.fragment
@@ -3716,15 +3733,11 @@ def aiGenerate_Image():
         AIGMInfo.empty()
 
 
-def display_weather(city_code, display_align):
+def display_weather(city_code):
     weather_info = get_city_weather(city_code)
     if weather_info:
-        if display_align == 'left':
-            st.markdown(f"地区: {weather_info['city']} 天气: {weather_info['weather_icon']} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}")
-            st.markdown(f"风向: {weather_info['winddirection']} 风力: {weather_info['wind_icon']} {weather_info['windpower']} 米/秒 湿度: {weather_info['humidity']}% {weather_info['humidity_icon']}")
-        elif display_align == 'center':
-            st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>地区: {weather_info['city']} 天气: {weather_info['weather_icon']} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>风向: {weather_info['winddirection']} 风力: {weather_info['wind_icon']} {weather_info['windpower']} 米/秒 湿度: {weather_info['humidity']}% {weather_info['humidity_icon']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>地区: {weather_info['city']} 天气: {weather_info['weather_icon']} 温度: {weather_info['temperature']} ℃ {weather_info['temp_icon']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; font-family:微软雅黑; color:#008080; font-size:18px;'>风向: {weather_info['winddirection']} 风力: {weather_info['wind_icon']} {weather_info['windpower']} 米/秒 湿度: {weather_info['humidity']}% {weather_info['humidity_icon']}</div>", unsafe_allow_html=True)
 
 
 global APPNAME_CN, APPNAME_EN, EMOJI, STATIONPACK, CITYCODE
@@ -3850,10 +3863,12 @@ if st.session_state.logged_in:
     if selected == "主页":
         #displayBigTimeCircle()
         updatePyFileinfo()
-        displayAppInfo(400)
-        display_weather(CITYCODE[st.session_state.StationCN], 'center')
+        #displayAppInfo(400)
+        displayAppInfo_static()
+        display_weather(CITYCODE[st.session_state.StationCN])
         st.divider()
-        displayVisitCounter()
+        #displayVisitCounter()
+        displayVisitCounter_static()
     elif selected == "生成题库" or selected == "选择考试":
         if st.session_state.examType == "training":
             #st.write("### :red[生成练习题库]")

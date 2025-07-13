@@ -118,6 +118,6 @@ def get_city_weather(city_code):
             return None
     except Exception as e:
         # 异常处理
-        print(f"Error fetching weather data: {e}")
+        print(f"获取天气失败: {e}")
 
     return None
