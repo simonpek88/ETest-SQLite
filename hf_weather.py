@@ -41,7 +41,7 @@ def get_city_history_weather(city_code, query_date=None):
                 humidity = history_data["humidity"]
                 pressure = history_data["pressure"]
 
-                WEATHERICON = {'多云': '☁️', '阴': '⛅', '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️', '暴雨': '🌧️💧', '雷阵雨': '⛈️', '小雪': '🌨️',
+                WEATHERICON = {'多云': '☁️', '阴': '⛅', '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️', '暴雨': '🌧️💧', '阵雨': '🌦️', '雷阵雨': '⛈️', '小雪': '🌨️',
                             '中雪': '❄️🌨', '大雪': '🌨❄️🌨', '暴雪': '❄️🌨❄️', '晴': '☀️', '雾': '🌫️', '霾': '🌫️', '风': '💨', '雪': '🌨️',
                             '冰雹': '🌨️', '冻雨': '❄️', '沙尘暴': '🌪️'}
 
@@ -96,7 +96,10 @@ def get_city_history_weather(city_code, query_date=None):
                         windspeed.append(each['windSpeed'])
                         humidity_pack.append(each['humidity'])
                         pressure_pack.append(each['pressure'])
-                        weather_icon_pack.append(WEATHERICON[each['text']])
+                        if each['text'] in WEATHERICON:
+                            weather_icon_pack.append(WEATHERICON[each['text']])
+                        else:
+                            weather_icon_pack.append('🚫')
 
                 return {
                     'sunrise': sunrise,
@@ -127,16 +130,12 @@ def get_city_history_weather(city_code, query_date=None):
             return None
     except Exception as e:
         # 异常处理
-        print(f"Error fetching weather data: {e}")
+        print(f"无法获取数据: {e}")
 
     return None
 
 
 def get_city_now_weather(city_code):
-    # 输入验证
-    if not isinstance(city_code, str) or not city_code.isdigit():
-        raise ValueError("Invalid city code")
-
     try:
         city_weather_info = get_weather(city_code, 'now')
         #print(city_weather_info)
@@ -163,10 +162,13 @@ def get_city_now_weather(city_code):
                 vis = now["vis"] # 能见度
                 cloud = now["cloud"] # 云量
 
-                WEATHERICON = {'多云': '☁️', '阴': '⛅', '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️', '暴雨': '🌧️💧', '雷阵雨': '⛈️', '小雪': '🌨️',
+                WEATHERICON = {'多云': '☁️', '阴': '⛅', '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️', '暴雨': '🌧️💧', '阵雨': '🌦️', '雷阵雨': '⛈️', '小雪': '🌨️',
                             '中雪': '❄️🌨', '大雪': '🌨❄️🌨', '暴雪': '❄️🌨❄️', '晴': '☀️', '雾': '🌫️', '霾': '🌫️', '风': '💨', '雪': '🌨️',
                             '冰雹': '🌨️', '冻雨': '❄️', '沙尘暴': '🌪️'}
-                weather_icon = WEATHERICON[weather]
+                if weather in WEATHERICON:
+                    weather_icon = WEATHERICON[weather]
+                else:
+                    weather_icon = '🚫'
 
                 WINDDIRECTIONICON = {
                     '北风': '⬆️',
@@ -268,7 +270,7 @@ def get_city_now_weather(city_code):
             return None
     except Exception as e:
         # 异常处理
-        print(f"Error fetching weather data: {e}")
+        print(f"无法获取数据: {e}")
 
     return None
 

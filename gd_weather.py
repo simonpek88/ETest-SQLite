@@ -28,10 +28,6 @@ def get_weather(city_code):
 
 
 def get_city_weather(city_code):
-    # 输入验证
-    if not isinstance(city_code, str) or not city_code.isdigit():
-        raise ValueError("Invalid city code")
-
     try:
         city_weather_info = get_weather(city_code)
 
@@ -118,6 +114,6 @@ def get_city_weather(city_code):
             return None
     except Exception as e:
         # 异常处理
-        print(f"获取天气失败: {e}")
+        print(f"无法获取数据: {e}")
 
     return None

@@ -369,7 +369,7 @@ def display_pypi():
     db_type = 'MySQL'
     cols_limit = 5
     pypi = st.columns(cols_limit)
-    badge_pack = ['streamlit', 'pandas', 'folium', 'python-docx', 'openpyxl']
+    badge_pack = ['streamlit', 'pandas', 'folium', 'python-docx', 'openpyxl', 'Pybadges']
     verinfo, verLM, likeCM = getVerInfo()
     app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
     app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
@@ -3752,7 +3752,7 @@ def display_weather(city_code):
         wcol[2].metric(label='湿度', value=f"{weather_info['humidity']}% {weather_info['humidity_icon']}")
         wcol[0].metric(label='风向', value=f"{weather_info['winddirection']}风")
         wcol[1].metric(label='风力', value=f"{weather_info['windpower']} km/s {weather_info['wind_icon']}")
-        wcol[2].metric(label='更新时间', value=f"{weather_info['reporttime'][2:]}")
+        wcol[2].metric(label='数据更新时间', value=f"{weather_info['reporttime'][5:]}")
         # 设置度量卡片的样式
         style_metric_cards(border_left_color="#8581d9")
 
