@@ -48,10 +48,13 @@ def get_city_weather(city_code):
                 windpower = live_data["windpower"]  # 风力
                 humidity = live_data["humidity"]  # 湿度
 
-                WEATHERICON = {'多云': '☁️', '阴': '⛅', '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️', '暴雨': '🌧️💧', '雷阵雨': '⛈️', '小雪': '🌨️',
+                WEATHERICON = {'多云': '☁️', '阴': '⛅', '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️', '暴雨': '🌧️💧', '阵雨': '🌦️', '雷阵雨': '⛈️', '小雪': '🌨️',
                             '中雪': '❄️🌨', '大雪': '🌨❄️🌨', '暴雪': '❄️🌨❄️', '晴': '☀️', '雾': '🌫️', '霾': '🌫️', '风': '💨', '雪': '🌨️',
                             '冰雹': '🌨️', '冻雨': '❄️', '沙尘暴': '🌪️'}
-                weather_icon = WEATHERICON[weather]
+                if weather in WEATHERICON:
+                    weather_icon = WEATHERICON[weather]
+                else:
+                    weather_icon = '🚫'
 
                 # 使用正则表达式提取数字部分
                 wind_power_dig = re.search(r'\d+', windpower)
@@ -80,7 +83,7 @@ def get_city_weather(city_code):
                 elif 10 <= temperature_dig <= 25:
                     temp_icon = '🌿 舒适'
                 elif 26 <= temperature_dig <= 35:
-                    temp_icon = '☀️ 较热'
+                    temp_icon = '🪭 较热'
                 else:
                     temp_icon = '🔥 高温'
 

@@ -70,9 +70,9 @@ def get_city_history_weather(city_code, query_date=None):
                 if temperature_dig < 10:
                     temp_icon = '❄️ 寒冷'
                 elif 10 <= temperature_dig <= 25:
-                    temp_icon = '🌡️ 舒适'
+                    temp_icon = '🌿 舒适'
                 elif 26 <= temperature_dig <= 35:
-                    temp_icon = '⚠️ 较热'
+                    temp_icon = '🪭 较热'
                 else:
                     temp_icon = '🔥 高温'
 
@@ -218,7 +218,7 @@ def get_city_now_weather(city_code):
                 elif 10 <= temperature_dig <= 25:
                     temp_icon = '🌿 舒适'
                 elif 26 <= temperature_dig <= 35:
-                    temp_icon = '☀️ 较热'
+                    temp_icon = '🪭 较热'
                 else:
                     temp_icon = '🔥 高温'
 
@@ -229,7 +229,7 @@ def get_city_now_weather(city_code):
                 elif 10 <= feelslike_dig <= 25:
                     feelslike_icon = '🌿 舒适'
                 elif 26 <= feelslike_dig <= 35:
-                    feelslike_icon = '☀️ 较热'
+                    feelslike_icon = '🪭 较热'
                 else:
                     feelslike_icon = '🔥 高温'
 
