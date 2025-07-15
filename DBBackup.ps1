@@ -1,22 +1,4 @@
-param(
-    [string]$target = ""
-)
-
-switch ($target.ToLower()) {
-    "simon" {
-        $BACKUP_DIR = "D:\My Documents\OneDrive\私人文档\Python Project\ETest-SQLite\DB\MySQL_Backup"
-    }
-    "cnaf" {
-        $BACKUP_DIR = "D:\Simon\Codes\ETest-SQLite-VSC\ETest-SQLite\DB\MySQL_Backup"
-    }
-    "st" {
-        $BACKUP_DIR = "D:\PythonProject\ETest-SQLite\DB\MySQL_Backup"
-    }
-    default {
-        Write-Host "无效参数. 请使用如下参数: simon, cnaf, or st (必须小写)."
-        exit 1
-    }
-}
+$BACKUP_DIR = ".\DB\MySQL_Backup"
 
 if (Test-Path $BACKUP_DIR) {
     $TIMESTAMP = Get-Date -Format "yyyyMMddHHmmss"
