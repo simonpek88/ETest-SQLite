@@ -2,8 +2,8 @@
 
 - E-Test 考试系统
 
-    ![GRU-PA ver](https://img.shields.io/badge/ver-0.47.472-blue.svg)
-    ![GRU-PA updated](https://img.shields.io/badge/updated-25/07/09%2012:38-orange.svg)
+    ![GRU-PA ver](https://img.shields.io/badge/ver-0.48.4825-blue.svg)
+    ![GRU-PA updated](https://img.shields.io/badge/updated-25/07/16%2015:38-orange.svg)
     ![GRU-PA build](https://img.shields.io/badge/build-passing-green.svg)
 
 ## E-Test 考试系统 是一个前端基于 Streamlit 框架，后端基于Python数据处理的web应用，旨在帮助用户进行专业技能自我评估和提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
