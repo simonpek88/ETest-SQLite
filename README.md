@@ -2,9 +2,9 @@
 
 - E-Test 考试系统
 
-    ![GRU-PA ver](https://img.shields.io/badge/ver-0.48.4825-blue.svg)
-    ![GRU-PA updated](https://img.shields.io/badge/updated-25/07/16%2015:38-orange.svg)
-    ![GRU-PA build](https://img.shields.io/badge/build-passing-green.svg)
+    ![E-Test ver](https://img.shields.io/badge/ver-0.48.4831-blue.svg)
+    ![E-Test updated](https://img.shields.io/badge/updated-2025/07/16%2014:37-orange.svg)
+    ![E-Test build](https://img.shields.io/badge/build-passing-green.svg)
 
 ## E-Test 考试系统 是一个前端基于 Streamlit 框架，后端基于Python数据处理的web应用，旨在帮助用户进行专业技能自我评估和提升。它包括考试、练习、查询和数据库设置及A.I.试题生成和答案解析等功能，为用户提供一个全面的学习和评估平台
 
@@ -40,12 +40,13 @@
       ![Python](https://img.shields.io/badge/Python-3.12.6-blue.svg)
       ![MySQL](https://img.shields.io/badge/MySQL-8.4.5-blue.svg)
       ![Streamlit](https://img.shields.io/badge/Streamlit-1.46.1-blue.svg)
-      ![pycryptodome](https://img.shields.io/badge/pycryptodome-3.23.0-blue.svg)
-      ![openai](https://img.shields.io/badge/openai-1.93.0-blue.svg)
-      ![qianfan](https://img.shields.io/badge/qianfan-0.4.12.3-blue.svg)
-      ![folium](https://img.shields.io/badge/folium-0.20.0-blue.svg)
-      ![python-docx](https://img.shields.io/badge/python_docx-1.2.0-blue.svg)
-      ![openpyxl](https://img.shields.io/badge/openpyxl-3.1.5-blue.svg)
+      ![Pandas](https://img.shields.io/badge/Pandas-2.3.0-blue.svg)
+      ![Plotly](https://img.shields.io/badge/Plotly-6.2.0-blue.svg)
+      ![Openai](https://img.shields.io/badge/Openai-1.93.0-blue.svg)
+      ![Qianfan](https://img.shields.io/badge/Qianfan-0.4.12.3-blue.svg)
+      ![Folium](https://img.shields.io/badge/Folium-0.20.0-blue.svg)
+      ![Python-docx](https://img.shields.io/badge/Python_docx-1.2.0-blue.svg)
+      ![Openpyxl](https://img.shields.io/badge/Openpyxl-3.1.5-blue.svg)
       ![XlsxWriter](https://img.shields.io/badge/XlsxWriter-3.2.5-blue.svg)
     - 或使用提供的requirements.txt文件自动安装
       - `pip install -r requirements.txt`

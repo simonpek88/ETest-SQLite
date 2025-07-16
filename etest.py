@@ -1,6 +1,7 @@
 # coding utf-8
 import base64
 import datetime
+import importlib.metadata
 import json
 import os
 import re
@@ -2272,6 +2273,30 @@ def actionDelQM(quesID, tablename, mRow):
 
 
 def aboutReadme():
+    new_content = ''
+    package_pack = ['Streamlit', 'Pandas', 'Plotly', 'Openai', 'Qianfan', 'Folium', 'Python-docx', 'Openpyxl', 'XlsxWriter']
+    with open('./README.md', 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+
+    verinfo, verLM, likeCM = getVerInfo()
+    app_version = f'{int(verinfo / 10000)}.{int((verinfo % 10000) / 100)}.{verinfo}'
+    app_lm = time.strftime('%Y-%m-%d %H:%M', time.localtime(verLM))
+    for line in lines:
+        if line.startswith("    ![E-Test ver]"):
+            line = f"    ![E-Test ver](https://img.shields.io/badge/ver-{app_version}-blue.svg)"
+        elif line.startswith("    ![E-Test updated]"):
+            line = f"    ![E-Test updated](https://img.shields.io/badge/updated-{app_lm.replace('-', '/')[:10]}%20{app_lm[-5:]}-orange.svg)"
+        elif line.startswith("      !["):
+            for each in package_pack:
+                if line.startswith(f"      ![{each}]"):
+                    package_ver = importlib.metadata.version(each)
+                    line = f"      ![{each}](https://img.shields.io/badge/{each.replace('-', '_')}-{package_ver}-blue.svg)"
+                    break
+        new_content = new_content + line + "\n"
+    new_content = new_content.replace('\n\n', '\n')
+    with open("./README.md", "w", encoding='utf-8') as f:
+        f.write(new_content)
+
     st.markdown(open("./README.md", "r", encoding="utf-8").read(), unsafe_allow_html=True)
 
 
