@@ -242,6 +242,15 @@ def get_city_now_weather(city_code):
                 else:
                     humidity_icon = '💦 潮湿'
 
+                vis_dig = int(vis)
+                # 根据能见度选择图标
+                if vis_dig < 10:
+                    vis_icon = '🌫️'
+                elif 10 <= vis_dig < 20:
+                    vis_icon = '🌁'
+                else:
+                    vis_icon = '🏞️'
+
                 return {
                     'obstime': obstime,
                     'weather': weather,
@@ -262,7 +271,8 @@ def get_city_now_weather(city_code):
                     'wind_icon': wind_icon,
                     'winddir_icon': winddir_icon,
                     'winddir_icon_html': winddir_icon_html,
-                    'humidity_icon': humidity_icon
+                    'humidity_icon': humidity_icon,
+                    'vis_icon': vis_icon
                 }
             else:
                 return None
