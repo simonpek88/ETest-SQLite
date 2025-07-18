@@ -83,7 +83,7 @@ def get_city_weather(city_code):
                 elif 10 <= temperature_dig <= 25:
                     temp_icon = '🌿 舒适'
                 elif 26 <= temperature_dig <= 35:
-                    temp_icon = '🪭 较热'
+                    temp_icon = '🥵 较热'
                 else:
                     temp_icon = '🔥 高温'
 
