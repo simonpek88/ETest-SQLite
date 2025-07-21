@@ -235,7 +235,7 @@ def login():
             items=[
                 sac.SegmentedItem(label="练习", icon="pen"),
                 sac.SegmentedItem(label="考试", icon="card-list"),
-            ], align="start"
+            ], align="start", color='red'
         )
 
         # 登录按钮
