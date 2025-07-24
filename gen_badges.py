@@ -81,4 +81,6 @@ def gen_badge(conn, cur, badge_text_pack, db_type='MySQL', app_name='app_name', 
         package_version = importlib.metadata.version(package)
         if check_is_changed(conn, cur, package, package_version, f'{badge_folder}/{package}-badge.svg'):
             with open(f'{badge_folder}/{package}-badge.svg', 'w') as f:
+                if package == 'streamlit-antd-components':
+                    package = 'SAC'
                 f.write(badge(left_text=package, right_text=package_version))
