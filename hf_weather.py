@@ -13,9 +13,18 @@ def get_weather(city_code, query_type, query_date=None):
         response = requests.get(f'https://kq359en4pj.re.qweatherapi.com/v7/weather/now?location={city_code}', headers=headers)
     elif query_type == 'historical':
         response = requests.get(f'https://kq359en4pj.re.qweatherapi.com/v7/historical/weather?location={city_code}&date={query_date}', headers=headers)
+    elif query_type == 'warning':
+        response = requests.get(f'https://kq359en4pj.re.qweatherapi.com/v7/warning/now?location={city_code}', headers=headers)
+    elif query_type == 'aqi':
+        lat = city_code[:city_code.find('_')]
+        lon = city_code[city_code.find('_') + 1:]
+        response = requests.get(f'https://kq359en4pj.re.qweatherapi.com/airquality/v1/current/{lat}/{lon}', headers=headers)
+    elif query_type == 'pf':
+        lat = city_code[:city_code.find('_')]
+        lon = city_code[city_code.find('_') + 1:]
+        response = requests.get(f'https://kq359en4pj.re.qweatherapi.com/v7/minutely/5m?location={lon},{lat}', headers=headers)
 
     data = response.json()
-    #print(data)
 
     return data
 
@@ -284,3 +293,92 @@ def get_city_now_weather(city_code):
 
     return None
 
+
+def get_city_warning_now(city_code):
+    try:
+        city_weather_info = get_weather(city_code, 'warning')
+
+        # 检查状态码
+        if city_weather_info.get('code') == '200':
+            warnings = city_weather_info['warning']
+            results = []
+            for warning in warnings:
+                if warning["status"] == 'active':
+                    if warning["text"].find('：') != -1:
+                        warning["text"] = warning["text"][warning["text"].find("：") + 1:].strip()
+                    results.append({
+                        'id': warning["id"], # 本条预警的唯一标识
+                        'sender': warning["sender"], # 预警发布单位
+                        'pubTime': warning['pubTime'], # 预警发布时间
+                        'title': warning["title"], # 预警信息标题
+                        'startTime': warning["startTime"], # 预警开始时间
+                        'endTime': warning["endTime"], # 预警结束时间
+                        'status': warning["status"], # 预警状态
+                        'severity': warning["severity"], # 预警等级
+                        'severityColor': warning["severityColor"], # 预警严重等级颜色
+                        'type': warning["type"], # 预警类型
+                        'typeName': warning["typeName"], # 预警类型名称
+                        'urgency': warning["urgency"], # 预警信息的紧迫程度
+                        'certainty': warning["certainty"], # 预警信息的确定性
+                        'text': warning["text"] # 预警信息
+                    })
+
+            return results
+
+        return None
+    except Exception as e:
+        # 异常处理
+        print(f"无法获取数据: {e}")
+
+    return None
+
+
+def get_city_aqi(city_code):
+    try:
+        city_weather_info = get_weather(city_code, 'aqi')
+
+        # 检查状态码
+        if city_weather_info['indexes']:
+            results, sub_results = {}, {}
+            results["name"] = city_weather_info['indexes'][0]['name']
+            results["aqi"] = city_weather_info['indexes'][0]['aqi']
+            results["level"] = city_weather_info['indexes'][0]['level']
+            results["category"] = city_weather_info['indexes'][0]['category']
+            results["color"] = city_weather_info['indexes'][0]['color']
+            results["primaryPollutant"] = city_weather_info['indexes'][0]['primaryPollutant']
+            results["health"] = city_weather_info['indexes'][0]['health']['effect'] + city_weather_info['indexes'][0]['health']['advice']['sensitivePopulation']
+            results["primaryPollutant_vu"] = None
+            if results["health"].endswith("。"):
+                results["health"] = results["health"][:-1]
+            for each in city_weather_info['pollutants']:
+                if each['name'] == results['primaryPollutant']:
+                    results['primaryPollutant_vu'] = each['concentration']
+                else:
+                    sub_results[each['name']] = each['concentration']
+            results['sub_pollutants'] = sub_results
+
+            return results
+
+        return None
+    except Exception as e:
+        # 异常处理
+        print(f"无法获取数据: {e}")
+
+    return None
+
+
+def get_city_pf_weather(city_code):
+    try:
+        city_weather_info = get_weather(city_code, 'pf')
+
+        # 检查状态码
+        if city_weather_info.get('code') == '200':
+
+            return city_weather_info['summary']
+
+        return None
+    except Exception as e:
+        # 异常处理
+        print(f"无法获取数据: {e}")
+
+    return None
