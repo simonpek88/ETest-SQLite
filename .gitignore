@@ -13,6 +13,9 @@ ExamResult/*.*
 outputQues/*.*
 OYC/
 Images/badges/Python-badge.svg
+Images/badges/E-Test-badge.svg
+Images/badges/E-Test-lm-badge.svg
+Images/badges/github-commit-activity.svg
 CacheData/
 word2pic/*.jpg
 word2pic/*.jpeg

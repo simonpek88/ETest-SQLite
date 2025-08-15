@@ -3,6 +3,7 @@ import importlib.metadata
 import os
 import sys
 
+import requests
 from pybadges import badge
 
 # cSpell:ignoreRegExp /[^\s]{16,}/
@@ -52,6 +53,7 @@ def gen_badge(conn, cur, badge_text_pack, db_type='MySQL', app_name='app_name', 
     if check_is_changed(conn, cur, f'{app_name}_last-updated', app_ver, f'{badge_folder}/{app_name}-lm-badge.svg'):
         with open(f'{badge_folder}/{app_name}-lm-badge.svg', 'w') as f:
             f.write(badge(left_text='Updated', right_text=app_lm[2:], right_color=badge_ver_color))
+        gen_github_commit_badge()
 
     # 获取python版本
     python_ver = sys.version[:sys.version.find('(')].strip()
@@ -84,3 +86,26 @@ def gen_badge(conn, cur, badge_text_pack, db_type='MySQL', app_name='app_name', 
                 if package == 'streamlit-antd-components':
                     package = 'SAC'
                 f.write(badge(left_text=package, right_text=package_version))
+
+    #gen_support_Ukraine()
+
+
+def gen_support_Ukraine():
+    with open(f'./Images/badges/Support-Ukraine-badge.svg', 'w') as f:
+        f.write(badge(left_text='Support', right_text='Ukraine', left_color='#005bbb', right_color="#debc12"))
+
+def gen_github_commit_badge():
+    try:
+        url = "https://img.shields.io/github/commit-activity/t/simonpek88/ETest-SQLite.svg"
+        response = requests.get(url, timeout=30)
+
+        if response.status_code == 200:
+            svg_content = response.text
+
+            # 将SVG内容写入文件
+            with open("./Images/badges/github-commit-activity.svg", "w", encoding="utf-8") as file:
+                file.write(svg_content)
+
+    except requests.exceptions.RequestException as e:
+        # 记录请求相关的错误，便于调试
+        pass

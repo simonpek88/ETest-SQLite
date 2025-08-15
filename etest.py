@@ -382,6 +382,8 @@ def display_pypi():
 
     pypi[0].image(f'./Images/badges/{APPNAME_EN}-badge.svg')
     pypi[1].image(f'./Images/badges/{APPNAME_EN}-lm-badge.svg')
+    pypi[2].image('./Images/badges/build-badge.svg')
+    pypi[3].image('./Images/badges/github-commit-activity.svg')
 
 
 def aboutLicense():
